@@ -1,0 +1,144 @@
+.container {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: #000;
+    color: #fff;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .navLinks {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .navLinks li a {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .navButton {
+    background-color: #fff;
+    color: #000;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .hero {
+    text-align: center;
+    padding: 2rem;
+    flex: 1;
+    background-color: #fff;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .servicingInfo {
+    margin-top: 2rem;
+  }
+  
+  .serviceList {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .serviceList li {
+    margin: 0.5rem 0;
+  }
+  
+  .brandSelector {
+    margin-top: 1rem;
+  }
+  
+  .brandSelect {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #000;
+    color: #fff;
+    margin-top: auto;
+  }
+  
+  .appLinks a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 0.5rem;
+  }
+  
+  .modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modalContent {
+    background-color: #fff;
+    padding: 20px;
+    width: 70%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    border-radius: 4px;
+  }
+  
+  .close {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  .input {
+    display: block;
+    width: 100%;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .submitButton {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+  }
