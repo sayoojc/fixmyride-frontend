@@ -8,7 +8,7 @@ const authApi = createAuthApi(axiosPrivate);
 
 
 
-const EmailInputModal: React.FC<any> = ({setShowEmailInputModal,setShowResetPasswordModal,email,setEmail}) => {
+const EmailInputModal: React.FC<any> = ({setShowEmailInputModal,email,setEmail}) => {
   const [error, setError] = useState<string>("");
 
   const handleSubmit = async (e: FormEvent) => {
@@ -24,9 +24,6 @@ const EmailInputModal: React.FC<any> = ({setShowEmailInputModal,setShowResetPass
       const response = await authApi.forgotPasswordApi(email);
      alert(response.message);
      setShowEmailInputModal(false);
-     setShowResetPasswordModal(true);
-
-     
     } catch (err) {
       const axiosError = err as AxiosError;
       setError(axiosError?.response?.data as string || "Something went wrong");

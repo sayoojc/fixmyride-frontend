@@ -1,5 +1,13 @@
 import React,{useState,useEffect} from "react";
 import GoogleSignUpButton from './GoogleSignUpButton'
+import { useRouter } from "next/navigation";
+
+
+import { useDispatch} from 'react-redux';
+import { login } from '@/redux/features/authSlice';
+import { AppDispatch } from '@/redux/store';
+
+
 
 interface SignupModalProps {
   showSignupModal: boolean;
@@ -27,6 +35,13 @@ const SignupModal: React.FC<SignupModalProps> = ({
 }) => {
   const [animateIn, setAnimateIn] = useState(false);
 
+
+  const router = useRouter(); 
+
+  //redux dispatcher
+
+  const dispatch = useDispatch<AppDispatch>();
+
   // Handle animation
   useEffect(() => {
     if (showSignupModal) {
@@ -40,10 +55,34 @@ const SignupModal: React.FC<SignupModalProps> = ({
 
   // Handle Google signup
   const handleGoogleSignup = () => {
-    // Implement Google signup logic here
-    console.log("Google signup initiated");
+    const receiveMessage = (event: MessageEvent) => {
+      console.log("Received message eventss:", event); 
+      console.log('The origin of the event',event.origin);
+      console.log('The window.location.origin',window.location.origin);
+      if (event.origin !== process.env.NEXT_PUBLIC_BACKEND_URL) return;
+       
+      const data = event.data;
+      console.log("data", data);
+  
+       dispatch(login({
+            id:data.id,
+            name:data.name,
+            role:data.role,
+            email:data.email,
+          }))
+     
+          router.push("/user");
+      window.removeEventListener("message", receiveMessage);
+    };
+  
+    window.addEventListener("message", receiveMessage);
+    window.open(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`,
+      "_blank",
+      "width=500,height=600"
+    );
   };
-
+  
   if (!showSignupModal) return null;
 
   return (

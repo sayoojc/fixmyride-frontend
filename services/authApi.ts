@@ -10,7 +10,10 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
   })
   return response.data
   },
-  
+  googleAuthApi: async() => {
+    const response = await axiosPrivate.get("/api/auth/google");
+    return response.data;
+  },
   registerTempApi: async (name:string,email:string,phone:string,password:string) => {
     const response = await axiosPrivate.post("/api/auth/register-temp",{
         name,

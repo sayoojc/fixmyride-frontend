@@ -4,24 +4,20 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface authState {
   user: {
     id: string | null;
-    userName: string | null;
+    name: string | null;
     role: string | null;
-    email:string|null;
-    verified:string|null;
+    email:string | null;
   };
-  accessToken: string | null;
   persist:boolean
 }
 
 const initialState: authState = {
   user: {
     id: null,
-    userName: null,
+    name: null,
     role: null,
     email:null,
-    verified:null,
   },
-  accessToken: null,
   persist:false,
 };
 
@@ -35,14 +31,11 @@ const authSlice = createSlice({
         id: string;
         name: string;
         role: string;
-        accessToken: string;
         email:string
-        verified:string;
       }>
     ) => {
-      const { id, name, role, accessToken,email,verified } = action.payload;
-      state.user = { id, userName:name, role,email,verified };
-      state.accessToken = accessToken;
+      const { id, name, role,email } = action.payload;
+      state.user = { id, name:name, role,email};
     },
     setPersist(state){
       state.persist=!state.persist
@@ -50,12 +43,10 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = {
         id: null,
-        userName: null,
+        name: null,
         role: null,
         email:null,
-        verified:null,
       };
-      state.accessToken = null;
     },
   },
 });

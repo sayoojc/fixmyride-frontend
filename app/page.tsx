@@ -16,8 +16,16 @@ import Header from '@/components/Header';
 import LoginModal from '@/components/LoginModal';
 import SignupModal from '@/components/SignupModal';
 import OTPModal from '@/components/OtpModal';
-import ResetPasswordModal from '../components/ResetPasswordModal';
 import EmailInputModal from '@/components/EnterEmailModal';
+
+// imports for redux
+import { useDispatch} from 'react-redux';
+import { login } from '@/redux/features/authSlice';
+import { AppDispatch } from '@/redux/store';
+
+
+import { toast } from 'react-toastify';
+
 
 const authApi = createAuthApi(axiosPrivate);
 
@@ -49,6 +57,9 @@ interface SignupData {
 const CarServiceLandingPage: React.FC = () => {
   const router = useRouter(); 
 
+  //redux dispatcher
+
+  const dispatch = useDispatch<AppDispatch>();
 
   
   // Auth modal states
@@ -57,7 +68,6 @@ const CarServiceLandingPage: React.FC = () => {
   const [showSignupModal, setShowSignupModal] = useState<boolean>(false);
   const [showOTPModal, setShowOTPModal] = useState<boolean>(false); // OTP Modal state
   const [showEmailInputModal,setShowEmailInputModal] = useState<boolean>(false);
-  const [showResetPassswordModal,setShowResetPasswordModal] = useState<boolean>(false);
   const [loginData, setLoginData] = useState<LoginData>({
     email: '',
     password: '',
@@ -93,14 +103,25 @@ const CarServiceLandingPage: React.FC = () => {
   const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await authApi.loginApi(loginData.email, loginData.password);
+     const response =  await authApi.loginApi(loginData.email, loginData.password);
+     console.log('The response.user after the login',response.user);
+     dispatch(login({
+      id:response.user._id,
+      name:response.user.name,
+      role:response.user.role,
+      email:response.user.email,
+
+     }))
       alert("Login successful!");
       setShowLoginModal(false);
       router.push("/user");
     } catch (error) {
       const err = error as AxiosError<{ message?: string }>;
-      console.error("Login failed:", err.response?.data?.message || "Something went wrong");
-      alert(err.response?.data?.message || "Login failed!");
+      const message = err.response?.data?.message || "Login failed. Please try again.";
+console.log('the message',err);
+      toast.error(message);
+
+    
     }
   };
 
@@ -179,21 +200,11 @@ const CarServiceLandingPage: React.FC = () => {
 
 {showEmailInputModal && <EmailInputModal 
 setShowEmailInputModal={setShowEmailInputModal} 
-setShowResetPasswordModal = {setShowResetPasswordModal} 
 email = {email} 
 setEmail = {setEmail}/>}
 
  {/* OTP Modal */}
  {showOTPModal && <OTPModal email = {signupData.email} phone = {signupData.phone} />}
- <ResetPasswordModal
-  show={showResetPassswordModal}
-  email = {email}
-  handleClose={() => setShowResetPasswordModal(false)}
-  handleReset={( otp:String, newPassword:String ) => {
-    console.log('OTP:', otp, 'New Password:', newPassword);
-    // Call backend API to verify OTP and change password
-  }}
-/>
     </div>
   );
 };
