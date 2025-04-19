@@ -1,10 +1,31 @@
- 
+"use client" 
+
+
  import React,{useState} from 'react';
  import { Calendar, BarChart, Settings, Users, Wrench, Car, Menu, X, LogOut } from 'lucide-react';
+ import Link from 'next/link';
+ import createAuthApi from '@/services/authApi';
+ import { axiosPrivate } from '@/api/axios';
+ import { useRouter } from "next/navigation"; 
+ import { toast } from 'react-toastify';
+
+ const authApi = createAuthApi(axiosPrivate);
 
  const DashboardSidebar: React.FC = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ Fix: Added state
 
+  const router = useRouter()
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+const adminLogout = async ():Promise<void>  => {
+  try {
+    const response = await authApi.adminLogoutApi();
+    toast.success('successfully logged out');
+    router.push('/');
+  } catch (error) {
+    console.error(error);
+    toast.error('logout failed')
+  }
+ 
+}
  
  return (
 
@@ -28,38 +49,50 @@
    </div>
    
    <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-blue-50 text-blue-600">
-       <Calendar className="mr-3 h-5 w-5" />
-       Dashboard
-     </a>
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-       <Car className="mr-3 h-5 w-5" />
-       Appointments
-     </a>
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-       <Users className="mr-3 h-5 w-5" />
-       Customers
-     </a>
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-       <Wrench className="mr-3 h-5 w-5" />
-       Services
-     </a>
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-       <BarChart className="mr-3 h-5 w-5" />
-       Reports
-     </a>
-     <a href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-       <Settings className="mr-3 h-5 w-5" />
-       Settings
-     </a>
-   </nav>
+  <Link href="/admin/dashboard" className="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-blue-50 text-blue-600">
+    <Calendar className="mr-3 h-5 w-5" />
+    Dashboard
+  </Link>
+  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Car className="mr-3 h-5 w-5" />
+    Appointments
+  </Link>
+  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Users className="mr-3 h-5 w-5" />
+    Customers
+  </Link>
+  <Link href="/admin/dashboard/vehicle-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Car className="mr-3 h-5 w-5" />
+    Vehicle Management
+  </Link>
+  <Link href="/admin/dashboard/make&model-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Car className="mr-3 h-5 w-5" />
+    Make&Model Management
+  </Link>
+  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Wrench className="mr-3 h-5 w-5" />
+    Services
+  </Link>
+  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <BarChart className="mr-3 h-5 w-5" />
+    Reports
+  </Link>
+  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Settings className="mr-3 h-5 w-5" />
+    Settings
+  </Link>
+  <div className="p-4 border-t border-gray-200">
+  <button
+  onClick={adminLogout}
+  className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 w-full"
+>
+  <LogOut className="mr-3 h-5 w-5" />
+  Logout
+</button>
+  </div>
+</nav>
    
-   <div className="p-4 border-t border-gray-200">
-     <a href="#" className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
-       <LogOut className="mr-3 h-5 w-5" />
-       Logout
-     </a>
-   </div>
+ 
  </div>
 </div>
     </>

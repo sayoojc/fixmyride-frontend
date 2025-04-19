@@ -11,6 +11,8 @@ import LoginModal from '@/components/admin/LoginModal';
 import { axiosPrivate } from '@/api/axios';
 import { useRouter } from "next/navigation";
 import createAuthApi from '@/services/authApi';
+import { toast } from 'react-toastify';
+
 const authApi = createAuthApi(axiosPrivate);
 
 export default function AdminHomePage() {
@@ -23,13 +25,13 @@ export default function AdminHomePage() {
   const handleLogin = async(email: string, password: string) => {
  try {
       await authApi.adminLoginApi(email,password);
-      alert("Login successful!");
+      toast.success('Successfully logged in')
       setShowLoginModal(false);
       router.push("/admin/dashboard");
     } catch (error) {
       const err = error as AxiosError<{ message?: string }>;
       console.error("Login failed:", err.response?.data?.message || "Something went wrong");
-      alert(err.response?.data?.message || "Login failed!");
+      toast.error('Login failed');
     }
   };
 

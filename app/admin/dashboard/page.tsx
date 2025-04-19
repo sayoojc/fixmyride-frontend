@@ -1,10 +1,56 @@
 "use client"
 
-import React, { useState,useEffect } from 'react';
-import { Calendar, BarChart, ChevronDown, Settings, Users, Wrench, Clock, Car, DollarSign, Bell, Menu, X, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, BarChart, ChevronDown, Settings, Users, Wrench, Clock, Car, DollarSign, Bell, Menu, X, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
 import createAuthApi from '@/services/authApi';
 import { axiosPrivate } from '@/api/axios';
-import DashboardSidebar from '../../../components/admin/DashboardSidebar'
+import DashboardSidebar from '../../../components/admin/DashboardSidebar';
+
+// Import shadcn components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const authApi = createAuthApi(axiosPrivate);
 
@@ -15,6 +61,7 @@ interface StatItem {
   icon: React.ReactNode;
   change: string;
   color: string;
+  bgColor: string;
 }
 
 interface Appointment {
@@ -30,34 +77,37 @@ interface ServiceItem {
   service: string;
   count: number;
 }
+
 type User = {
   _id: string;
   name: string;
   email: string;
   role: string;
-  isListed:boolean;
+  isListed: boolean;
 };
 
-
 const AdminDashboard: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const response = await authApi.getUsersApi();
-      console.log(response.data.users)
       setUsers(response.data.users);
-   
     } catch (error) {
       console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  const toggleListing = async (email:string) => {
+  const toggleListing = async (email: string) => {
     try {
-       const response = await authApi.toggleListing(email);
-       const updatedUser = response?.data.user;
-       console.log("🚀 Updated user from API:", updatedUser);
-       console.log("👥 Previous users:", users);
-       setUsers((prevUsers) =>
+      const response = await authApi.toggleListing(email);
+      const updatedUser = response?.data.user;
+      
+      setUsers((prevUsers) =>
         prevUsers.map((user) => {
           if (user.email === email) {
             return { ...user, isListed: updatedUser.isListed };
@@ -66,23 +116,48 @@ const AdminDashboard: React.FC = () => {
         })
       );
     } catch (error) {
-      console.log('Toggle listing status is failed',error);
+      console.log('Toggle listing status failed', error);
     }
   }
-    const [users,setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-
-  fetchUsers();
- 
-   },[]);
+    fetchUsers();
+  }, []);
   
   // Sample data for dashboard widgets
   const stats: StatItem[] = [
-    { title: 'Total Appointments', value: '124', icon: <Calendar size={20} />, change: '+12%', color: 'bg-blue-100 text-blue-600' },
-    { title: 'Pending Services', value: '28', icon: <Clock size={20} />, change: '-3%', color: 'bg-orange-100 text-orange-600' },
-    { title: 'Completed Today', value: '16', icon: <Wrench size={20} />, change: '+5%', color: 'bg-green-100 text-green-600' },
-    { title: 'Revenue (Month)', value: '$14,385', icon: <DollarSign size={20} />, change: '+18%', color: 'bg-purple-100 text-purple-600' },
+    { 
+      title: 'Total Appointments', 
+      value: '124', 
+      icon: <Calendar size={20} />, 
+      change: '+12%', 
+      color: 'text-blue-600', 
+      bgColor: 'bg-blue-100'
+    },
+    { 
+      title: 'Pending Services', 
+      value: '28', 
+      icon: <Clock size={20} />, 
+      change: '-3%', 
+      color: 'text-orange-600', 
+      bgColor: 'bg-orange-100'
+    },
+    { 
+      title: 'Completed Today', 
+      value: '16', 
+      icon: <Wrench size={20} />, 
+      change: '+5%', 
+      color: 'text-green-600', 
+      bgColor: 'bg-green-100'
+    },
+    { 
+      title: 'Revenue (Month)', 
+      value: '$14,385', 
+      icon: <DollarSign size={20} />, 
+      change: '+18%', 
+      color: 'text-purple-600', 
+      bgColor: 'bg-purple-100'
+    },
   ];
   
   const recentAppointments: Appointment[] = [
@@ -102,46 +177,93 @@ const AdminDashboard: React.FC = () => {
     { service: 'Other', count: 9 },
   ];
   
-  // Status color mapping
-  const getStatusColor = (status: Appointment['status']): string => {
+  // Status badge variants
+  const getStatusBadgeVariant = (status: Appointment['status']): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
     switch(status) {
-      case 'Completed': return 'bg-green-100 text-green-600';
-      case 'In Progress': return 'bg-blue-100 text-blue-600';
-      case 'Scheduled': return 'bg-gray-100 text-gray-600';
-      case 'Waiting': return 'bg-orange-100 text-orange-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'Completed': return "success";
+      case 'In Progress': return "default";
+      case 'Scheduled': return "secondary";
+      case 'Waiting': return "warning";
+      default: return "outline";
     }
   };
 
+  // Custom Badge component with shadcn styling but custom colors
+  const StatusBadge = ({ status }: { status: Appointment['status'] }) => {
+    let className = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ";
+    
+    switch(status) {
+      case 'Completed':
+        className += "bg-green-100 text-green-800";
+        break;
+      case 'In Progress':
+        className += "bg-blue-100 text-blue-800";
+        break;
+      case 'Scheduled':
+        className += "bg-slate-100 text-slate-800";
+        break;
+      case 'Waiting':
+        className += "bg-amber-100 text-amber-800";
+        break;
+      default:
+        className += "bg-gray-100 text-gray-800";
+    }
+    
+    return <span className={className}>{status}</span>;
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50">
-     <DashboardSidebar/>
+    <div className="flex h-screen bg-slate-50">
+     
       
       {/* Main content */}
-      <div className={`flex-1 md:ml-64 transition-all duration-200 ease-in-out`}>
+      <div className="flex-1 md:ml-64 transition-all duration-200 ease-in-out overflow-y-auto">
         {/* Top header */}
-        <header className="bg-white shadow-sm">
+        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
           <div className="flex items-center justify-between px-4 py-4 md:px-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Dashboard Overview</h2>
-              <p className="text-sm text-gray-500">Welcome back, Admin</p>
+              <h2 className="text-xl font-bold text-slate-800">Dashboard Overview</h2>
+              <p className="text-sm text-slate-500">Welcome back, Admin</p>
             </div>
             
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 bg-gray-100 rounded-full hover:text-gray-500 focus:outline-none">
-                <Bell size={20} />
-              </button>
-              <div className="flex items-center">
-                <img 
-                  className="w-8 h-8 rounded-full" 
-                  src="/api/placeholder/32/32" 
-                  alt="Admin profile" 
-                />
-                <button className="ml-2 flex items-center text-sm text-gray-700 focus:outline-none">
-                  <span className="hidden md:block">Admin User</span>
-                  <ChevronDown size={16} className="ml-1" />
-                </button>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" className="rounded-full">
+                      <Bell size={18} className="text-slate-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Notifications</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/api/placeholder/32/32" alt="Admin" />
+                      <AvatarFallback>AD</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:block text-sm font-medium">Admin User</span>
+                    <ChevronDown size={16} className="text-slate-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
@@ -151,197 +273,272 @@ const AdminDashboard: React.FC = () => {
           {/* Stats cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {stats.map((stat, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                    <p className="text-2xl font-semibold text-gray-800 mt-1">{stat.value}</p>
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">{stat.title}</p>
+                      <p className="text-2xl font-semibold text-slate-800 mt-1">{stat.value}</p>
+                    </div>
+                    <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                      <div className={stat.color}>{stat.icon}</div>
+                    </div>
                   </div>
-                  <div className={`p-3 rounded-full ${stat.color}`}>
-                    {stat.icon}
+                  <div className="mt-4">
+                    <span className={`text-xs font-medium ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                      {stat.change}
+                    </span>
+                    <span className="text-xs text-slate-500 ml-1">from last week</span>
                   </div>
-                </div>
-                <div className="mt-2">
-                  <span className={`text-xs font-medium ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-xs text-gray-500 ml-1">from last week</span>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-
-
           
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-  <h3 className="text-lg font-medium text-gray-800 mb-4">Recent Users</h3>
-  <ul className="divide-y divide-gray-100">
-    {users.map((user) => (
-       
-
-      <li key={user._id} className="py-2">
-        <p className="text-sm font-semibold text-gray-700">{user.name}</p>
-        <p className="text-xs text-gray-500">{user.email}</p>
-        <button
-      onClick={() =>toggleListing(user.email)}
-      className={`px-4 py-2 rounded text-white font-medium transition duration-200
-        ${user.isListed ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
-    >
-      {user.isListed ? 'Block' : 'Unblock'}
-    </button>
-      </li>
-    ))}
-  </ul>
-</div>
-          
-          {/* Main content grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Appointments list */}
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-800">Today's Appointments</h3>
-                  <button className="text-sm text-blue-600 hover:text-blue-800">View All</button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentAppointments.map((appointment,index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{appointment.id}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{appointment.customer}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{appointment.vehicle}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{appointment.service}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{appointment.time}</td>
-                        <td className="px-4 py-3 text-sm">
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(appointment.status)}`}>
-                            {appointment.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="p-4 border-t border-gray-100 text-center">
-                <button className="text-sm text-blue-600 hover:text-blue-800">Load more</button>
-              </div>
-            </div>
+          {/* Tabs for main dashboard sections */}
+          <Tabs defaultValue="appointments" className="mb-6">
+            <TabsList className="mb-4">
+              <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
             
-            {/* Right column */}
-            <div className="space-y-6">
-              {/* Upcoming services */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-medium text-gray-800">Upcoming Services</h3>
+            <TabsContent value="appointments" className="space-y-6">
+              {/* Main content grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Appointments table */}
+                <Card className="lg:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <div>
+                      <CardTitle>Today's Appointments</CardTitle>
+                      <CardDescription>Manage your scheduled services</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      View All
+                      <ChevronRight size={16} className="ml-1" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Vehicle</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentAppointments.map((appointment, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{appointment.id}</TableCell>
+                            <TableCell>{appointment.customer}</TableCell>
+                            <TableCell>{appointment.vehicle}</TableCell>
+                            <TableCell>{appointment.service}</TableCell>
+                            <TableCell>{appointment.time}</TableCell>
+                            <TableCell>
+                              <StatusBadge status={appointment.status} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                  <CardFooter className="flex justify-center border-t pt-4">
+                    <Button variant="ghost" size="sm">Load more</Button>
+                  </CardFooter>
+                </Card>
+                
+                {/* Right column */}
+                <div className="space-y-6">
+                  {/* Upcoming services */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Upcoming Services</CardTitle>
+                      <CardDescription>Service distribution for this week</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {upcomingServices.map((item, index) => (
+                        <div key={index} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-700">{item.service}</span>
+                            <span className="text-sm font-medium text-slate-700">{item.count}</span>
+                          </div>
+                          <Progress value={(item.count / 12) * 100} className="h-2" />
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Quick actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Quick Actions</CardTitle>
+                      <CardDescription>Frequently used functions</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-3">
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                        New Appointment
+                      </Button>
+                      <Button className="w-full bg-green-600 hover:bg-green-700">
+                        Add Customer
+                      </Button>
+                      <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                        Create Invoice
+                      </Button>
+                      <Button className="w-full bg-amber-600 hover:bg-amber-700">
+                        Service Report
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Calendar preview */}
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle>Calendar</CardTitle>
+                      <Button variant="ghost" size="sm">
+                        Full View
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between mb-4">
+                        <Button variant="outline" size="icon">
+                          <ChevronLeft size={16} />
+                        </Button>
+                        <h4 className="text-sm font-medium text-slate-800">March 2025</h4>
+                        <Button variant="outline" size="icon">
+                          <ChevronRight size={16} />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day, i) => (
+                          <div key={i} className="text-xs font-medium text-slate-500 py-1">{day}</div>
+                        ))}
+                        
+                        {/* Sample calendar days */}
+                        {[...Array(31)].map((_, i) => {
+                          const day = i + 1;
+                          const isToday = day === 18; // Today is March 18
+                          const hasAppointments = [3, 7, 12, 18, 22, 25, 28].includes(day);
+                          
+                          return (
+                            <Button
+                              key={i}
+                              variant={isToday ? "default" : hasAppointments ? "outline" : "ghost"}
+                              className={`h-8 w-8 p-0 ${
+                                isToday 
+                                  ? 'bg-blue-600 hover:bg-blue-700' 
+                                  : hasAppointments 
+                                    ? 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100'
+                                    : ''
+                              }`}
+                            >
+                              {day}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="p-4">
-                  {upcomingServices.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between py-2">
-                      <span className="text-sm text-gray-600">{item.service}</span>
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium text-gray-800">{item.count}</span>
-                        <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${(item.count / 12) * 100}%` }} 
-                          ></div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="users">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Manage system users and permissions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex justify-center py-6">
+                      <div className="animate-pulse flex space-x-4">
+                        <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+                        <div className="flex-1 space-y-4 py-1">
+                          <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-slate-200 rounded"></div>
+                            <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Quick actions */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-medium text-gray-800">Quick Actions</h3>
-                </div>
-                <div className="p-4 grid grid-cols-2 gap-3">
-                  <button className="p-3 text-sm text-center text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-                    New Appointment
-                  </button>
-                  <button className="p-3 text-sm text-center text-green-600 bg-green-50 rounded-lg hover:bg-green-100">
-                    Add Customer
-                  </button>
-                  <button className="p-3 text-sm text-center text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100">
-                    Create Invoice
-                  </button>
-                  <button className="p-3 text-sm text-center text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100">
-                    Service Report
-                  </button>
-                </div>
-              </div>
-              
-              {/* Calendar preview */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-800">Calendar</h3>
-                    <button className="text-sm text-blue-600 hover:text-blue-800">Full View</button>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.map((user) => (
+                          <TableRow key={user._id}>
+                            <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{user.role}</Badge>
+                            </TableCell>
+                            <TableCell>
+                            <Badge variant={user.isListed ? "default" : "destructive"}>
+  {user.isListed ? "Active" : "Blocked"}
+</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button 
+                                variant={user.isListed ? "destructive" : "outline"}
+                                size="sm"
+                                onClick={() => toggleListing(user.email)}
+                              >
+                                {user.isListed ? "Block" : "Unblock"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="analytics">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Analytics Dashboard</CardTitle>
+                  <CardDescription>Track performance metrics and insights</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center p-16">
+                  <div className="text-center">
+                    <BarChart className="mx-auto h-16 w-16 text-slate-400" />
+                    <h3 className="mt-4 text-lg font-medium">Analytics Module</h3>
+                    <p className="mt-2 text-sm text-slate-500">Analytics features coming soon</p>
                   </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <button className="p-1 rounded-full hover:bg-gray-100">
-                      <ChevronDown className="transform rotate-90" size={20} />
-                    </button>
-                    <h4 className="text-sm font-medium text-gray-800">March 2025</h4>
-                    <button className="p-1 rounded-full hover:bg-gray-100">
-                      <ChevronDown className="transform -rotate-90" size={20} />
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-1 text-center">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day, i) => (
-                      <div key={i} className="text-xs font-medium text-gray-500 py-1">{day}</div>
-                    ))}
-                    
-                    {/* Sample calendar days */}
-                    {[...Array(31)].map((_, i) => {
-                      const day = i + 1;
-                      const isToday = day === 18; // Today is March 18
-                      const hasAppointments = [3, 7, 12, 18, 22, 25, 28].includes(day);
-                      
-                      return (
-                        <div 
-                          key={i} 
-                          className={`text-xs p-2 rounded-full ${
-                            isToday 
-                              ? 'bg-blue-600 text-white' 
-                              : hasAppointments 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'hover:bg-gray-100'
-                          }`}
-                        >
-                          {day}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          <Separator className="my-6" />
+          
+          <div className="mb-6">
+            <Alert>
+              <DollarSign className="h-4 w-4" />
+              <AlertTitle>Monthly Revenue Update</AlertTitle>
+              <AlertDescription>
+                Revenue has increased by 18% compared to last month. View the detailed finance report.
+              </AlertDescription>
+            </Alert>
           </div>
-
-
         </main>
       </div>
-
     </div>
   );
 };

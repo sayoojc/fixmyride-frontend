@@ -1,6 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
+
+
+import createUserApi from '@/services/userApi';
+import { axiosPrivate } from '@/api/axios';
+const userApi = createUserApi(axiosPrivate);
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +15,43 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { PlusCircle, Pencil, Trash2, Check } from "lucide-react";
+import AddAddressModal from '@/components/user/AddAddressModal';
+import AddVehicleModal from '@/components/user/AddVehicleModal';
 
 
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store'; 
+type User = {
+  name:string,
+  id:string,
+  email:string,
+  phone:string,
+  role:string,
+  isListed:boolean
+}
+
 
 export const CustomerProfile = () => {
     
-  const user = useSelector((state: RootState) => state.auth.user);
+
+  const [user,setUser] = useState<User | null>(null);
+  const [addAddressModalOpen,setAddAddressModalOpen] = useState<boolean>(false);
+  const [addVehicleModalOpen,setAddVehicleModalOpen] = useState<boolean>(false);
+ 
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+          const response = await userApi.getProfileDataApi(); 
+          console.log('response from the fetch user',response);
+          setUser(response.user);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+  
+    fetchUserDetails();
+  }, []);
   
   const [userDetails, setUserDetails] = useState({
     name: 'John Doe',
@@ -87,7 +122,7 @@ export const CustomerProfile = () => {
                   <div className="flex items-center gap-2">
                     <Input 
                       id="name"
-                      value={user.name ?? ""}
+                      value={user?.name}
                       className="bg-gray-50"
                       readOnly
                     />
@@ -103,7 +138,7 @@ export const CustomerProfile = () => {
                     <Input 
                       id="email"
                       type="email"
-                      value={userDetails.email}
+                      value={user?.email}
                       className="bg-gray-50"
                       readOnly
                     />
@@ -118,7 +153,7 @@ export const CustomerProfile = () => {
                   <div className="flex items-center gap-2">
                     <Input 
                       id="phone"
-                      value={userDetails.phone}
+                      value={user?.phone}
                       className="bg-gray-50"
                       readOnly
                     />
@@ -150,10 +185,16 @@ export const CustomerProfile = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Saved Addresses</h3>
-                  <Button className="bg-red-500 hover:bg-red-600 text-white">
-                    <PlusCircle className="h-4 w-4 mr-2" /> ADD NEW ADDRESS
-                  </Button>
-                </div>
+                      {/* add address modal */}
+                      <Button onClick={() => setAddAddressModalOpen(true)}>
+      <PlusCircle className="h-4 w-4 mr-2" /> ADD NEW ADDRESS
+    </Button>
+
+    <AddAddressModal 
+      open={addAddressModalOpen}
+      onOpenChange={setAddAddressModalOpen}
+    />
+                    </div>
                 
                 {userDetails.addresses.map((address) => (
                   <Card key={address.id} className="mb-3">
@@ -193,9 +234,12 @@ export const CustomerProfile = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">My Vehicles</h3>
-                  <Button className="bg-red-500 hover:bg-red-600 text-white">
-                    <PlusCircle className="h-4 w-4 mr-2" /> ADD NEW VEHICLE
-                  </Button>
+                {/* add vehicle modal */}
+                <Button onClick={() => setAddVehicleModalOpen(true)}>
+      <PlusCircle className="h-4 w-4 mr-2" /> ADD NEW VEHICLE
+    </Button>
+<AddVehicleModal open={addVehicleModalOpen} onOpenChange={setAddVehicleModalOpen} />
+
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -285,6 +329,10 @@ export const CustomerProfile = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+
+
+
     </div>
   );
 };

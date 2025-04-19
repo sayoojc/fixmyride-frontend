@@ -1,5 +1,4 @@
 import axios from "axios";
-import { request } from "http";
 
 
 export const axiosPrivate = axios.create({
