@@ -38,6 +38,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
         brandId,
         newStatus
       })
+      return response
     } catch (error) {
       
     }
@@ -48,7 +49,8 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
         brandId,
         modelId,
         newStatus
-      })
+      });
+      return response;
     } catch (error) {
       
     }
@@ -65,6 +67,37 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
       return response
     } catch (error) {
       
+    }
+  },
+  updateModelApi: async(id:string, 
+    name:string, 
+    imageUrl:string) => {
+    try {
+      const response = await axiosPrivate.patch("/api/admin/update-model",{
+      id,
+      name,
+      imageUrl,
+      })
+      return response
+    } catch (error) {
+      
+    }
+  },
+  getUsersApi:async () => {
+    try {
+      const response = await axiosPrivate.get("/api/admin/get-users");
+      return response;
+    } catch (error) {
+       console.error('fetching data failed',error);
+       throw error;
+    }
+  },
+  toggleListing:async (email:string) => {
+    try {
+      const response = await axiosPrivate.patch("/api/admin/toggle-user-listing",{email});
+      return response;
+    } catch (error) {
+       console.error('Toggling the status failed');
     }
   }
 

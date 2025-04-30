@@ -17,18 +17,13 @@ import { Switch } from "@/components/ui/switch";
 import { PlusCircle, Pencil, Trash2, Check } from "lucide-react";
 import AddAddressModal from '@/components/user/AddAddressModal';
 import AddVehicleModal from '@/components/user/AddVehicleModal';
+import EditAddressModal from '@/components/user/EditAddressModal';
 
+import { toast } from 'react-toastify';
 
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store'; 
-type User = {
-  name:string,
-  id:string,
-  email:string,
-  phone:string,
-  role:string,
-  isListed:boolean
-}
+// import { useSelector } from 'react-redux';
+// import { RootState } from '../../../redux/store'; 
+import {User,Address}  from '../../../types/user'
 
 
 export const CustomerProfile = () => {
@@ -37,6 +32,8 @@ export const CustomerProfile = () => {
   const [user,setUser] = useState<User | null>(null);
   const [addAddressModalOpen,setAddAddressModalOpen] = useState<boolean>(false);
   const [addVehicleModalOpen,setAddVehicleModalOpen] = useState<boolean>(false);
+  const [editAddressModalOpen,setEditAddressModalOpen] = useState<boolean>(false);
+  const [editingAddress,setEditingAddress] = useState<Address|null>(null);
  
 
   useEffect(() => {
@@ -52,7 +49,76 @@ export const CustomerProfile = () => {
   
     fetchUserDetails();
   }, []);
+
+  const handleSetDefaultAddress = async (addressId: string,userId:string) => {
+    try {
+      const response = await axiosPrivate.patch("/api/user/set-default-address", {
+        addressId,
+        userId
+      });
   
+      if (response.status === 200) {
+        toast.success("Default address updated successfully!");
+  
+        setUser(prevUser => {
+          if (!prevUser) return prevUser;
+  
+          // Update the isDefault property of all addresses
+          const updatedAddresses = prevUser.addresses.map(address => ({
+            ...address,
+            isDefault: address._id === addressId
+          }));
+  
+          return {
+            ...prevUser,
+            addresses: updatedAddresses,
+            defaultAddress: addressId
+          };
+        });
+      } else {
+        toast.error("Failed to update default address.");
+      }
+    } catch (error) {
+      console.error("Error setting default address:", error);
+      toast.error("Something went wrong while setting default address.");
+    }
+  };
+   
+
+  const handleDeleteAddress = async (addressId: string, userId: string) => {
+    try {
+      const response = await userApi.deleteAddress(addressId,userId);
+  
+      if (response?.status === 200) {
+        toast.success("Address deleted successfully!");
+  
+        setUser((prevUser) => {
+          if (!prevUser) return prevUser;
+        
+          const updatedAddresses = prevUser.addresses.filter(addr => addr._id !== addressId);
+        
+          const isDeletedDefault = prevUser.defaultAddress === addressId;
+        
+          return {
+            ...prevUser,
+            addresses: updatedAddresses,
+            defaultAddress: isDeletedDefault
+              ? updatedAddresses[0]?._id || "" // ✅ always return a string
+              : prevUser.defaultAddress
+          };
+        });
+      } else {
+        toast.error("Failed to delete address.");
+      }
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      toast.error("Something went wrong while deleting address.");
+    }
+  };
+  
+  
+  
+
   const [userDetails, setUserDetails] = useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
@@ -168,7 +234,7 @@ export const CustomerProfile = () => {
                   <div className="flex items-center gap-2">
                     <Input 
                       id="default-address"
-                      value={userDetails.defaultAddress}
+                      value={user?.defaultAddress}
                       className="bg-gray-50"
                       readOnly
                     />
@@ -193,31 +259,42 @@ export const CustomerProfile = () => {
     <AddAddressModal 
       open={addAddressModalOpen}
       onOpenChange={setAddAddressModalOpen}
+      userId= {user?.id}
+      setUser = {setUser}
     />
+    
                     </div>
                 
-                {userDetails.addresses.map((address) => (
-                  <Card key={address.id} className="mb-3">
+                {user?.addresses.map((address) => (
+                  <Card key={address._id} className="mb-3">
                     <CardContent className="p-4">
                       <div className="flex justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{address.type}</span>
+                            <span className="font-medium">{address.addressType}</span>
                             {address.isDefault && (
                               <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-100">Default</Badge>
                             )}
                           </div>
-                          <p className="text-gray-600">{address.address}</p>
+                          <p className="text-gray-600">{address.addressLine1+address.addressLine2+address.city+address.state}</p>
                         </div>
                         <div className="flex flex-col space-y-2">
-                          <Button variant="ghost" className="h-8 text-red-500 justify-start px-2">
+                          <Button variant="ghost" className="h-8 text-red-500 justify-start px-2" 
+                          onClick={() =>{
+                            setEditAddressModalOpen(true)
+                            setEditingAddress(address)
+                          }
+                          }>
                             <Pencil className="h-4 w-4 mr-2" /> EDIT
                           </Button>
-                          <Button variant="ghost" className="h-8 text-gray-500 justify-start px-2">
+                        
+                          <Button variant="ghost" className="h-8 text-gray-500 justify-start px-2" 
+                          onClick={() => {address._id && user.id ?handleDeleteAddress(address._id,user.id): null}}
+                          >
                             <Trash2 className="h-4 w-4 mr-2" /> DELETE
                           </Button>
                           {!address.isDefault && (
-                            <Button variant="ghost" className="h-8 text-blue-500 justify-start px-2">
+                            <Button variant="ghost" className="h-8 text-blue-500 justify-start px-2" onClick={() => {address._id && user.id ?handleSetDefaultAddress(address._id,user.id): null}}>
                               <Check className="h-4 w-4 mr-2" /> SET AS DEFAULT
                             </Button>
                           )}
@@ -226,6 +303,13 @@ export const CustomerProfile = () => {
                     </CardContent>
                   </Card>
                 ))}
+                  <EditAddressModal 
+                          open = {editAddressModalOpen}
+                          onOpenChange={() =>setEditAddressModalOpen((prev) => !prev)}
+                          userId= {user?.id}
+                          address={editingAddress}
+                          setUser={setUser}
+                          />
               </div>
             </TabsContent>
             

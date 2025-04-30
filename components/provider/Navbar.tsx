@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent } from "react";
 import { axiosPrivate } from "@/api/axios";
 import createAuthApi from "@/services/authApi";
 import { AxiosError } from "axios";
+import {toast} from 'react-toastify'
 
 const authApi = createAuthApi(axiosPrivate);
 export default function Navbar() {
@@ -13,6 +13,7 @@ export default function Navbar() {
   
     try {
         await authApi.ProviderLogoutApi();
+        toast.success('Logout successfull');
         router.push('/provider')
     } catch (error) {
        const err = error as AxiosError<{ message?: string }>;
@@ -27,12 +28,12 @@ export default function Navbar() {
         <h1 className="text-2xl font-bold">Car Service Center</h1>
 
         <div className="space-x-4">
-          <button onClick={() => router.push("/")} className="hover:underline">
+          <button onClick={() => router.push("/provider/dashboard")} className="hover:underline">
             Dashboard
           </button>
-          <button onClick={() => router.push("/profile")} className="hover:underline">
+          <button onClick={() => router.push("/provider/profile")} className="hover:underline">
             Profile
-          </button>
+          </button> 
           <button 
             onClick={handleLogout}
             className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-500 hover:text-white"

@@ -1,21 +1,31 @@
 import { AxiosInstance } from "axios";
-
+interface SignupFormData {
+  name: string;
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    pinCode: string;
+  };
+}
 
 const createAuthApi = (axiosPrivate:AxiosInstance) => ({
 
   loginApi: async(email:string,password:string) => {
-  const response = await axiosPrivate.post("/api/auth/login",{
+  const response = await axiosPrivate.post("/api/user/login",{
     email,
     password,
   })
   return response.data
   },
-  googleAuthApi: async() => {
-    const response = await axiosPrivate.get("/api/auth/google");
-    return response.data;
-  },
+  // googleAuthApi: async() => {
+  //   const response = await axiosPrivate.get("/api/user/google");
+  //   return response.data;
+  // },
   registerTempApi: async (name:string,email:string,phone:string,password:string) => {
-    const response = await axiosPrivate.post("/api/auth/register-temp",{
+    const response = await axiosPrivate.post("/api/user/register-temp",{
         name,
         email,
         phone,
@@ -24,7 +34,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
     return response.data
   },
   registerApi: async (otpValue:string,email:string,phone:string) => {
-    const response = await axiosPrivate.post("/api/auth/signup",{
+    const response = await axiosPrivate.post("/api/user/signup",{
         otpValue,
         email,
         phone
@@ -34,35 +44,40 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
   //forgot password
 
   forgotPasswordApi: async (email:string) => {
-    const response = await axiosPrivate.post("/api/auth/forgotPassword",{
+    const response = await axiosPrivate.post("/api/user/forgotPassword",{
         email,
     })
     return response.data
   },
   resetPasswordApi: async(email:string,otp:string,newPassword:string) => {
-    const response =  await axiosPrivate.post("/api/auth/resetPassword",{
+    const response =  await axiosPrivate.post("/api/user/resetPassword",{
       email,
       otp,
       newPassword
     })
   },
   adminLoginApi: async(email:string,password:string) => {
-    const response = await axiosPrivate.post("/api/auth/adminlogin",{
+    const response = await axiosPrivate.post("/api/admin/adminlogin",{
       email,
       password,
     })
     return response.data
     },
     providerLoginApi: async(email:string,password:string) => {
-      const response = await axiosPrivate.post("/api/auth/providerlogin",{
-        email,
-        password,
-      })
-      return response.data
+      try {
+        const response = await axiosPrivate.post("/api/provider/provider-login",{
+          email,
+          password,
+        })
+        return response.data
+      } catch (error) {
+        throw error
+      }
+    
       },
       logoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/auth/logout");
+          const response = await axiosPrivate.post("/api/user/logout");
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
@@ -71,7 +86,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       },
     ProviderLogoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/auth/logout");
+          const response = await axiosPrivate.post("/api/provider/providerlogout");
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
@@ -80,30 +95,33 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       },
       adminLogoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/auth/logout");
+          const response = await axiosPrivate.post("/api/admin/logout");
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
           throw error;
         }
       },
-      getUsersApi:async () => {
+      //provider register
+      providerRegisterTempApi: async (data:SignupFormData) => {
         try {
-          const response = await axiosPrivate.get("/api/admin/getData");
-          return response;
+          console.log('provider register temp api')
+          const response = await axiosPrivate.post("/api/provider/provider-register-temp",data)
+          return response.data
         } catch (error) {
-           console.error('fetching data failed',error);
-           throw error;
+          console.error('Provider registration failed');
+
         }
+
       },
-      toggleListing:async (email:string) => {
-        try {
-          const response = await axiosPrivate.patch("/api/admin/toggleListing",{email});
-          return response;
-        } catch (error) {
-           console.error('Toggling the status failed');
-        }
-      }
+      providerRegisterApi: async (otp:string,email:string,phone:string) => {
+        const response = await axiosPrivate.post("/api/provider/provider-register",{
+            otp,
+            email,
+            phone
+        })
+        return response.data
+      },
 });
 
 export default createAuthApi;

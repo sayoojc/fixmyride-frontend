@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, BarChart, ChevronDown, Settings, Users, Wrench, Clock, Car, DollarSign, Bell, Menu, X, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
 import createAuthApi from '@/services/authApi';
 import { axiosPrivate } from '@/api/axios';
+import createAdminApi from '@/services/adminApi';
 import DashboardSidebar from '../../../components/admin/DashboardSidebar';
 
 // Import shadcn components
@@ -53,6 +54,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const authApi = createAuthApi(axiosPrivate);
+const adminApi = createAdminApi(axiosPrivate);
 
 // Define TypeScript interfaces
 interface StatItem {
@@ -93,7 +95,7 @@ const AdminDashboard: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await authApi.getUsersApi();
+      const response = await adminApi.getUsersApi();
       setUsers(response.data.users);
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -104,7 +106,7 @@ const AdminDashboard: React.FC = () => {
 
   const toggleListing = async (email: string) => {
     try {
-      const response = await authApi.toggleListing(email);
+      const response = await adminApi.toggleListing(email);
       const updatedUser = response?.data.user;
       
       setUsers((prevUsers) =>

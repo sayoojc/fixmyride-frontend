@@ -5,6 +5,7 @@ import Link from 'next/link';
 import createAuthApi from '@/services/authApi';
 import { axiosPrivate } from '@/api/axios';
 import { useRouter } from 'next/navigation';
+import {toast} from 'react-toastify'
 
 
 const authApi = createAuthApi(axiosPrivate);
@@ -16,7 +17,7 @@ export const Header = () => {
     try {
         await authApi.logoutApi();
         router.push('/');
-        alert('loggedout successfully');
+        toast.success('loggedout successfully');
     } catch (error) {
         console.error('logout failed',error);
     }

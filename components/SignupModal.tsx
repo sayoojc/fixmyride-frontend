@@ -1,13 +1,25 @@
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import GoogleSignUpButton from './GoogleSignUpButton'
 import { useRouter } from "next/navigation";
-
-
-import { useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { login } from '@/redux/features/authSlice';
 import { AppDispatch } from '@/redux/store';
+import { z } from 'zod'
+import { Spinner } from "@nextui-org/react"; 
+import {toast} from 'react-toastify'
 
-
+const signupSchema = z
+  .object({
+    fullName: z.string().min(2, "Full name must be at least 2 characters").max(50, "Full name must be less than 50 characters"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().regex(/^\+?[\d\s-]{10,}$/, "Invalid phone number"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 interface SignupModalProps {
   showSignupModal: boolean;
@@ -34,7 +46,8 @@ const SignupModal: React.FC<SignupModalProps> = ({
   handleSignupSubmit,
 }) => {
   const [animateIn, setAnimateIn] = useState(false);
-
+  const [errors, setErrors] = useState<Record<string, string>>({}); // State for validation errors
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter(); 
 
@@ -56,20 +69,16 @@ const SignupModal: React.FC<SignupModalProps> = ({
   // Handle Google signup
   const handleGoogleSignup = () => {
     const receiveMessage = (event: MessageEvent) => {
-      console.log("Received message eventss:", event); 
-      console.log('The origin of the event',event.origin);
-      console.log('The window.location.origin',window.location.origin);
-      if (event.origin !== process.env.NEXT_PUBLIC_BACKEND_URL) return;
+      if (event.origin !== process.env.NEXT_PUBLIC_CLIENT_URL) return;
        
-      const data = event.data;
-      console.log("data", data);
+      // const data = event.data;
   
-       dispatch(login({
-            id:data.id,
-            name:data.name,
-            role:data.role,
-            email:data.email,
-          }))
+      //  dispatch(login({
+      //       id:data.id,
+      //       name:data.name,
+      //       role:data.role,
+      //       email:data.email,
+      //     }))
      
           router.push("/user");
       window.removeEventListener("message", receiveMessage);
@@ -77,17 +86,41 @@ const SignupModal: React.FC<SignupModalProps> = ({
   
     window.addEventListener("message", receiveMessage);
     window.open(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/google?state=user`,
       "_blank",
       "width=500,height=600"
     );
   };
-  
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    
+    // Validate signupData with Zod
+    const validation = signupSchema.safeParse(signupData);
+
+    if (!validation.success) {
+      // Extract errors and map them to field names
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        fieldErrors[field] = err.message;
+      });
+      setErrors(fieldErrors);
+      setIsLoading(false);
+      return;
+    }
+
+    // Clear errors if validation passes
+    setErrors({});
+    setIsLoading(true); // Start loader
+
+    // Call the original handleSignupSubmit
+    handleSignupSubmit(event);
+  };
   if (!showSignupModal) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div 
+      <div
         className={`bg-gray-900 rounded-lg p-6 max-w-sm w-full mx-4 border border-gray-700 transform transition-transform duration-300 ease-out ${
           animateIn ? "translate-y-0" : "translate-y-full"
         }`}
@@ -98,50 +131,96 @@ const SignupModal: React.FC<SignupModalProps> = ({
             ✕
           </button>
         </div>
-        
+
         <GoogleSignUpButton onClick={handleGoogleSignup} />
-        
+
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-700"></div>
           <span className="px-3 text-sm text-gray-400">or</span>
           <div className="flex-grow border-t border-gray-700"></div>
         </div>
-        
-        <form onSubmit={handleSignupSubmit} className="space-y-3">
+
+        <form onSubmit={onSubmit} noValidate className="space-y-3">
           <div>
             <label className="block text-gray-300 text-sm mb-1">Full Name</label>
-            <input type="text" name="fullName" onChange={handleSignupInputChange} className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white" required />
+            <input
+              type="text"
+              name="fullName"
+              value={signupData.fullName}
+              onChange={handleSignupInputChange}
+              className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white"
+            />
+            {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
           </div>
           <div>
             <label className="block text-gray-300 text-sm mb-1">Email</label>
-            <input type="email" name="email" onChange={handleSignupInputChange} className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white" required />
+            <input
+              type="email"
+              name="email"
+              value={signupData.email}
+              onChange={handleSignupInputChange}
+              className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
           <div>
             <label className="block text-gray-300 text-sm mb-1">Phone</label>
-            <input type="phone" name="phone" onChange={handleSignupInputChange} className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white" required />
+            <input
+              type="phone"
+              name="phone"
+              value={signupData.phone}
+              onChange={handleSignupInputChange}
+              className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white"
+            />
+            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
           <div>
             <label className="block text-gray-300 text-sm mb-1">Password</label>
-            <input type="password" name="password" onChange={handleSignupInputChange} className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white" required />
+            <input
+              type="password"
+              name="password"
+              value={signupData.password}
+              onChange={handleSignupInputChange}
+              className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
           </div>
           <div>
             <label className="block text-gray-300 text-sm mb-1">Confirm Password</label>
-            <input type="password" name="confirmPassword" onChange={handleSignupInputChange} className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white" required />
+            <input
+              type="password"
+              name="confirmPassword"
+              value={signupData.confirmPassword}
+              onChange={handleSignupInputChange}
+              className="w-full p-2 text-sm border border-gray-700 rounded bg-gray-800 text-white"
+            />
+            {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
           </div>
-          <div className="flex items-center">
-            <input type="checkbox" name="agreeTerms" onChange={handleSignupInputChange} className="mr-2" required />
-            <label className="text-gray-300 text-sm">I agree to the <a href="#" className="text-[#E73C33]">Terms & Conditions</a></label>
-          </div>
-          <button type="submit" className="w-full bg-[#E73C33] text-white py-2 rounded font-semibold hover:bg-opacity-80 transition text-sm">
-            Sign Up
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-[#E73C33] text-white py-2 rounded font-semibold hover:bg-opacity-80 transition text-sm flex items-center justify-center"
+          >
+            {isLoading ? (
+              <>
+                <Spinner color="white" size="sm" className="mr-2" />
+                Processing...
+              </>
+            ) : (
+              "Sign Up"
+            )}
           </button>
           <div className="text-center text-gray-400 text-sm">
             <p>
               Already have an account?{" "}
-              <button type="button" className="text-[#E73C33] hover:text-opacity-80" onClick={() => {
-                setShowSignupModal(false);
-                setShowLoginModal(true);
-              }}>
+              <button
+                type="button"
+                className="text-[#E73C33] hover:text-opacity-80"
+                onClick={() => {
+                  setShowSignupModal(false);
+                  setShowLoginModal(true);
+                }}
+              >
                 Login
               </button>
             </p>

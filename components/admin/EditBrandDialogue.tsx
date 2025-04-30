@@ -46,8 +46,14 @@ const EditBrandDialog: React.FC<EditBrandDialogProps> = ({
   });
   const [editBrandImagePreview,setEditBrandImagePreview] = useState<string|null>(editingBrand?.imageUrl ?? null);
   useEffect(() => {
-    setEditBrandImagePreview(editingBrand?.imageUrl ?? null);
-  }, [editingBrand]);
+    if (editingBrand) {
+      editBrandForm.reset({
+        name: editingBrand.brandName,
+        image: undefined, // or null, based on how you handle it
+      });
+      setEditBrandImagePreview(editingBrand.imageUrl ?? null);
+    }
+  }, [editingBrand, editBrandForm]);
   return (
     <Dialog open={isEditBrandDialogOpen} onOpenChange={setIsEditBrandDialogOpen}>
       <DialogContent className="sm:max-w-[600px]">
@@ -69,7 +75,7 @@ const EditBrandDialog: React.FC<EditBrandDialogProps> = ({
                 <FormItem>
                   <FormLabel htmlFor="edit-name">Brand Name</FormLabel>
                   <FormControl>
-                    <Input id="edit-name" {...field} />
+                    <Input id="edit-name" {...field}  />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

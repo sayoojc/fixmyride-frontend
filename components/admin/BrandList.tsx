@@ -46,6 +46,8 @@ interface BrandListProps {
   getStatusBadge: (status: 'active' | 'blocked') => React.ReactNode;
   setIsEditBrandDialogOpen:(status:boolean) => void;
   setEditingBrand:(brand:Brand) => void;
+  setEditingModel:(model:Model) => void;
+  setIsEditModelDialogOpen:(status:boolean) => void;
 }
 
 const BrandList: React.FC<BrandListProps> = ({
@@ -59,7 +61,9 @@ const BrandList: React.FC<BrandListProps> = ({
   toggleModelStatus,
   getStatusBadge,
   setIsEditBrandDialogOpen,
-  setEditingBrand
+  setEditingBrand,
+  setEditingModel,
+  setIsEditModelDialogOpen,
 }) => {
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
 
@@ -164,9 +168,22 @@ const BrandList: React.FC<BrandListProps> = ({
                                   </TableCell>
                                   <TableCell>{getStatusBadge(model.status)}</TableCell>
                                   <TableCell>
-                                    <Button onClick={() => toggleModelStatus(brand._id, model._id, 'active')}>
-                                      Set Active
-                                    </Button>
+                                  <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost">More</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => toggleModelStatus(brand._id,model._id,model.status === 'active' ? 'blocked' : 'active')}>
+                            {model.status === 'active' ? 'Block Model' : 'Unblock Model'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() =>{
+                            setEditingModel(model)
+                            setIsEditModelDialogOpen(true) }}>
+                            Edit Model
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                                   </TableCell>
                                 </TableRow>
                               ))

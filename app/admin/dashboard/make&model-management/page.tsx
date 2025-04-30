@@ -78,6 +78,16 @@ const BrandModelManagement: React.FC = () => {
   const [isEditBrandDialogOpen, setIsEditBrandDialogOpen] = useState<boolean>(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState<boolean>(false);
+  const [editingModel, setEditingModel] = useState<{ name: string; imageUrl: string,_id:string } | null>(null);
+
+  const editModelForm = useForm({
+    defaultValues: {
+      name: "",
+      image: null,
+    },
+  });
+
   const itemsPerPage = 10;
 
   // Initialize forms
@@ -189,11 +199,8 @@ const BrandModelManagement: React.FC = () => {
   const addBrand = async (brandData: z.infer<typeof brandSchema>) => {
 
     try {
-      console.log('The add brand front end function ');
      const imageUrl = await imageUploadApi.uploadBrandImageApi(brandData.image);
-        console.log('The image url ',imageUrl)
       const newBrand = await adminApi.AddBrandApi(brandData.name,imageUrl);
-      console.log('The new brand',newBrand);
       setBrands([...brands, newBrand]);
       setIsAddBrandDialogOpen(false);
       addBrandForm.reset();
@@ -244,39 +251,45 @@ const BrandModelManagement: React.FC = () => {
       if (!brand) return;
       const newStatus = brand.status === "active" ? "blocked" : "active";
       const response = await adminApi.updateBrandStatusApi(brandId, newStatus);
-
-      setBrands(brands.map(brand => 
-        brand._id === brandId 
-          ? { ...brand, status: newStatus } 
-          : brand
-      ));
+      console.log({response})
+      if (response && response.status === 200) {
+        setBrands(brands.map(brand =>
+          brand._id === brandId
+            ? { ...brand, status: newStatus }
+            : brand
+        ));
+      } else {
+        console.warn("Failed to update brand status.");
+      }
     } catch (error) {
       console.error(`Error toggling brand status:`, error);
     }
   };
 
-  const toggleModelStatus = async (brandId: string,modelId:string,status:string) => {
+  const toggleModelStatus = async (brandId: string, modelId: string, newStatus: "active" | "blocked") => {
     try {
-      // Find the brand to toggle
-      const brand = brands.find(b => b._id === brandId);
-      if (!brand) return;
-      
-      // Determine the new status
-      const newStatus = brand.status === "active" ? "blocked" : "active";
-      
-      // Call API to update status
-      const response = await adminApi.updateModelStatusApi(brandId,modelId,status);
-      
-      // Update state with new status
-      setBrands(brands.map(brand => 
-        brand._id === brandId 
-          ? { ...brand, status: newStatus } 
-          : brand
-      ));
+      const response = await adminApi.updateModelStatusApi(brandId, modelId, newStatus);
+      const updatedModel = response?.data.model;
+      if (!updatedModel) {
+        console.warn("Model status update failed or response malformed");
+        return;
+      }
+      setBrands(prevBrands =>
+        prevBrands.map(brand => {
+          if (brand._id !== brandId) return brand;
+  
+          const updatedModels = brand.models.map(model =>
+            model._id === modelId ? { ...model, status: updatedModel.status } : model
+          );
+  
+          return { ...brand, models: updatedModels };
+        })
+      );
     } catch (error) {
-      console.error(`Error toggling brand status:`, error);
+      console.error(`Error toggling model status:`, error);
     }
   };
+  
 
   const addModel = async(modelData: z.infer<typeof modelSchema>) => {
 
@@ -298,20 +311,58 @@ const BrandModelManagement: React.FC = () => {
     addModelForm.reset();
   };
 
-  const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState<boolean>(false);
-  const [editingModel, setEditingModel] = useState<{ name: string; imageUrl: string } | null>(null);
 
-  const editModelForm = useForm({
-    defaultValues: {
-      name: "",
-      image: null,
-    },
-  });
-
-  const updateModel = (data: { name: string; image: string | File }) => {
-    // Your update model logic
-    console.log('Model updated', data);
+  const updateModel = async (updatedModelData: z.infer<typeof modelSchema>) => {
+    console.log("updateModel function fired");
+    if (!editingModel) return;
+  
+    try {
+      console.log("Updated model data", updatedModelData);
+      let imageUrl = editingModel.imageUrl;
+  
+      // Upload image if a new one is selected
+      if (updatedModelData.image && updatedModelData.image.size > 0) {
+        imageUrl = await imageUploadApi.uploadBrandImageApi(updatedModelData.image);
+      }
+  
+      // API call to update model
+      const response = await adminApi.updateModelApi(
+        editingModel._id,
+        updatedModelData.name,
+        imageUrl
+      );
+  
+      const updatedModel = response?.data?.model;
+      if (!updatedModel) {
+        console.warn("Model update failed or response malformed");
+        return;
+      }
+  
+      // Update state
+      setBrands(prevBrands =>
+        prevBrands.map(brand => {
+          // Only update the brand that owns the model
+          const hasModel = brand.models.some(model => model._id === editingModel._id);
+          if (!hasModel) return brand;
+  
+          const updatedModels = brand.models.map(model =>
+            model._id === editingModel._id ? updatedModel : model
+          );
+  
+          return { ...brand, models: updatedModels };
+        })
+      );
+  
+      // Reset form and close dialog
+      setIsEditModelDialogOpen(false);
+      setEditingModel(null);
+      editModelForm.reset();
+    } catch (error) {
+      console.error("Error updating model:", error);
+    }
   };
+  
+  
 
   return (
 <div className="flex h-screen bg-slate-50">
@@ -334,6 +385,9 @@ const BrandModelManagement: React.FC = () => {
       getStatusBadge={getStatusBadge}
       setIsEditBrandDialogOpen = {setIsEditBrandDialogOpen}
       setEditingBrand = {setEditingBrand}
+      setEditingModel = {setEditingModel}
+      setIsEditModelDialogOpen = {setIsEditModelDialogOpen}
+      
     />
   </div>
 

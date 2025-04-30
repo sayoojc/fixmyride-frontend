@@ -1,36 +1,72 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from "@/components/ui/dialog";
-  import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-  import { useForm } from "react-hook-form";
+// Validation schema
+const modelSchema = z.object({
+  name: z.string().min(1, "Model name is required"),
+  image: z
+    .instanceof(File)
+    .refine((file) => file.size > 0, "Image file is required")
+    .optional()
+});
 
-
+type ModelFormType = z.infer<typeof modelSchema>;
 
 interface EditModelDialogProps {
   isEditModelDialogOpen: boolean;
   setIsEditModelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   editingModel: { name: string; imageUrl: string } | null;
-  editModelForm: any; // Replace with the actual type for your form
-  updateModel: (data: { name: string; image: string | File }) => void;
+  updateModel: (data: ModelFormType) => void;
 }
 
 const EditModelDialog: React.FC<EditModelDialogProps> = ({
   isEditModelDialogOpen,
   setIsEditModelDialogOpen,
   editingModel,
-  editModelForm,
   updateModel,
 }) => {
- 
+  const editModelForm = useForm<ModelFormType>({
+    resolver: zodResolver(modelSchema),
+    defaultValues: {
+      name: "",
+      image: undefined,
+    },
+  });
+
+  const [editModelImagePreview, setEditModelImagePreview] = useState<string | null>(
+    editingModel?.imageUrl ?? null
+  );
+
+  useEffect(() => {
+    if (editingModel) {
+      editModelForm.reset({
+        name: editingModel.name,
+        image: undefined,
+      });
+      setEditModelImagePreview(editingModel.imageUrl ?? null);
+    }
+  }, [editingModel, editModelForm]);
+
   return (
     <Dialog open={isEditModelDialogOpen} onOpenChange={setIsEditModelDialogOpen}>
       <DialogContent className="sm:max-w-[600px]">
@@ -42,14 +78,7 @@ const EditModelDialog: React.FC<EditModelDialogProps> = ({
         </DialogHeader>
         <Form {...editModelForm}>
           <form
-            onSubmit={editModelForm.handleSubmit(() => {
-              if (editingModel) {
-                updateModel({
-                  name: editingModel.name,
-                  image: editingModel.imageUrl,
-                });
-              }
-            })}
+            onSubmit={editModelForm.handleSubmit(updateModel)}
             className="grid gap-4 py-4"
           >
             <FormField
@@ -65,6 +94,7 @@ const EditModelDialog: React.FC<EditModelDialogProps> = ({
                 </FormItem>
               )}
             />
+
             <FormItem>
               <FormLabel htmlFor="edit-image">Model Image</FormLabel>
               <FormControl>
@@ -75,13 +105,23 @@ const EditModelDialog: React.FC<EditModelDialogProps> = ({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      editModelForm.setValue('image', file);
+                      editModelForm.setValue("image", file);
+                      setEditModelImagePreview(URL.createObjectURL(file));
                     }
                   }}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
+
+            {editModelImagePreview && (
+              <img
+                src={editModelImagePreview}
+                alt="Preview"
+                className="mt-2 h-20 w-20 rounded object-contain border"
+              />
+            )}
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditModelDialogOpen(false)}>
                 Cancel

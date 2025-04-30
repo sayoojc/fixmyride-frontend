@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,22 +16,45 @@ import { MapPin, Home, Briefcase, Map } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+
 const userApi = createUserApi(axiosPrivate);
-import {User,Address} from '../../types/user'
+type User = {
+  name:string,
+  id:string,
+  email:string,
+  phone:string,
+  role:string,
+  isListed:boolean
+  addresses:Address[],
+  defaultAddress:string
+}
+interface Address {
+  _id?: string;
+  userId: string | undefined;
+  addressLine1: string;
+  addressLine2?: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  isDefault: boolean;
+  addressType: string; // Matches backend schema
+}
 
-
-interface AddAddressModalProps {
+interface EditAddressModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string | undefined;
+  address: Address | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-export const AddAddressModal: React.FC<AddAddressModalProps> = ({
+export const EditAddressModal: React.FC<EditAddressModalProps> = ({
   open,
   onOpenChange,
   userId,
+  address,
   setUser
 }) => {
   const [addressForm, setAddressForm] = useState<Address>({
@@ -44,14 +66,31 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
     state: "",
     zipCode: "",
     isDefault: false,
-    addressType: "Home"
+    addressType: "Home",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Populate form with existing address data
+  useEffect(() => {
+    if (address) {
+      setAddressForm({
+        userId: userId,
+        addressLine1: address.addressLine1 || "",
+        addressLine2: address.addressLine2 || "",
+        street: address.street || "",
+        city: address.city || "",
+        state: address.state || "",
+        zipCode: address.zipCode || "",
+        isDefault: address.isDefault || false,
+        addressType: address.addressType || "Home",
+      });
+    }
+  }, [address, userId]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!addressForm.addressLine1.trim()) newErrors.addressLine1 = "Address Line 1 is required";
     if (!addressForm.street.trim()) newErrors.street = "Street is required";
     if (!addressForm.city.trim()) newErrors.city = "City is required";
@@ -65,8 +104,7 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setAddressForm(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when field is filled
+
     if (errors[name] && value.trim()) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -76,46 +114,47 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
     }
   };
 
-  const handleSubmitAddress = async() => {
+  const handleSubmitAddress = async () => {
     if (!validateForm()) return;
 
-    const response = await userApi.addAddressApi({
-      ...addressForm,
-      userId: userId,
-    });
-    if (response && response.data.address) {
-      const newAddress = response.data.address;
+    try {
+        if(address?._id && userId){
+            const response = await userApi.updateAddressApi(addressForm, address._id, userId);
+            if (response && response.data.address) {
+              const updatedAddress = response.data.address;
+            
+              toast.success("Address Updated Successfully");
+            
+              setUser(prevUser => {
+                if (!prevUser) return prevUser;
+            
+                const updatedAddresses = prevUser.addresses.map(addr =>
+                  addr._id === updatedAddress._id ? updatedAddress : addr
+                );
+            
+                return {
+                  ...prevUser,
+                  addresses: updatedAddresses,
+                  defaultAddress: updatedAddress.isDefault
+                    ? updatedAddress._id
+                    : prevUser.defaultAddress
+                };
+              });
+            
+                setErrors({});
+                onOpenChange(false);
+              } else {
+                toast.error("Failed to update address");
+              } 
+        } else {
+            throw new Error('Address Id or userId is missing')
+        }
+
     
-      toast.success("Address Added Successfully");
-    
-      setUser((prevUser: User | null): User | null => {
-        if (!prevUser) return prevUser;
-    
-        return {
-          ...prevUser,
-          addresses: [...prevUser.addresses, newAddress],
-          defaultAddress: newAddress.isDefault
-            ? newAddress._id
-            : prevUser.defaultAddress
-        };
-      });
+    } catch (error) {
+      toast.error("Error updating address");
+      console.error("Update address error:", error);
     }
-    
-    // Reset form
-    setAddressForm({
-      userId: userId,
-      addressLine1: "",
-      addressLine2: "",
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      isDefault: false,
-      addressType: "Home"
-    });
-     
-    setErrors({});
-    onOpenChange(false); 
   };
 
   return (
@@ -124,17 +163,17 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center text-xl font-semibold">
             <MapPin className="mr-2 h-5 w-5 text-red-500" />
-            Add New Address
+            Edit Address
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="addressType" className="text-gray-600 text-sm font-medium">
+            <Label htmlFor="AddressType" className="text-gray-600 text-sm font-medium">
               Address Type
             </Label>
             <RadioGroup
-              id="addressType"
+              id="AddressType"
               defaultValue="Home"
               className="flex flex-wrap gap-4"
               value={addressForm.addressType}
@@ -275,7 +314,7 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
             </Label>
           </div>
         </div>
-        
+
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
             variant="outline"
@@ -292,12 +331,13 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
             className="bg-red-500 hover:bg-red-600 text-white"
             onClick={handleSubmitAddress}
           >
-            Save Address
+            Update Address
           </Button>
+          
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default AddAddressModal;
+export default EditAddressModal;

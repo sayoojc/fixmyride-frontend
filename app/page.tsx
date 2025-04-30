@@ -104,7 +104,6 @@ const CarServiceLandingPage: React.FC = () => {
     e.preventDefault();
     try {
      const response =  await authApi.loginApi(loginData.email, loginData.password);
-     console.log('The response.user after the login',response.user);
      dispatch(login({
       id:response.user._id,
       name:response.user.name,
@@ -112,13 +111,12 @@ const CarServiceLandingPage: React.FC = () => {
       email:response.user.email,
 
      }))
-      alert("Login successful!");
+      toast.success('Login successfull');
       setShowLoginModal(false);
       router.push("/user");
     } catch (error) {
       const err = error as AxiosError<{ message?: string }>;
       const message = err.response?.data?.message || "Login failed. Please try again.";
-console.log('the message',err);
       toast.error(message);
 
     
@@ -136,8 +134,7 @@ console.log('the message',err);
        
       } catch (error) {
         const err = error as AxiosError<{ message?: string }>;
-        console.error("Login failed:", err.response?.data?.message || "Something went wrong");
-        alert(err.response?.data?.message || "Login failed!");
+        toast.error(err.response?.data?.message || "Login failed!");
       }
     };
 
@@ -146,7 +143,7 @@ console.log('the message',err);
     e.preventDefault();
 
     if (signupData.password !== signupData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -157,13 +154,13 @@ console.log('the message',err);
         signupData.phone,
         signupData.password
       );
-      alert("Signup successful!");
+       toast.success('Fill the otp to continue')
       setShowSignupModal(false);
       setShowOTPModal(true);
     } catch (error) {
       const err = error as AxiosError<{ message?: string }>;
       console.error("Signup failed:", err.response?.data?.message || "Something went wrong");
-      alert(err.response?.data?.message || "Signup failed!");
+      toast.error(err.response?.data?.message || "Signup failed!");
     }
   };
 
@@ -200,8 +197,7 @@ console.log('the message',err);
 
 {showEmailInputModal && <EmailInputModal 
 setShowEmailInputModal={setShowEmailInputModal} 
-email = {email} 
-setEmail = {setEmail}/>}
+/>}
 
  {/* OTP Modal */}
  {showOTPModal && <OTPModal email = {signupData.email} phone = {signupData.phone} />}
