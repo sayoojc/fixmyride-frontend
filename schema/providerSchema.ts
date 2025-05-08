@@ -11,6 +11,7 @@ export const verificationSchema = z.object({
   ifscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, {
     message: "Invalid IFSC code",
   }),
+  bankName:z.string().min(3,{message:"Bank name is required"}),
   accountNumber: z
     .string()
     .min(5, { message: "Account number is too short" })

@@ -99,6 +99,41 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
     } catch (error) {
        console.error('Toggling the status failed');
     }
+  },
+  getProvidersList : async () => {
+    try {
+      const response = await axiosPrivate.get("/api/admin/get-providers");
+        return response;
+    } catch (error) {
+            throw error
+        }
+      },
+  getVerificationData : async (id:string) => {
+    try {
+      const response = await axiosPrivate.get(`/api/admin/get-verification-data?id=${id}`,);
+      return response
+    } catch (error) {
+       throw error
+    }
+  },
+  getProviderById : async (id:string) => {
+    try {
+      const response = await axiosPrivate.get(`/api/admin/get-provider?id=${id}`);
+        return response;
+    } catch (error) {
+            throw error
+        }
+      },
+  verifyProviderApi: async (providerId:string,verificationAction:string) => {
+    try {
+      const response = await axiosPrivate.patch('/api/admin/verify-provider',{
+           providerId,
+           verificationAction
+      })
+      return response
+    } catch (error) {
+      throw error
+    }
   }
 
 })

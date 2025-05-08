@@ -37,4 +37,17 @@ export interface IServiceProvider {
     startedYear: string
     description: string
   }
+  export  interface IVerification{
+    providerId: string;
+    licenseImage: string;
+    idProofImage: string;
+    accountHolderName: string;
+    bankName:string;
+    ifscCode: string;
+    accountNumber: string;
+    startedYear: string;
+    description: string;
+    status: 'pending' | 'approved' | 'rejected';
+    submittedAt: Date;
+  }
   

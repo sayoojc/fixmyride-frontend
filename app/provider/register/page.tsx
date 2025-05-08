@@ -8,14 +8,14 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
-
+import {toast} from 'react-toastify'
 import { axiosPrivate } from "@/api/axios"
 import createAuthApi from "@/services/authApi"
 import GoogleSignupButton from "@/components/GoogleSignUpButton"
 
 const authApi = createAuthApi(axiosPrivate)
 
-import OtpVerificationModal from "@/components/provider/Otp"
+
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -128,15 +128,16 @@ export default function ServiceProviderSignupPage() {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...submissionData } = data
       const response: unknown = await authApi.providerRegisterTempApi(submissionData);
-   
-        setSuccess(true)
-        console.log('success',success);
+       toast.success('Enter OTP to continue');
+       console.log("Email before router.push:", data.email);
+       router.push(`/provider/register/otp?email=${data.email}&phone=${data.phone}`);
         form.reset()
         
       
      
     } catch (err: unknown) {
       setError("An error occurred while registering. Please try again.")
+      toast.error('error submitting form ')
       console.error("Error submitting form:", err)
     } finally {
       setIsSubmitting(false)
@@ -213,13 +214,13 @@ export default function ServiceProviderSignupPage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
         >
-            <OtpVerificationModal
+            {/* <OtpVerificationModal
         open={success}
         onOpenChange={setSuccess}
         onVerify={handleVerify}
         onResend={handleResend}
         email={email}
-      />
+      /> */}
         </motion.div>
       </motion.div>
     )

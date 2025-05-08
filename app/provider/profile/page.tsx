@@ -1,200 +1,821 @@
-"use client";
+// "use client";
 
-import { useState,useEffect } from 'react';
-import createProviderApi from '@/services/providerApi';
-import { CheckCircle } from "lucide-react";
-import { axiosPrivate } from '@/api/axios';
-import Link from 'next/link';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { 
-  Avatar, 
-  AvatarFallback, 
-  AvatarImage 
-} from '@/components/ui/avatar';
-import {
-  Badge
-} from '@/components/ui/badge';
-import {
-  Separator
-} from '@/components/ui/separator';
-import {
-  Label
-} from '@/components/ui/label';
-import Navbar from "../../../components/provider/Navbar";
-import { Clock, MapPin, Mail, Phone, Award, User, FileEdit, Save, X,XCircle, } from 'lucide-react';
-import { IServiceProvider } from '@/types/provider';
+// import { useState, useEffect } from "react";
+// import createProviderApi from "@/services/providerApi";
+// import { CheckCircle } from "lucide-react";
+// import { axiosPrivate } from "@/api/axios";
+// import Link from "next/link";
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardFooter,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Textarea } from "@/components/ui/textarea";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Badge } from "@/components/ui/badge";
+// import { Separator } from "@/components/ui/separator";
+// import { Label } from "@/components/ui/label";
+// import Navbar from "../../../components/provider/Navbar";
+// import {
+//   Clock,
+//   MapPin,
+//   Mail,
+//   Phone,
+//   Award,
+//   User,
+//   FileEdit,
+//   Save,
+//   X,
+//   XCircle,
+// } from "lucide-react";
+// import { IServiceProvider } from "@/types/provider";
+
+// interface Statistic {
+//   label: string;
+//   value: number;
+//   icon: React.ReactNode;
+// }
+// const providerApi = createProviderApi(axiosPrivate);
+// export default function ProfilePage() {
+//   const [isEditing, setIsEditing] = useState<boolean>(false);
+//   const [providerData, setProviderData] = useState<IServiceProvider>();
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         const response = await providerApi.getProfileData();
+//         console.log("response", response.provider);
+//         setProviderData(response.provider);
+//       } catch (error) {
+//         console.error("Error fetching profile:", error);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
 
 
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+//     const { name, value } = e.target;
+//     setProviderData({
+//       ...providerData,
+//       [name]: name === 'foundedYear' ? parseInt(value) : value
+//     });
+//   };
+
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     // Here you would typically save the data to your backend
+//     setIsEditing(false);
+//     // Show success message
+//     alert("Profile updated successfully!");
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-slate-50">
+//       <Navbar />
+
+//       <main className="container mx-auto p-6">
+//         <div className="relative mb-8">
+//           {/* Cover image */}
+//           <div className="h-64 w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
+//             <div className="absolute inset-0 bg-black/10 rounded-lg"></div>
+//           </div>
+
+//           {/* Profile header */}
+//           <div className="absolute -bottom-6 left-8 flex items-end">
+//             <Avatar className="h-24 w-24 border-4 border-white bg-white">
+//               <AvatarImage
+//                 src="/api/placeholder/96/96"
+//                 alt={providerData?.name}
+//               />
+//               <AvatarFallback>{providerData?.name}</AvatarFallback>
+//             </Avatar>
+//             <div className="ml-6 pb-8">
+//               <div className="flex items-center gap-4">
+//                 <h1 className="text-3xl font-bold text-white">
+//                   {providerData?.name}
+//                 </h1>
+//                 {!providerData?.verificationStatus ? (
+//                   <Link href="/provider/profile/verification">
+//                     <div className="cursor-pointer px-3 py-1 bg-yellow-400 text-blue-900 text-sm font-bold rounded-md hover:bg-yellow-300 hover:scale-105 hover:shadow-lg active:bg-yellow-500 active:scale-95 border border-yellow-500 shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 flex items-center gap-1">
+//                       <span className="relative">
+//                         <span className="absolute -right-1 -top-1 flex h-2 w-2">
+//                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+//                           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+//                         </span>
+//                       </span>
+//                       Verify Now
+//                     </div>
+//                   </Link>
+//                 ) : providerData.verificationStatus === "approved" ? (
+//                   <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 text-sm rounded">
+//                     <CheckCircle size={16} />
+//                     Verified
+//                   </span>
+//                 ) : providerData.verificationStatus === "pending" ? (
+//                   <span className="flex items-center gap-1 px-2 py-1 text-white-600 text-lg rounded">
+//                     <Clock size={16} />
+//                     Pending Verification
+//                   </span>
+//                 ) : (
+//                   <span className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-500 text-sm rounded">
+//                     <XCircle size={16} />
+//                     Rejected
+//                   </span>
+//                 )}
+//               </div>
+//               <p className="text-sm text-white/80">
+//                 Service Provider since {providerData?.startedYear}
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Action buttons */}
+//           <div className="absolute right-6 bottom-6">
+//             {!isEditing ? (
+//               <Button
+//                 onClick={() => setIsEditing(true)}
+//                 className="bg-blue-600 hover:bg-blue-700"
+//               >
+//                 <FileEdit className="mr-2 h-4 w-4" />
+//                 Edit Profile
+//               </Button>
+//             ) : (
+//               <div className="flex space-x-3">
+//                 <Button variant="outline" onClick={() => setIsEditing(false)}>
+//                   <X className="mr-2 h-4 w-4" />
+//                   Cancel
+//                 </Button>
+//                 <Button
+//                   onClick={handleSubmit}
+//                   className="bg-green-600 hover:bg-green-700"
+//                 >
+//                   <Save className="mr-2 h-4 w-4" />
+//                   Save Changes
+//                 </Button>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         <div className="mt-12">
+//           <Tabs defaultValue="profile" className="w-full">
+//             <TabsList className="mb-6">
+//               <TabsTrigger value="profile">Profile</TabsTrigger>
+//               <TabsTrigger value="services">Services</TabsTrigger>
+//               <TabsTrigger value="reviews">Reviews</TabsTrigger>
+//               <TabsTrigger value="gallery">Gallery</TabsTrigger>
+//             </TabsList>
+
+//             <TabsContent value="profile">
+//               {!isEditing ? (
+//                 <div className="grid md:grid-cols-3 gap-6">
+//                   <div className="md:col-span-2 space-y-6">
+//                     <Card>
+//                       <CardHeader>
+//                         <CardTitle>Business Information</CardTitle>
+//                         <CardDescription>
+//                           Details about your automotive service business
+//                         </CardDescription>
+//                       </CardHeader>
+//                       <CardContent className="space-y-4">
+//                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                           <div className="space-y-1">
+//                             <div className="flex items-center text-sm text-muted-foreground">
+//                               <Mail className="mr-2 h-4 w-4" />
+//                               Email
+//                             </div>
+//                             <p className="font-medium">{providerData?.email}</p>
+//                           </div>
+
+//                           <div className="space-y-1">
+//                             <div className="flex items-center text-sm text-muted-foreground">
+//                               <Phone className="mr-2 h-4 w-4" />
+//                               Phone
+//                             </div>
+//                             <p className="font-medium">{providerData?.phone}</p>
+//                           </div>
+
+//                           <div className="space-y-1">
+//                             <div className="flex items-center text-sm text-muted-foreground">
+//                               <MapPin className="mr-2 h-4 w-4" />
+//                               Address
+//                             </div>
+//                             <p className="font-medium">
+//                               {providerData?.address}
+//                             </p>
+//                           </div>
+//                         </div>
+//                       </CardContent>
+//                     </Card>
+
+//                     <Card>
+//                       <CardHeader>
+//                         <CardTitle>About Us</CardTitle>
+//                         <CardDescription>
+//                           Your company description and mission
+//                         </CardDescription>
+//                       </CardHeader>
+//                       <CardContent>
+//                         <p className="text-muted-foreground">{providerData?.description}</p>
+//                       </CardContent>
+//                     </Card>
+//                   </div>
+
+//                   <div className="space-y-6">
+//                     <Card>
+//                       <CardHeader>
+//                         <CardTitle>Quick Links</CardTitle>
+//                       </CardHeader>
+//                       <CardContent className="space-y-2">
+//                         <Button
+//                           variant="outline"
+//                           className="w-full justify-start"
+//                         >
+//                           View Service History
+//                         </Button>
+//                         <Button
+//                           variant="outline"
+//                           className="w-full justify-start"
+//                         >
+//                           Manage Appointments
+//                         </Button>
+//                         <Button
+//                           variant="outline"
+//                           className="w-full justify-start"
+//                         >
+//                           Update Business Hours
+//                         </Button>
+//                         <Button
+//                           variant="outline"
+//                           className="w-full justify-start"
+//                         >
+//                           Add New Certification
+//                         </Button>
+//                       </CardContent>
+//                     </Card>
+//                   </div>
+//                 </div>
+//               ) : (
+//                 <Card>
+//                   <CardHeader>
+//                     <CardTitle>Edit Profile</CardTitle>
+//                     <CardDescription>
+//                       Update your business information
+//                     </CardDescription>
+//                   </CardHeader>
+//                   <CardContent>
+//                     <form className="space-y-6">
+//                       <div className="grid md:grid-cols-2 gap-6">
+//                         <div className="space-y-4">
+//                           <div className="space-y-2">
+//                             <Label htmlFor="name">Business Name</Label>
+//                             <Input
+//                               id="name"
+//                               name="name"
+//                               value={providerData?.name}
+//                               onChange={handleChange}
+//                             />
+//                           </div>
+
+//                           <div className="space-y-2">
+//                             <Label htmlFor="email">Email</Label>
+//                             <Input
+//                               id="email"
+//                               name="email"
+//                               type="email"
+//                               value={providerData?.email}
+//                               onChange={handleChange}
+//                             />
+//                           </div>
+
+//                           <div className="space-y-2">
+//                             <Label htmlFor="phone">Phone</Label>
+//                             <Input
+//                               id="phone"
+//                               name="phone"
+//                               value={providerData?.phone}
+//                               onChange={handleChange}
+//                             />
+//                           </div>
+
+//                           <div className="space-y-2">
+//                             <Label htmlFor="address">Address</Label>
+//                             <Input
+//                               id="address"
+//                               name="address"
+//                               value={providerData?.address}
+//                               onChange={handleChange}
+//                             />
+//                           </div>
+//                         </div>
+
+//                         <div className="space-y-4">
+
+//                           <div className="space-y-2">
+//                             <Label htmlFor="foundedYear">Founded Year</Label>
+//                             <Input
+//                               id="foundedYear"
+//                               name="foundedYear"
+//                               type="number"
+//                               value={providerData?.startedYear}
+//                               onChange={handleChange}
+//                             />
+//                           </div>
+
+//                           <div className="space-y-2">
+//                             <Label htmlFor="about">About</Label>
+//                             <Textarea
+//                               id="about"
+//                               name="about"
+//                               value={providerData?.description}
+//                               onChange={handleChange}
+//                               rows={5}
+//                             />
+//                           </div>
+//                         </div>
+//                       </div>
+//                     </form>
+//                   </CardContent>
+//                 </Card>
+//               )}
+//             </TabsContent>
+
+//             <TabsContent value="services">
+//               <Card>
+//                 <CardHeader>
+//                   <CardTitle>Services Offered</CardTitle>
+//                   <CardDescription>
+//                     Automotive services available to customers
+//                   </CardDescription>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <p className="text-center text-muted-foreground py-8">
+//                     Services content would be displayed here
+//                   </p>
+//                 </CardContent>
+//               </Card>
+//             </TabsContent>
+
+//             <TabsContent value="reviews">
+//               <Card>
+//                 <CardHeader>
+//                   <CardTitle>Customer Reviews</CardTitle>
+//                   <CardDescription>
+//                     What your customers are saying about you
+//                   </CardDescription>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <p className="text-center text-muted-foreground py-8">
+//                     Reviews content would be displayed here
+//                   </p>
+//                 </CardContent>
+//               </Card>
+//             </TabsContent>
+
+//             <TabsContent value="gallery">
+//               <Card>
+//                 <CardHeader>
+//                   <CardTitle>Service Gallery</CardTitle>
+//                   <CardDescription>
+//                     Images of your workshop and completed services
+//                   </CardDescription>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <p className="text-center text-muted-foreground py-8">
+//                     Gallery content would be displayed here
+//                   </p>
+//                 </CardContent>
+//               </Card>
+//             </TabsContent>
+//           </Tabs>
+//         </div>
+//       </main>
+
+//       <footer className="p-4 text-center bg-slate-900 text-white mt-8">
+//         <p>© 2025 Car Service Provider. All Rights Reserved.</p>
+//       </footer>
+//     </div>
+//   );
+// }
+
+
+
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
+import createProviderApi from "@/services/providerApi"
+import { CheckCircle } from "lucide-react"
+import { axiosPrivate } from "@/api/axios"
+import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Label } from "@/components/ui/label"
+import Navbar from "../../../components/provider/Navbar"
+import { Clock, MapPin, Mail, Phone, FileEdit, Save, X, XCircle, Pencil, Loader2 } from "lucide-react"
+import createimageUploadApi from "@/services/imageUploadApi"
+import { axiosPublic } from "@/api/axiosPublic"
+
+
+interface IServiceProvider {
+  name: string
+  ownerName: string
+  email: string
+  phone?: string
+  googleId?: string
+  provider?: string
+  address?: string
+  streetAddress?: string
+  city?: string
+  state?: string
+  pincode?: string
+  location?: {
+    latitude: number
+    longitude: number
+  }
+  isListed: boolean
+  verificationStatus?: "pending" | "approved" | "rejected"
+  password?: string
+  createdAt: Date
+  updatedAt: Date
+  license?: string
+  ownerIdProof?: string
+  profilePicture?: string
+  coverPhoto?: string
+  bankDetails?: {
+    accountHolderName: string
+    accountNumber: string
+    ifscCode: string
+    bankName: string
+  }
+  startedYear?: number
+  description?: string
+}
+
+const defaultProvider: IServiceProvider = {
+  name: "",
+  ownerName: "",
+  email: "",
+  isListed: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  license: "",
+  ownerIdProof: "",
+  profilePicture: "",
+  coverPhoto: "",
+  bankDetails: {
+    accountHolderName: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankName: "",
+  },
+  startedYear: 0,
+  description: "",
+}
 
 interface Statistic {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
+  label: string
+  value: number
+  icon: React.ReactNode
 }
-const providerApi = createProviderApi(axiosPrivate);
+
+const providerApi = createProviderApi(axiosPrivate)
+const imageUploadApi = createimageUploadApi(axiosPublic);
+
 export default function ProfilePage() {
- 
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [providerData, setProviderData] = useState<IServiceProvider>(defaultProvider)
+  const [addressFields, setAddressFields] = useState({
+    street: "",
+    city: "",
+    state: "",
+    pincode: "",
+  })
+  const coverPhotoInputRef = useRef<HTMLInputElement>(null)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFiles, setSelectedFiles] = useState<{
+    profile?: File
+    cover?: File
+  }>({})
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await providerApi.getProfileData();
-        console.log('response',response);
-        setProviderData(response.provider);
+        const response = await providerApi.getProfileData()
+        console.log("response", response.provider)
+
+        // Parse address if it exists
+        if (response.provider?.address) {
+          const addressParts = response.provider.address.split(",")
+          const street = addressParts[0]?.trim() || ""
+          const city = addressParts[1]?.trim() || ""
+          let state = ""
+          let pincode = ""
+
+          if (addressParts[2]) {
+            const statePincodeParts = addressParts[2].trim().split(" ")
+            state = statePincodeParts.slice(0, -1).join(" ").trim()
+            pincode = statePincodeParts[statePincodeParts.length - 1]?.trim() || ""
+          }
+
+          // Update the provider data with parsed address components
+          setProviderData({
+            ...response.provider,
+            streetAddress: street,
+            city: city,
+            state: state,
+            pincode: pincode,
+          })
+
+          setAddressFields({
+            street,
+            city,
+            state,
+            pincode,
+          })
+        } else {
+          setProviderData(response.provider)
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error("Error fetching profile:", error)
       }
-    };
-  
-    fetchData();
-  }, []);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [providerData, setProviderData] = useState<IServiceProvider>();
-  // Mock data for the service provider
-  // const [providerData, setProviderData] = useState<ProviderData>({
-  //   name: "AutoFix Pro Services",
-  //   ownerName: "Michael Rodriguez",
-  //   email: "contact@autofixpro.com",
-  //   phone: "(555) 123-4567",
-  //   address: "123 Mechanic Avenue, Autoville, CA 94103",
-  //   businessHours: "Mon-Fri: 8AM-6PM, Sat: 9AM-3PM",
-  //   specialty: "European & Japanese Vehicles",
-  //   foundedYear: 2015,
-  //   about: "AutoFix Pro Services has been providing high-quality automotive repair and maintenance services for over 10 years. We specialize in European and Japanese vehicles, offering everything from routine maintenance to complex repairs. Our team of certified technicians is committed to delivering exceptional service and ensuring customer satisfaction with every job."
-  // });
+    }
 
-  // Mock statistics
-  // const statistics: Statistic[] = [
-  //   { label: "Completed Services", value: 1258, icon: <Clock className="h-5 w-5 text-blue-500" /> },
-  //   { label: "Active Customers", value: 437, icon: <User className="h-5 w-5 text-green-500" /> },
-  //   { label: "5-Star Reviews", value: 892, icon: <Award className="h-5 w-5 text-yellow-500" /> },
-  //   { label: "Service Specialists", value: 8, icon: <User className="h-5 w-5 text-purple-500" /> }
-  // ];
+    fetchData()
+  }, [])
 
-  // Mock certifications
-  // const certifications: string[] = [
-  //   "ASE Master Technician",
-  //   "BMW Certified",
-  //   "Toyota Service Center",
-  //   "Honda Professional Automotive Career Training",
-  //   "Electric Vehicle Service Certified"
-  // ];
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setProviderData({
+      ...providerData,
+      [name]: name === "startedYear" ? Number.parseInt(value) : value,
+    })
+  }
 
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  //   const { name, value } = e.target;
-  //   setProviderData({
-  //     ...providerData,
-  //     [name]: name === 'foundedYear' ? parseInt(value) : value
-  //   });
-  // };
+  const handleCoverPhotoClick = () => {
+    coverPhotoInputRef.current?.click()
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically save the data to your backend
-    setIsEditing(false);
-    // Show success message
-    alert("Profile updated successfully!");
-  };
+  const handleProfilePhotoClick = () => {
+    profilePhotoInputRef.current?.click()
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: "cover" | "profile") => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Store the selected file for later upload during form submission
+    setSelectedFiles({
+      ...selectedFiles,
+      [type]: file,
+    })
+
+    // Create a temporary URL for preview
+    const previewUrl = URL.createObjectURL(file)
+    setProviderData({
+      ...providerData,
+      [type === "cover" ? "coverPhoto" : "profilePicture"]: previewUrl,
+    })
+  }
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+
+    // Update the address fields state
+    setAddressFields({
+      ...addressFields,
+      [name]: value,
+    })
+
+    // Update the corresponding field in providerData
+    const fieldMapping: Record<string, string> = {
+      street: "streetAddress",
+      city: "city",
+      state: "state",
+      pincode: "pincode",
+    }
+
+    // Update the provider data with the individual field
+    setProviderData({
+      ...providerData,
+      [fieldMapping[name]]: value,
+      // Also update the combined address for display purposes
+      address: `${name === "street" ? value : addressFields.street}, ${
+        name === "city" ? value : addressFields.city
+      }, ${name === "state" ? value : addressFields.state} ${name === "pincode" ? value : addressFields.pincode}`,
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const updatedProviderData = { ...providerData }
+
+      // Handle image uploads if files were selected
+      if (selectedFiles.profile || selectedFiles.cover) {
+        const uploadPromises = []
+
+        if (selectedFiles.profile) {
+          uploadPromises.push(
+            imageUploadApi.uploadBrandImageApi(selectedFiles.profile).then((response) => {
+              if (response) {
+                updatedProviderData.profilePicture = response
+              }
+            }),
+          )
+        }
+
+        if (selectedFiles.cover) {
+          uploadPromises.push(
+            imageUploadApi.uploadBrandImageApi(selectedFiles.cover).then((response) => {
+              if (response) {
+                updatedProviderData.coverPhoto = response
+              }
+            }),
+          )
+        }
+
+        // Wait for all uploads to complete
+        await Promise.all(uploadPromises)
+      }
+
+      // Prepare the final data to send to the backend
+      const dataToSend = {
+        ...updatedProviderData,
+        // Include address components separately
+        streetAddress: addressFields.street,
+        city: addressFields.city,
+        state: addressFields.state,
+        pincode: addressFields.pincode,
+      }
+
+      // Update the provider profile
+      const updateResponse = await providerApi.updateProfile(dataToSend)
+
+      if (updateResponse.success) {
+        // Update the local state with the response data
+        setProviderData(updateResponse.provider)
+        setIsEditing(false)
+        alert("Profile updated successfully!")
+      } else {
+        throw new Error(updateResponse.message || "Failed to update profile")
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      alert("Failed to update profile. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+      // Clear selected files after submission
+      setSelectedFiles({})
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
-      
+
       <main className="container mx-auto p-6">
         <div className="relative mb-8">
           {/* Cover image */}
-          <div className="h-64 w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
-            {/* <div className="absolute inset-0 bg-black/10 rounded-lg"></div> */}
+          <div className="h-64 w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden relative">
+            {providerData?.coverPhoto && (
+              <img
+                src={providerData.coverPhoto || "/placeholder.svg"}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/10 rounded-lg"></div>
+            {isEditing && (
+              <div
+                className="absolute right-4 top-4 p-2 bg-white/80 rounded-full cursor-pointer hover:bg-white transition-colors"
+                onClick={handleCoverPhotoClick}
+              >
+                <Pencil className="h-5 w-5 text-blue-600" />
+              </div>
+            )}
+            <input
+              type="file"
+              ref={coverPhotoInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => handleFileSelect(e, "cover")}
+            />
           </div>
-          
+
           {/* Profile header */}
           <div className="absolute -bottom-6 left-8 flex items-end">
-            <Avatar className="h-24 w-24 border-4 border-white bg-white">
-              <AvatarImage src="/api/placeholder/96/96" alt={providerData?.name} />
-              <AvatarFallback>{providerData?.name}</AvatarFallback>
-            
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-24 w-24 border-4 border-white bg-white">
+                <AvatarImage src={providerData?.profilePicture || "/api/placeholder/96/96"} alt={providerData?.name} />
+                <AvatarFallback>{providerData?.name?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              {isEditing && (
+                <div
+                  className="absolute bottom-0 right-0 p-1 bg-white rounded-full cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200"
+                  onClick={handleProfilePhotoClick}
+                >
+                  <Pencil className="h-4 w-4 text-blue-600" />
+                </div>
+              )}
+              <input
+                type="file"
+                ref={profilePhotoInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, "profile")}
+              />
+            </div>
             <div className="ml-6 pb-8">
-  <div className="flex items-center gap-4">
-    <h1 className="text-3xl font-bold text-white">{providerData?.name}</h1>
-    {!providerData?.verificationStatus ? (
-      <Link href="/provider/profile/verification">
-  <div className="cursor-pointer px-3 py-1 bg-yellow-400 text-blue-900 text-sm font-bold rounded-md hover:bg-yellow-300 hover:scale-105 hover:shadow-lg active:bg-yellow-500 active:scale-95 border border-yellow-500 shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 flex items-center gap-1">
-    <span className="relative">
-      <span className="absolute -right-1 -top-1 flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-      </span>
-    </span>
-    Verify Now
-  </div>
-</Link>
-) : providerData.verificationStatus === "approved" ? (
-  <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 text-sm rounded">
-    <CheckCircle size={16} />
-    Verified
-  </span>
-) : providerData.verificationStatus === "pending" ? (
-  <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-600 text-sm rounded">
-    <Clock size={16} />
-    Pending Verification
-  </span>
-) : (
-  <span className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-500 text-sm rounded">
-    <XCircle size={16} />
-    Rejected
-  </span>
-)}
-
-  </div>
-  <p className="text-sm text-white/80">
-    Service Provider since {providerData?.startedYear}
-  </p>
-</div>
-
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-white">{providerData?.name}</h1>
+                {!providerData?.verificationStatus ? (
+                  <Link href="/provider/profile/verification">
+                    <div className="cursor-pointer px-3 py-1 bg-yellow-400 text-blue-900 text-sm font-bold rounded-md hover:bg-yellow-300 hover:scale-105 hover:shadow-lg active:bg-yellow-500 active:scale-95 border border-yellow-500 shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 flex items-center gap-1">
+                      <span className="relative">
+                        <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      </span>
+                      Verify Now
+                    </div>
+                  </Link>
+                ) : providerData.verificationStatus === "approved" ? (
+                  <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 text-sm rounded">
+                    <CheckCircle size={16} />
+                    Verified
+                  </span>
+                ) : providerData.verificationStatus === "pending" ? (
+                  <span className="flex items-center gap-1 px-2 py-1 text-white-600 text-lg rounded">
+                    <Clock size={16} />
+                    Pending Verification
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-500 text-sm rounded">
+                    <XCircle size={16} />
+                    Rejected
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-white/80">Service Provider since {providerData?.startedYear}</p>
+            </div>
           </div>
-          
+
           {/* Action buttons */}
           <div className="absolute right-6 bottom-6">
             {!isEditing ? (
-              <Button 
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
+              <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700">
                 <FileEdit className="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>
             ) : (
               <div className="flex space-x-3">
-                <Button 
+                <Button
                   variant="outline"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false)
+                    setSelectedFiles({})
+                    // Reset any temporary preview URLs
+                    if (selectedFiles.profile || selectedFiles.cover) {
+                      // Refetch the data to restore original images
+                      providerApi.getProfileData().then((response) => {
+                        setProviderData(response.provider)
+                      })
+                    }
+                  }}
+                  disabled={isSubmitting}
                 >
                   <X className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleSubmit}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             )}
@@ -209,7 +830,7 @@ export default function ProfilePage() {
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
               <TabsTrigger value="gallery">Gallery</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="profile">
               {!isEditing ? (
                 <div className="grid md:grid-cols-3 gap-6">
@@ -221,14 +842,6 @@ export default function ProfilePage() {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* <div className="space-y-1">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <User className="mr-2 h-4 w-4" />
-                              Owner
-                            </div>
-                            <p className="font-medium">{providerData.ownerName}</p>
-                          </div> */}
-                          
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Mail className="mr-2 h-4 w-4" />
@@ -236,7 +849,7 @@ export default function ProfilePage() {
                             </div>
                             <p className="font-medium">{providerData?.email}</p>
                           </div>
-                          
+
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Phone className="mr-2 h-4 w-4" />
@@ -244,7 +857,7 @@ export default function ProfilePage() {
                             </div>
                             <p className="font-medium">{providerData?.phone}</p>
                           </div>
-                          
+
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-muted-foreground">
                               <MapPin className="mr-2 h-4 w-4" />
@@ -252,22 +865,6 @@ export default function ProfilePage() {
                             </div>
                             <p className="font-medium">{providerData?.address}</p>
                           </div>
-                          
-                          {/* <div className="space-y-1">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Clock className="mr-2 h-4 w-4" />
-                              Business Hours
-                            </div>
-                            <p className="font-medium">{providerData.businessHours}</p>
-                          </div> */}
-                          
-                          {/* <div className="space-y-1">
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Award className="mr-2 h-4 w-4" />
-                              Specialty
-                            </div>
-                            <p className="font-medium">{providerData.specialty}</p>
-                          </div> */}
                         </div>
                       </CardContent>
                     </Card>
@@ -277,50 +874,13 @@ export default function ProfilePage() {
                         <CardTitle>About Us</CardTitle>
                         <CardDescription>Your company description and mission</CardDescription>
                       </CardHeader>
-                      {/* <CardContent>
-                        <p className="text-muted-foreground">{providerData.about}</p>
-                      </CardContent> */}
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Certifications & Qualifications</CardTitle>
-                        <CardDescription>Professional certifications and training</CardDescription>
-                      </CardHeader>
                       <CardContent>
-                        {/* <div className="flex flex-wrap gap-2">
-                          {certifications.map((cert, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs py-1">
-                              <Award className="mr-1 h-3 w-3" />
-                              {cert}
-                            </Badge>
-                          ))}
-                        </div> */}
+                        <p className="text-muted-foreground">{providerData?.description}</p>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Service Statistics</CardTitle>
-                        <CardDescription>Performance metrics and achievements</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {/* <div className="space-y-4">
-                          {statistics.map((stat, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <div className="mr-3">{stat.icon}</div>
-                                <span className="text-sm text-muted-foreground">{stat.label}</span>
-                              </div>
-                              <span className="text-xl font-bold">{stat.value.toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div> */}
-                      </CardContent>
-                    </Card>
-                    
                     <Card>
                       <CardHeader>
                         <CardTitle>Quick Links</CardTitle>
@@ -349,29 +909,14 @@ export default function ProfilePage() {
                     <CardDescription>Update your business information</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form className="space-y-6">
+                    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <Label htmlFor="name">Business Name</Label>
-                            <Input
-                              id="name"
-                              name="name"
-                              value={providerData?.name}
-                              // onChange={handleChange}
-                            />
+                            <Input id="name" name="name" value={providerData?.name} onChange={handleChange} />
                           </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="ownerName">Owner Name</Label>
-                            <Input
-                              id="ownerName"
-                              name="ownerName"
-                              // value={providerData.ownerName}
-                              // onChange={handleChange}
-                            />
-                          </div>
-                          
+
                           <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -379,70 +924,81 @@ export default function ProfilePage() {
                               name="email"
                               type="email"
                               value={providerData?.email}
-                              // onChange={handleChange}
+                              onChange={handleChange}
                             />
                           </div>
-                          
+
                           <div className="space-y-2">
                             <Label htmlFor="phone">Phone</Label>
+                            <Input id="phone" name="phone" value={providerData?.phone} onChange={handleChange} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="street">Street Address</Label>
                             <Input
-                              id="phone"
-                              name="phone"
-                              value={providerData?.phone}
-                              // onChange={handleChange}
+                              id="street"
+                              name="street"
+                              value={addressFields.street}
+                              onChange={handleAddressChange}
+                              placeholder="Street address"
                             />
                           </div>
-                          
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="city">City</Label>
+                              <Input
+                                id="city"
+                                name="city"
+                                value={addressFields.city}
+                                onChange={handleAddressChange}
+                                placeholder="City"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="state">State</Label>
+                              <Input
+                                id="state"
+                                name="state"
+                                value={addressFields.state}
+                                onChange={handleAddressChange}
+                                placeholder="State"
+                              />
+                            </div>
+                          </div>
+
                           <div className="space-y-2">
-                            <Label htmlFor="address">Address</Label>
+                            <Label htmlFor="pincode">Pincode</Label>
                             <Input
-                              id="address"
-                              name="address"
-                              value={providerData?.address}
-                              // onChange={handleChange}
+                              id="pincode"
+                              name="pincode"
+                              value={addressFields.pincode}
+                              onChange={handleAddressChange}
+                              placeholder="Pincode"
                             />
                           </div>
                         </div>
-                        
+
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="businessHours">Business Hours</Label>
+                            <Label htmlFor="startedYear">Founded Year</Label>
                             <Input
-                              id="businessHours"
-                              name="businessHours"
-                              // value={providerData.businessHours}
-                              // onChange={handleChange}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="specialty">Specialty</Label>
-                            <Input
-                              id="specialty"
-                              name="specialty"
-                              // value={providerData.specialty}
-                              // onChange={handleChange}
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="foundedYear">Founded Year</Label>
-                            <Input
-                              id="foundedYear"
-                              name="foundedYear"
+                              id="startedYear"
+                              name="startedYear"
                               type="number"
-                              // value={providerData.foundedYear}
-                              // onChange={handleChange}
+                              value={providerData?.startedYear}
+                              onChange={handleChange}
                             />
                           </div>
-                          
+
                           <div className="space-y-2">
-                            <Label htmlFor="about">About</Label>
+                            <Label htmlFor="description">About</Label>
                             <Textarea
-                              id="about"
-                              name="about"
-                              // value={providerData.about}
-                              // onChange={handleChange}
+                              id="description"
+                              name="description"
+                              value={providerData?.description}
+                              onChange={handleChange}
                               rows={5}
                             />
                           </div>
@@ -453,7 +1009,7 @@ export default function ProfilePage() {
                 </Card>
               )}
             </TabsContent>
-            
+
             <TabsContent value="services">
               <Card>
                 <CardHeader>
@@ -465,7 +1021,7 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="reviews">
               <Card>
                 <CardHeader>
@@ -477,7 +1033,7 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="gallery">
               <Card>
                 <CardHeader>
@@ -492,10 +1048,10 @@ export default function ProfilePage() {
           </Tabs>
         </div>
       </main>
-      
+
       <footer className="p-4 text-center bg-slate-900 text-white mt-8">
         <p>© 2025 Car Service Provider. All Rights Reserved.</p>
       </footer>
     </div>
-  );
+  )
 }

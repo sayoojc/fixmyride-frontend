@@ -87,6 +87,7 @@ export default function VerificationPage() {
       accountNumber: "",
       startedYear: "",
       description: "",
+      bankName:""
     },
   })
 
@@ -336,6 +337,21 @@ export default function VerificationPage() {
             />
           </div>
           {renderErrorMessage("accountHolderName")}
+        </motion.div>
+        <motion.div variants={itemVariants} className="space-y-2">
+          <Label htmlFor="accountHolderName" className="text-base font-medium">
+            Bank Name
+          </Label>
+          <div className="relative">
+            <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+            <Input
+              id="accountHolderName"
+              className={`pl-10 ${errors.bankName ? "border-red-400" : ""}`}
+              placeholder="Enter account holder's full name"
+              {...register("bankName")}
+            />
+          </div>
+          {renderErrorMessage("bankName")}
         </motion.div>
 
         <motion.div variants={itemVariants} className="space-y-2">

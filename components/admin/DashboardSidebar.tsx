@@ -61,6 +61,10 @@ const adminLogout = async ():Promise<void>  => {
     <Users className="mr-3 h-5 w-5" />
     Customers
   </Link>
+  <Link href="/admin/dashboard/provider-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+    <Users className="mr-3 h-5 w-5" />
+    Provider Management
+  </Link>
   <Link href="/admin/dashboard/vehicle-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
     <Car className="mr-3 h-5 w-5" />
     Vehicle Management

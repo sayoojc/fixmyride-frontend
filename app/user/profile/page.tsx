@@ -208,9 +208,9 @@ export const CustomerProfile = () => {
                       className="bg-gray-50"
                       readOnly
                     />
-                    <Button variant="ghost" className="text-red-500 font-medium h-9">
+                    {/* <Button variant="ghost" className="text-red-500 font-medium h-9">
                       EDIT
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               
@@ -238,9 +238,9 @@ export const CustomerProfile = () => {
                       className="bg-gray-50"
                       readOnly
                     />
-                    <Button variant="ghost" className="text-red-500 font-medium h-9">
-                      CHANGE
-                    </Button>
+                      {/* <Button variant="ghost" className="text-red-500 font-medium h-9">
+                        CHANGE
+                      </Button> */}
                   </div>
                 </div>
               </div>
