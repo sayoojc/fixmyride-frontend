@@ -1,257 +1,137 @@
-// "use client"
-
-// import React, { useEffect, useState } from 'react';
-// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { PlusCircle } from "lucide-react";
-// import createUserApi from '@/services/userApi';
-// import { axiosPrivate } from '@/api/axios';
-// const userApi = createUserApi(axiosPrivate);
-
-// // interface Vehicle {
-// //   id: number;
-// //   model: string;
-// //   type: string;
-// //   regNumber: string;
-// //   year: string;
-// // }
-// interface AddVehicleModalProps {
-//     open: boolean;
-//     onOpenChange: (open: boolean) => void;
-//   }
-
-//   export const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onOpenChange }) => {
-//     const [brands, setBrands] = useState<any[]>([]);
-// const [selectedBrand, setSelectedBrand] = useState<any>(null);
-// const [selectedModel, setSelectedModel] = useState<any>(null);
-
-
-// useEffect(() => {
-//     if (!open) return;
-  
-//     const fetchBrandsAndModels = async () => {
-//       try {
-//         const response = await userApi.getBrandAndModels();
-//         console.log("Response", response);
-//         if (response.success) {
-//           setBrands(response.brand);
-//         }
-//       } catch (error) {
-//         console.error("Failed to fetch brands and models:", error);
-//       }
-//     };
-  
-//     fetchBrandsAndModels();
-//   }, [open]);
-  
-
-//     const currentYear = new Date().getFullYear();
-//     const [vehicleForm, setVehicleForm] = useState({
-//       model: '',
-//       type: 'Petrol',
-//       regNumber: '',
-//       year: currentYear.toString()
-//     });
-  
-//     const handleVehicleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//       const { name, value } = e.target;
-//       setVehicleForm(prev => ({ ...prev, [name]: value }));
-//     };
-  
-//     const handleSubmitVehicle = () => {
-//       if (!vehicleForm.model || !vehicleForm.regNumber) {
-//         alert('Please fill all required fields');
-//         return;
-//       }
-  
-//       // Reset form
-//       setVehicleForm({
-//         model: '',
-//         type: 'Petrol',
-//         regNumber: '',
-//         year: currentYear.toString()
-//       });
-  
-//       // Close dialog
-//       onOpenChange(false);
-//     };
-  
-//     const years = Array.from({ length: currentYear - 1989 }, (_, i) => (currentYear - i).toString());
-  
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogTrigger asChild>
-//         <Button className="bg-red-500 hover:bg-red-600 text-white">
-//           <PlusCircle className="h-4 w-4 mr-2" /> ADD NEW VEHICLE
-//         </Button>
-//       </DialogTrigger>
-//       <DialogContent className="sm:max-w-md">
-//         <DialogHeader>
-//           <DialogTitle className="text-xl font-semibold">Add New Vehicle</DialogTitle>
-//         </DialogHeader>
-//         <div className="grid gap-4 py-4">
-//           <div className="space-y-2">
-//             <Label htmlFor="vehicleModel" className="text-gray-600 text-sm">Vehicle Model</Label>
-//             <Input 
-//               id="vehicleModel"
-//               name="model"
-//               placeholder="e.g. Tata Tiago, Hyundai i20"
-//               value={vehicleForm.model}
-//               onChange={handleVehicleChange}
-//             />
-//           </div>
-//           <div className="space-y-2">
-//   <Label className="text-gray-600 text-sm">Select Brand</Label>
-//   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-//     {brands.map((brand) => (
-//       <div
-//         key={brand._id}
-//         onClick={() => {
-//           setSelectedBrand(brand);
-//           setSelectedModel(null); // reset previously selected model
-//         }}
-//         className={`border rounded-lg p-2 cursor-pointer text-center transition-all ${
-//           selectedBrand?._id === brand._id ? 'border-red-500 ring-2 ring-red-400' : 'hover:shadow-md'
-//         }`}
-//       >
-//         <img src={brand.imageUrl} alt={brand.brandName} className="w-full h-20 object-contain" />
-//         <p className="text-sm mt-1">{brand.brandName}</p>
-//       </div>
-//     ))}
-//     {selectedBrand && (
-//   <div className="space-y-2">
-//     <Label className="text-gray-600 text-sm">Select Model</Label>
-//     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-//       {selectedBrand.models.map((model: any) => (
-//         <div
-//           key={model._id}
-//           onClick={() => setSelectedModel(model)}
-//           className={`border rounded-lg p-2 cursor-pointer text-center transition-all ${
-//             selectedModel?._id === model._id ? 'border-green-500 ring-2 ring-green-400' : 'hover:shadow-md'
-//           }`}
-//         >
-//           <img src={model.imageUrl} alt={model.name} className="w-full h-20 object-contain" />
-//           <p className="text-sm mt-1">{model.name}</p>
-//         </div>
-//       ))}
-//     </div>
-//   </div>
-// )}
-
-//   </div>
-// </div>
-//           <div className="space-y-2">
-//             <Label htmlFor="vehicleType" className="text-gray-600 text-sm">Fuel Type</Label>
-//             <Select 
-//               value={vehicleForm.type}
-//               onValueChange={(value) => setVehicleForm(prev => ({...prev, type: value}))}
-//             >
-//               <SelectTrigger id="vehicleType">
-//                 <SelectValue placeholder="Select fuel type" />
-//               </SelectTrigger>
-//               <SelectContent>
-//                 <SelectItem value="Petrol">Petrol</SelectItem>
-//                 <SelectItem value="Diesel">Diesel</SelectItem>
-//                 <SelectItem value="Electric">Electric</SelectItem>
-//                 <SelectItem value="CNG">CNG</SelectItem>
-//                 <SelectItem value="Hybrid">Hybrid</SelectItem>
-//               </SelectContent>
-//             </Select>
-//           </div>
-
-//           <div className="space-y-2">
-//             <Label htmlFor="regNumber" className="text-gray-600 text-sm">Registration Number</Label>
-//             <Input 
-//               id="regNumber"
-//               name="regNumber"
-//               placeholder="e.g. KL-01-AB-1234"
-//               value={vehicleForm.regNumber}
-//               onChange={handleVehicleChange}
-//             />
-//           </div>
-
-//           <div className="space-y-2">
-//             <Label htmlFor="vehicleYear" className="text-gray-600 text-sm">Manufacturing Year</Label>
-//             <Select 
-//               value={vehicleForm.year}
-//               onValueChange={(value) => setVehicleForm(prev => ({...prev, year: value}))}
-//             >
-//               <SelectTrigger id="vehicleYear">
-//                 <SelectValue placeholder="Select year" />
-//               </SelectTrigger>
-//               <SelectContent>
-//                 {years.map(year => (
-//                   <SelectItem key={year} value={year}>{year}</SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//           </div>
-//         </div>
-//         <DialogFooter>
-//         <Button variant="outline" onClick={() => onOpenChange(false)}>
-//             Cancel
-//           </Button>
-//           <Button className="bg-red-500 hover:bg-red-600 text-white" onClick={handleSubmitVehicle}>
-//             Save Vehicle
-//           </Button>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// };
-
-// export default AddVehicleModal;
+"use client";
 
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import createUserApi from "@/services/userApi";
+import { axiosPrivate } from "@/api/axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, Loader2, AlertCircle } from "lucide-react";
+import { FuelIcon as GasPump, Droplet, Zap, Flame } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { toast } from "react-toastify";
+import type { User as UserType, Address } from "../../types/user"
+
+const userApi = createUserApi(axiosPrivate);
 
 type Brand = {
-  id: number;
-  name: string;
-  logo: string;
+  _id: string;
+  brandName: string;
+  imageUrl: string;
+  models: Model[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 };
 
 type Model = {
-  id: number;
+  _id: string;
+  brandId: string;
   name: string;
-  image: string;
+  imageUrl: string;
+  status: string;
+  fuelTypes: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 };
 
 type AddVehicleModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  setUser:(user:UserType) => void
+  user:UserType
 };
 
-// Dummy Data — replace with actual API
-const brands: Brand[] = [
-  { id: 1, name: "Maruti", logo: "/images/maruti.png" },
-  { id: 2, name: "Hyundai", logo: "/images/hyundai.png" },
-];
-
-const allModels: Record<string, Model[]> = {
-  Maruti: [
-    { id: 1, name: "Swift", image: "/images/swift.png" },
-    { id: 2, name: "Baleno", image: "/images/baleno.png" },
-    { id: 3, name: "Alto", image: "/images/alto.png" },
-  ],
-  Hyundai: [
-    { id: 4, name: "i20", image: "/images/i20.png" },
-    { id: 5, name: "Creta", image: "/images/creta.png" },
-  ],
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
 };
 
-const fuelOptions = ["Petrol", "Diesel", "CNG", "Electric"];
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+  exit: { opacity: 0, y: -20 },
+};
 
-const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onOpenChange }) => {
-  const [step, setStep] = useState<"brand" | "model" | "fuel" | "final">("brand");
+// Fuel type icons and colors mapping
+const fuelTypeConfig = {
+  Petrol: {
+    icon: GasPump,
+    color: "bg-red-100 text-red-600 border-red-200",
+    label: "Petrol",
+  },
+  Diesel: {
+    icon: Droplet,
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    label: "Diesel",
+  },
+  CNG: {
+    icon: Flame,
+    color: "bg-green-100 text-green-600 border-green-200",
+    label: "CNG",
+  },
+  LPG: {
+    icon: Flame,
+    color: "bg-purple-100 text-purple-600 border-purple-200",
+    label: "LPG",
+  },
+  Electric: {
+    icon: Zap,
+    color: "bg-blue-100 text-blue-600 border-blue-200",
+    label: "Electric",
+  },
+};
+
+const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
+  open,
+  onOpenChange,
+  setUser,
+  user
+}) => {
+  const [step, setStep] = useState<"brand" | "model" | "fuel" | "final">(
+    "brand"
+  );
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [selectedFuel, setSelectedFuel] = useState<string | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      fetchBrands();
+    } else {
+      // Reset state when modal closes
       setStep("brand");
       setSelectedBrand(null);
       setSelectedModel(null);
@@ -259,107 +139,446 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onOpenChange })
     }
   }, [open]);
 
-  const models = selectedBrand ? allModels[selectedBrand.name] || [] : [];
+  const fetchBrands = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await userApi.getBrandsApi();
+      if (response && response.brand) {
+        setBrands(response.brand);
+      }
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      setError("Failed to load brands. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (!open) return null;
+  const handleSubmitVehicle = async () => {
+    if (!selectedBrand || !selectedModel || !selectedFuel) {
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      const vehicleData = {
+        brandId: selectedBrand._id,
+        brandName: selectedBrand.brandName,
+        modelId: selectedModel._id,
+        modelName: selectedModel.name,
+        fuelType: selectedFuel,
+      };
+
+      // Send data to backend
+      const response = await userApi.addVehicleApi(vehicleData);
+   
+        setSubmitSuccess(true);
+  const newVehicle = response.vehicle;
+
+  setUser({
+    ...user,
+    vehicles: [...user.vehicles, newVehicle],
+  });
+
+
+        toast.success("Vehicle added successfully");
+      
+
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Error adding the vehicle: ${errMsg}nkhkjhkhjhl`);
+      setSubmitError("Failed to add vehicle. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getFuelIcon = (fuelType: string) => {
+    const config = fuelTypeConfig[fuelType as keyof typeof fuelTypeConfig] || {
+      icon: GasPump,
+      color: "bg-gray-100 text-gray-600 border-gray-200",
+      label: fuelType,
+    };
+
+    const Icon = config.icon;
+    return { Icon, color: config.color, label: config.label };
+  };
+
+  const renderStepContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchBrands}
+            className="mt-2"
+          >
+            Try again
+          </Button>
+        </Alert>
+      );
+    }
+
+    switch (step) {
+      case "brand":
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="brand-step"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-4"
+            >
+              <DialogHeader>
+                <DialogTitle>Select Brand</DialogTitle>
+              </DialogHeader>
+
+              {brands.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No brands available
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {brands.map((brand) => (
+                    <motion.div
+                      key={brand._id}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Card
+                        className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
+                        onClick={() => {
+                          setSelectedBrand(brand);
+                          setStep("model");
+                        }}
+                      >
+                        <CardContent className="flex flex-col items-center justify-center p-4">
+                          <div className="w-16 h-16 flex items-center justify-center">
+                            <img
+                              src={brand.imageUrl || "/placeholder.svg"}
+                              alt={brand.brandName}
+                              className="max-w-full max-h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "/images/placeholder-brand.png";
+                              }}
+                            />
+                          </div>
+                          <p className="mt-2 text-sm font-medium">
+                            {brand.brandName}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case "model":
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="model-step"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-4"
+            >
+              <DialogHeader className="flex flex-row items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setStep("brand")}
+                  className="mr-2 h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle>Select Model</DialogTitle>
+              </DialogHeader>
+
+              {selectedBrand?.models.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No models available for this brand
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {selectedBrand?.models.map((model) => (
+                    <motion.div
+                      key={model._id}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Card
+                        className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
+                        onClick={() => {
+                          console.log("selected model", model);
+                          setSelectedModel(model);
+                          setStep("fuel");
+                        }}
+                      >
+                        <CardContent className="flex flex-col items-center justify-center p-4">
+                          <div className="w-16 h-16 flex items-center justify-center">
+                            <img
+                              src={model.imageUrl || "/placeholder.svg"}
+                              alt={model.name}
+                              className="max-w-full max-h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "/images/placeholder-model.png";
+                              }}
+                            />
+                          </div>
+                          <p className="mt-2 text-sm font-medium">
+                            {model.name}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case "fuel":
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="fuel-step"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-4"
+            >
+              <DialogHeader className="flex flex-row items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setStep("model")}
+                  className="mr-2 h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle>Select Fuel Type</DialogTitle>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-4">
+                {selectedModel?.fuelTypes.map((fuel) => {
+                  const { Icon, color, label } = getFuelIcon(fuel);
+                  return (
+                    <motion.div
+                      key={fuel}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Card
+                        className={cn(
+                          "cursor-pointer border-2 hover:shadow-md transition-all overflow-hidden",
+                          color
+                        )}
+                        onClick={() => {
+                          setSelectedFuel(fuel);
+                          setStep("final");
+                        }}
+                      >
+                        <CardContent className="flex items-center p-4 gap-3">
+                          <div className="rounded-full p-2 bg-white/80 backdrop-blur">
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <span className="font-medium">{label}</span>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case "final":
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="final-step"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="space-y-6"
+            >
+              <DialogHeader>
+                <DialogTitle>You're All Set!</DialogTitle>
+              </DialogHeader>
+
+              <motion.div className="space-y-4" variants={itemVariants}>
+                <Card className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-4 bg-primary/10">
+                      <h3 className="font-semibold">Vehicle Details</h3>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <img
+                            src={selectedBrand?.imageUrl || "/placeholder.svg"}
+                            alt={selectedBrand?.brandName}
+                            className="w-6 h-6 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "/images/placeholder-brand.png";
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm">
+                          <span className="text-muted-foreground">Brand:</span>{" "}
+                          {selectedBrand?.brandName}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <img
+                            src={selectedModel?.imageUrl || "/placeholder.svg"}
+                            alt={selectedModel?.name}
+                            className="w-6 h-6 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "/images/placeholder-model.png";
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm">
+                          <span className="text-muted-foreground">Model:</span>{" "}
+                          {selectedModel?.name}
+                        </span>
+                      </div>
+
+                      {selectedFuel && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            {React.createElement(
+                              getFuelIcon(selectedFuel).Icon,
+                              { className: "w-4 h-4" }
+                            )}
+                          </div>
+                          <span className="text-sm">
+                            <span className="text-muted-foreground">
+                              Fuel Type:
+                            </span>{" "}
+                            {selectedFuel}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {submitError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{submitError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {submitSuccess ? (
+                  <Alert
+                    variant="default"
+                    className="bg-green-50 text-green-700 border-green-200"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="rounded-full bg-green-100 p-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <AlertDescription>
+                        Vehicle added successfully!
+                      </AlertDescription>
+                    </motion.div>
+                  </Alert>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      className="w-full"
+                      onClick={handleSubmitVehicle}
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding Vehicle...
+                        </>
+                      ) : (
+                        "Add Vehicle"
+                      )}
+                    </Button>
+                  </motion.div>
+                )}
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+        );
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg w-[90%] max-w-lg shadow-lg relative">
-        {/* Close Button */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute top-2 right-2 text-gray-600 text-xl"
-        >
-          &times;
-        </button>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Vehicle</DialogTitle>{" "}
+          {/* Or whatever your modal is about */}
+        </DialogHeader>
 
-        {step === "brand" && (
-          <>
-            <h2 className="text-xl font-semibold mb-4">Select Brand</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {brands.map((brand) => (
-                <div
-                  key={brand.id}
-                  onClick={() => {
-                    setSelectedBrand(brand);
-                    setStep("model");
-                  }}
-                  className="cursor-pointer text-center hover:bg-gray-100 p-2 rounded"
-                >
-                  <img src={brand.logo} alt={brand.name} className="w-16 h-16 mx-auto" />
-                  <p className="mt-2 text-sm">{brand.name}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === "model" && (
-          <>
-            <button onClick={() => setStep("brand")} className="text-sm text-blue-500 mb-2">
-              ← Back to brands
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Select Model</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {models.map((model) => (
-                <div
-                  key={model.id}
-                  onClick={() => {
-                    setSelectedModel(model);
-                    setStep("fuel");
-                  }}
-                  className="cursor-pointer text-center hover:bg-gray-100 p-2 rounded"
-                >
-                  <img src={model.image} alt={model.name} className="w-16 h-16 mx-auto" />
-                  <p className="mt-2 text-sm">{model.name}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === "fuel" && (
-          <>
-            <button onClick={() => setStep("model")} className="text-sm text-blue-500 mb-2">
-              ← Back to models
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Select Fuel Type</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {fuelOptions.map((fuel) => (
-                <div
-                  key={fuel}
-                  onClick={() => {
-                    setSelectedFuel(fuel);
-                    setStep("final");
-                  }}
-                  className="cursor-pointer p-4 border rounded-lg text-center shadow hover:bg-blue-50"
-                >
-                  {fuel}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === "final" && (
-          <>
-            <h2 className="text-xl font-semibold mb-4">You're All Set!</h2>
-            <ul className="space-y-2 text-gray-700">
-              <li>🚗 Brand: {selectedBrand?.name}</li>
-              <li>📘 Model: {selectedModel?.name}</li>
-              <li>🛢️ Fuel: {selectedFuel}</li>
-            </ul>
-            <button
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              onClick={() => onOpenChange(false)}
-            >
-              Confirm & Continue
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+        {renderStepContent()}
+      </DialogContent>
+    </Dialog>
   );
 };
 

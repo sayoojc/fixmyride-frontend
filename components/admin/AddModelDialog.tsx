@@ -1,31 +1,38 @@
 import React, { useState } from 'react';
-  import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-  import { Input } from "@/components/ui/input";
-  import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from "@/components/ui/dialog";
-  import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-
-  import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select";
+// Define available fuel types
+const FUEL_TYPES = [
+  { id: "petrol", label: "Petrol" },
+  { id: "diesel", label: "Diesel" },
+  { id: "cng", label: "CNG" },
+  { id: "lpg", label: "LPG" },
+];
 
 interface AddModelDialogProps {
   isAddModelDialogOpen: boolean;
   setIsAddModelDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  addModelForm: any; // Replace with your form hook type
-  addModel: (data: any) => void; // Replace with your actual addModel function
-  brands: { _id: string; brandName: string }[]; // Brands array
+  addModelForm: any;
+  addModel: (data: any) => void;
+  brands: { _id: string; brandName: string }[];
 }
 
 const AddModelDialog: React.FC<AddModelDialogProps> = ({
@@ -97,6 +104,46 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Fuel Types Field */}
+            <div className="space-y-2">
+              <FormLabel>Supported Fuel Types</FormLabel>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {FUEL_TYPES.map((fuel) => (
+                  <FormField
+                    key={fuel.id}
+                    control={addModelForm.control}
+                    name="fuelTypes"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={fuel.id}
+                          className="flex flex-row items-center space-x-2 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={(field.value || []).includes(fuel.id)}
+                              onCheckedChange={(checked) => {
+                                const updatedFuelTypes = checked
+                                  ? [...(field.value || []), fuel.id]
+                                  : (field.value || []).filter(
+                                      (value: string) => value !== fuel.id
+                                    );
+                                field.onChange(updatedFuelTypes);
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="cursor-pointer font-normal">
+                            {fuel.label}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </div>
 
             {/* Model Image Field */}
             <FormItem>

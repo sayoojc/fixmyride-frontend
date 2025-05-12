@@ -17,18 +17,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import { toast } from "react-toastify";
-
+import {User} from '../../types/user'
 const userApi = createUserApi(axiosPrivate);
-type User = {
-  name:string,
-  id:string,
-  email:string,
-  phone:string,
-  role:string,
-  isListed:boolean
-  addresses:Address[],
-  defaultAddress:string
-}
 interface Address {
   _id?: string;
   userId: string | undefined;

@@ -58,6 +58,7 @@ const modelSchema = z.object({
   image: z
   .instanceof(File)
   .refine((file) => file.size > 0, "Image file is required"),
+   fuelTypes: z.array(z.string()).min(1, "At least one fuel type is required"),
 });
 
 
@@ -295,7 +296,7 @@ const BrandModelManagement: React.FC = () => {
 
     const imageUrl = await imageUploadApi.uploadBrandImageApi(modelData.image);
     console.log('The image url from the add model',imageUrl);
-     const response = await adminApi.AddModelApi(modelData.name,imageUrl,modelData.brandId);
+     const response = await adminApi.AddModelApi(modelData.name,imageUrl,modelData.brandId,modelData.fuelTypes);
      console.log('response',response);
         
      setBrands((prevBrands) => 

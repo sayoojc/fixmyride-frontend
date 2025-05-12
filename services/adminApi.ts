@@ -12,12 +12,13 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
         console.error('Adding brand failed');
     }
   },
-  AddModelApi : async (model:string,imageUrl:string,brandId:string) => {
+  AddModelApi : async (model:string,imageUrl:string,brandId:string,fuelTypes:string[]) => {
     try {
         const response = await axiosPrivate.post("/api/admin/add-model",{
             model,
             imageUrl,
-            brandId
+            brandId,
+            fuelTypes
         });
         return response.data;
     } catch (error) {
