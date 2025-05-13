@@ -1,21 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation";
-import { useRouter } from 'next/navigation'
+import { useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import createAdminApi from "@/services/adminApi";
-import { axiosPrivate } from "@/api/axios";
-const adminApi = createAdminApi(axiosPrivate);
-import { IVerification } from "@/types/provider";
-import {
-  CheckCircle,
-  XCircle,
-  FileText,
-  Building,
-  CreditCard,
-  ArrowLeft
-} from "lucide-react"
+import createAdminApi from "@/services/adminApi"
+import { axiosPrivate } from "@/api/axios"
+const adminApi = createAdminApi(axiosPrivate)
+import type { IVerification } from "@/types/provider"
+import { CheckCircle, XCircle, FileText, Building, CreditCard, ArrowLeft } from "lucide-react"
 import { toast } from "react-toastify"
 
 // Import shadcn components
@@ -34,34 +27,34 @@ import {
 } from "@/components/ui/dialog"
 
 // Define TypeScript interfaces
-import { IServiceProvider } from "@/types/provider";
-
+import type { IServiceProvider } from "@/types/provider"
 
 interface ProviderVerificationProps {
   onBack: () => void
 }
 
 const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
-  const [provider, setProvider] = useState<IServiceProvider | null>(null);
-  const [verificationData,setVerificationData] = useState<IVerification | null>( null );
+  const [provider, setProvider] = useState<IServiceProvider | null>(null)
+  const [verificationData, setVerificationData] = useState<IVerification | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [currentTab, setCurrentTab] = useState<string>("idProof")
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false)
   const [verificationAction, setVerificationAction] = useState<"Verified" | "Rejected" | null>(null)
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const providerId = searchParams.get("id");
+  const [adminNotes, setAdminNotes] = useState<string>("")
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const providerId = searchParams.get("id")
   // Fetch provider data
   useEffect(() => {
     const fetchProvider = async () => {
-      if (!providerId) return;
+      if (!providerId) return
       try {
         setLoading(true)
-        const verificationData = await adminApi.getVerificationData(providerId);
-        setVerificationData(verificationData.data.verificationData);
-        const response = await adminApi.getProviderById(providerId);
-        setProvider(response.data.providers);
-        setLoading(false);
+        const verificationData = await adminApi.getVerificationData(providerId)
+        setVerificationData(verificationData.data.verificationData)
+        const response = await adminApi.getProviderById(providerId)
+        setProvider(response.data.providers)
+        setLoading(false)
       } catch (error) {
         console.error("Failed to fetch provider details:", error)
         setLoading(false)
@@ -89,9 +82,10 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
     if (!provider || !verificationAction || !providerId) return
 
     try {
-      const response = adminApi.verifyProviderApi(providerId,verificationAction)
-     toast.success(`provider ${verificationAction} successfully`);
-       router.push('/admin/dashboard/provider-management');
+      // Include admin notes in the verification request
+      const response = adminApi.verifyProviderApi(providerId, verificationAction, adminNotes)
+      toast.success(`provider ${verificationAction} successfully`)
+      router.push("/admin/dashboard/provider-management")
       closeConfirmModal()
     } catch (error) {
       console.error("Failed to verify provider:", error)
@@ -191,7 +185,6 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
 
       {/* Main content */}
       <main className="w-[85%] ml-[250px] overflow-hidden p-2">
-
         <div className="flex gap-3 h-full">
           {/* Provider Information Card */}
           <div className="w-64 flex-shrink-0">
@@ -216,12 +209,12 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                   <span className="text-slate-500">Started:</span>
                   <span className="font-medium text-slate-800">{verificationData?.startedYear}</span>
                 </div>
-               
+
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">Status:</span>
                   <Badge variant={provider.isListed ? "default" : "destructive"} className="text-xs">
-  {provider.isListed ? "Active" : "Blocked"}
-</Badge>
+                    {provider.isListed ? "Active" : "Blocked"}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">Verification:</span>
@@ -238,14 +231,6 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                     {provider?.verificationStatus}
                   </Badge>
                 </div>
-                {/* <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-500">Rating:</span>
-                  <div className="flex items-center">
-                    <span className="text-amber-500">★</span>
-                    <span className="ml-1 font-medium">{provider.rating.toFixed(1)}</span>
-                    <span className="text-xs text-slate-500 ml-1">({provider.completedServices})</span>
-                  </div>
-                </div> */}
               </div>
 
               {provider?.verificationStatus === "pending" && (
@@ -316,7 +301,8 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <img
                           src={verificationData?.idProofImage || "/api/placeholder/400/320"}
                           alt="ID Proof"
-                          className="max-w-full max-h-full object-contain"
+                          className="w-[400px] h-[300px] object-contain"
+                          style={{ maxWidth: "100%" }}
                         />
                       </div>
                     </CardContent>
@@ -338,7 +324,8 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <img
                           src={verificationData?.licenseImage || "/api/placeholder/400/320"}
                           alt="Shop License"
-                          className="max-w-full max-h-full object-contain"
+                          className="w-[400px] h-[300px] object-contain"
+                          style={{ maxWidth: "100%" }}
                         />
                       </div>
                     </CardContent>
@@ -373,7 +360,6 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                           <p className="text-xs font-medium text-slate-500 mb-1">IFSC Code</p>
                           <p className="text-sm font-semibold">{verificationData?.ifscCode}</p>
                         </div>
-                     
                       </div>
                     </CardContent>
                   </Card>
@@ -443,6 +429,19 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                     <p className="font-medium text-slate-800">{provider?.ownerName}</p>
                     <p className="text-slate-500">{provider?.name}</p>
                   </div>
+
+                  <div className="mt-3">
+                    <label htmlFor="admin-notes" className="text-xs font-medium text-slate-700 block mb-1">
+                      Admin Notes
+                    </label>
+                    <textarea
+                      id="admin-notes"
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Add verification notes here..."
+                      className="w-full text-xs p-2 border border-slate-300 rounded-md h-20 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
 
                 <DialogFooter className="flex-row justify-end gap-2">
@@ -466,7 +465,5 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
     </motion.div>
   )
 }
-
-
 
 export default ProviderVerification

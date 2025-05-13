@@ -125,13 +125,23 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
             throw error
         }
       },
-  verifyProviderApi: async (providerId:string,verificationAction:string) => {
+  verifyProviderApi: async (providerId:string,verificationAction:string,adminNotes:string) => {
     try {
       const response = await axiosPrivate.patch('/api/admin/verify-provider',{
            providerId,
            verificationAction
       })
       return response
+    } catch (error) {
+      throw error
+    }
+  },
+  toggleProviderListing: async (providerId:string) => {
+    try {
+      const response = await axiosPrivate.patch('/api/admin/toggle-provider-listing',{
+        providerId
+      });
+      return response.data;
     } catch (error) {
       throw error
     }
