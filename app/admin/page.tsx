@@ -18,10 +18,6 @@ const authApi = createAuthApi(axiosPrivate);
 export default function AdminHomePage() {
    const router = useRouter(); 
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
   const handleLogin = async(email: string, password: string) => {
  try {
       await authApi.adminLoginApi(email,password);

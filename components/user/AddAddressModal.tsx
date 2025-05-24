@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,9 +82,10 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
       ...addressForm,
       userId: userId,
     });
-    if (response && response.data.address) {
-      const newAddress = response.data.address;
-    
+    console.log('The response from the add address function',response)
+    if (response ) {
+      const newAddress = response.data;
+      console.log('new address',newAddress);
       toast.success("Address Added Successfully");
     
       setUser((prevUser: User | null): User | null => {

@@ -26,7 +26,7 @@ const createUserApi = (axiosPrivate:AxiosInstance) => ( {
   },
   addAddressApi : async (addressData:Address) => {
     try {
-      const response = await axiosPrivate.post("/api/user/add-address", { address: addressData });
+      const response = await axiosPrivate.post("/api/user/add-address", addressData );
     return response;
     } catch (error) {
       console.error('Fetching Brand Data Failed');

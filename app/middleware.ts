@@ -1,33 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
+// import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const accessToken = req.cookies.get("accessToken");
-  const refreshToken = req.cookies.get("refreshToken");
+// export async function middleware(req: NextRequest) {
+//   const accessToken = req.cookies.get("accessToken");
+//   const refreshToken = req.cookies.get("refreshToken");
 
-  if (accessToken) {
-    console.log('The accesstoken exists')
-    // ✅ Token exists, let user in
-    return NextResponse.next();
-  }
+//   if (accessToken) {
+//     console.log('The accesstoken exists')
+//     return NextResponse.next();
+//   }
 
-  if (refreshToken) {
-        console.log('The refreshtoken exists')
+//   if (refreshToken) {
+//         console.log('The refreshtoken exists')
+//     const res = await fetch(`${process.env.API_URL}/auth/refresh-token`, {
+//       method: "POST",
+//       credentials: "include",
+//     });
 
-    // ⏳ Try refreshing the token
-    const res = await fetch(`${process.env.API_URL}/auth/refresh-token`, {
-      method: "POST",
-      credentials: "include",
-    });
+//     if (res.ok) {
+    
+//       return NextResponse.next();
+//     } else {
+//       return NextResponse.redirect(new URL("/login", req.url));
+//     }
+//   }
 
-    if (res.ok) {
-      // ✅ Token refreshed. Let user in.
-      return NextResponse.next();
-    } else {
-      // ❌ Refresh token is invalid/expired. Redirect to login
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-  }
-
-  // ❌ No tokens at all
-  return NextResponse.redirect(new URL("/login", req.url));
-}
+//   return NextResponse.redirect(new URL("/login", req.url));
+// }

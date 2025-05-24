@@ -6,6 +6,12 @@ export interface IServiceProvider {
     googleId?: string;
     provider?: string;
     address?:string;
+    addressToSend:{
+    street:string,
+    city:string,
+    state:string,
+    pinCode:string,
+    }
     location?: {
       latitude: number;
       longitude: number;

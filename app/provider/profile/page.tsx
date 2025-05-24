@@ -21,7 +21,6 @@ import { Clock, MapPin, Mail, Phone, FileEdit, Save, X, XCircle, Pencil, Loader2
 import createimageUploadApi from "@/services/imageUploadApi"
 import { axiosPublic } from "@/api/axiosPublic"
 
-
 interface IServiceProvider {
   name: string
   ownerName: string
@@ -30,10 +29,12 @@ interface IServiceProvider {
   googleId?: string
   provider?: string
   address?: string
-  streetAddress?: string
-  city?: string
-  state?: string
-  pincode?: string
+  addressToSend?:{
+     street:string,
+    city:string,
+    state:string,
+    pinCode:string,
+  }
   location?: {
     latitude: number
     longitude: number
@@ -77,13 +78,6 @@ const defaultProvider: IServiceProvider = {
   startedYear: 0,
   description: "",
 }
-
-interface Statistic {
-  label: string
-  value: number
-  icon: React.ReactNode
-}
-
 const providerApi = createProviderApi(axiosPrivate)
 const imageUploadApi = createimageUploadApi(axiosPublic);
 
@@ -95,7 +89,7 @@ export default function ProfilePage() {
     street: "",
     city: "",
     state: "",
-    pincode: "",
+    pinCode: "",
   })
   const coverPhotoInputRef = useRef<HTMLInputElement>(null)
   const profilePhotoInputRef = useRef<HTMLInputElement>(null)
@@ -105,10 +99,14 @@ export default function ProfilePage() {
   }>({})
 
   useEffect(() => {
+    if(providerData){
+      console.log('provider data',providerData);
+    }
+  },[providerData]);
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await providerApi.getProfileData()
-        console.log("response", response.provider)
 
         // Parse address if it exists
         if (response.provider?.address) {
@@ -116,28 +114,24 @@ export default function ProfilePage() {
           const street = addressParts[0]?.trim() || ""
           const city = addressParts[1]?.trim() || ""
           let state = ""
-          let pincode = ""
+          let pinCode = ""
 
           if (addressParts[2]) {
             const statePincodeParts = addressParts[2].trim().split(" ")
             state = statePincodeParts.slice(0, -1).join(" ").trim()
-            pincode = statePincodeParts[statePincodeParts.length - 1]?.trim() || ""
+            pinCode = statePincodeParts[statePincodeParts.length - 1]?.trim() || ""
           }
 
           // Update the provider data with parsed address components
           setProviderData({
             ...response.provider,
-            streetAddress: street,
-            city: city,
-            state: state,
-            pincode: pincode,
           })
 
           setAddressFields({
             street,
             city,
             state,
-            pincode,
+            pinCode,
           })
         } else {
           setProviderData(response.provider)
@@ -149,7 +143,6 @@ export default function ProfilePage() {
 
     fetchData()
   }, [])
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setProviderData({
@@ -169,60 +162,37 @@ export default function ProfilePage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: "cover" | "profile") => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Store the selected file for later upload during form submission
     setSelectedFiles({
       ...selectedFiles,
       [type]: file,
     })
-
-    // Create a temporary URL for preview
     const previewUrl = URL.createObjectURL(file)
     setProviderData({
       ...providerData,
       [type === "cover" ? "coverPhoto" : "profilePicture"]: previewUrl,
     })
   }
-
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-
-    // Update the address fields state
     setAddressFields({
       ...addressFields,
       [name]: value,
     })
-
-    // Update the corresponding field in providerData
-    const fieldMapping: Record<string, string> = {
-      street: "streetAddress",
-      city: "city",
-      state: "state",
-      pincode: "pincode",
-    }
-
-    // Update the provider data with the individual field
     setProviderData({
       ...providerData,
-      [fieldMapping[name]]: value,
-      // Also update the combined address for display purposes
       address: `${name === "street" ? value : addressFields.street}, ${
         name === "city" ? value : addressFields.city
-      }, ${name === "state" ? value : addressFields.state} ${name === "pincode" ? value : addressFields.pincode}`,
+      }, ${name === "state" ? value : addressFields.state} ${name === "pinCode" ? value : addressFields.pinCode}`,
     })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     try {
-      const updatedProviderData = { ...providerData }
-
-      // Handle image uploads if files were selected
+      const { address, ...updatedProviderData } = providerData;
       if (selectedFiles.profile || selectedFiles.cover) {
         const uploadPromises = []
-
         if (selectedFiles.profile) {
           uploadPromises.push(
             imageUploadApi.uploadBrandImageApi(selectedFiles.profile).then((response) => {
@@ -232,7 +202,6 @@ export default function ProfilePage() {
             }),
           )
         }
-
         if (selectedFiles.cover) {
           uploadPromises.push(
             imageUploadApi.uploadBrandImageApi(selectedFiles.cover).then((response) => {
@@ -242,26 +211,14 @@ export default function ProfilePage() {
             }),
           )
         }
-
-        // Wait for all uploads to complete
         await Promise.all(uploadPromises)
       }
-
-      // Prepare the final data to send to the backend
       const dataToSend = {
         ...updatedProviderData,
-        // Include address components separately
-        streetAddress: addressFields.street,
-        city: addressFields.city,
-        state: addressFields.state,
-        pincode: addressFields.pincode,
+      addressToSend:addressFields,
       }
-
-      // Update the provider profile
       const updateResponse = await providerApi.updateProfile(dataToSend)
-
       if (updateResponse.success) {
-        // Update the local state with the response data
         setProviderData(updateResponse.provider)
         setIsEditing(false)
         alert("Profile updated successfully!")
@@ -273,7 +230,6 @@ export default function ProfilePage() {
       alert("Failed to update profile. Please try again.")
     } finally {
       setIsSubmitting(false)
-      // Clear selected files after submission
       setSelectedFiles({})
     }
   }
@@ -570,11 +526,11 @@ export default function ProfilePage() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="pincode">Pincode</Label>
+                            <Label htmlFor="pinCode">Pincode</Label>
                             <Input
-                              id="pincode"
-                              name="pincode"
-                              value={addressFields.pincode}
+                              id="pinCode"
+                              name="pinCode"
+                              value={addressFields.pinCode}
                               onChange={handleAddressChange}
                               placeholder="Pincode"
                             />

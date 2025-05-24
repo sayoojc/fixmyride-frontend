@@ -144,8 +144,9 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
     setError(null);
     try {
       const response = await userApi.getBrandsApi();
-      if (response && response.brand) {
-        setBrands(response.brand);
+      console.log('response',response);
+      if (response && response.brands) {
+        setBrands(response.brands);
       }
     } catch (error) {
       console.error("Error fetching brands:", error);

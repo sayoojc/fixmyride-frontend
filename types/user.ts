@@ -36,7 +36,7 @@ export interface IBrand {
   status:string;
 }
 
-export type User = {
+export interface User {
   name:string,
   id:string,
   email:string,
@@ -47,5 +47,34 @@ export type User = {
   defaultAddress:string,
   provider:string
   profileImage:string
-  vehicles:IVehicle[]
+  vehicles:Vehicle[]
+}
+
+export interface Brand {
+  _id: string;
+  brandName: string;
+  imageUrl: string;
+  status: string;
+  createdAt?: string; // optional datetime
+  updatedAt?: string; // optional datetime
+}
+
+
+export interface Model {
+  _id: string;
+  name: string;
+  imageUrl: string;
+  status: string;
+  brandId: string;
+  fuelTypes: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Vehicle {
+  _id: string;
+  userId: string;
+  brandId: Brand;
+  modelId: Model;
+  fuel: string;
 }

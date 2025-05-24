@@ -17,20 +17,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import { toast } from "react-toastify";
-import {User} from '../../types/user'
+import {User,Address} from '../../types/user'
 const userApi = createUserApi(axiosPrivate);
-interface Address {
-  _id?: string;
-  userId: string | undefined;
-  addressLine1: string;
-  addressLine2?: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  isDefault: boolean;
-  addressType: string; // Matches backend schema
-}
+
 
 interface EditAddressModalProps {
   open: boolean;
@@ -108,10 +97,11 @@ export const EditAddressModal: React.FC<EditAddressModalProps> = ({
     if (!validateForm()) return;
 
     try {
-        if(address?._id && userId){
-            const response = await userApi.updateAddressApi(addressForm, address._id, userId);
+        if(address?.id && userId){
+            const response = await userApi.updateAddressApi(addressForm,address.id,userId);
             if (response && response.data.address) {
               const updatedAddress = response.data.address;
+              console.log('updated address',updatedAddress);
             
               toast.success("Address Updated Successfully");
             
@@ -119,14 +109,14 @@ export const EditAddressModal: React.FC<EditAddressModalProps> = ({
                 if (!prevUser) return prevUser;
             
                 const updatedAddresses = prevUser.addresses.map(addr =>
-                  addr._id === updatedAddress._id ? updatedAddress : addr
+                  addr.id === updatedAddress.id ? updatedAddress : addr
                 );
             
                 return {
                   ...prevUser,
                   addresses: updatedAddresses,
                   defaultAddress: updatedAddress.isDefault
-                    ? updatedAddress._id
+                    ? updatedAddress.id
                     : prevUser.defaultAddress
                 };
               });
