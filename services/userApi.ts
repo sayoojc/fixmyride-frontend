@@ -114,16 +114,24 @@ addVehicleApi: async (vehicleData: Partial<IVehicle>) => {
   try {
     const response = await axiosPrivate.post("/api/user/add-vehicle", vehicleData);
     return response.data;
-  } catch (error: any) {
-    console.error('Error while adding the vehicle:', error);
-
-    // Optionally, rethrow the original error
+  } catch (error) {
     if (axios.isAxiosError(error)) {
-      // This gives you access to `error.response?.data.message` etc.
       throw new Error(error.response?.data?.message || "Axios error while adding the vehicle");
     }
 
     throw new Error("Unknown error while adding the vehicle");
+  }
+},
+getServicePackages: async() => {
+  try {
+    const response = await axiosPrivate.get("/api/user/get-service-packages");
+    return response.data
+  } catch (error) {
+     if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || "Axios error while getting the service packages");
+    }
+
+    throw new Error("Unknown error while getting the service packages");
   }
 }
 

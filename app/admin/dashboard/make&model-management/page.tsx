@@ -145,9 +145,7 @@ const BrandModelManagement: React.FC = () => {
   useEffect(() => {
     const fetchBrandsWithModels = async () => {
       try {
-        console.log('calling get brands api');
        const brands = await adminApi.getBrandsApi();
-       console.log('brands',brands.brand);
         setBrands(brands.brand);
       } catch (error) {
         console.error("Failed to fetch brands:", error);
@@ -169,6 +167,11 @@ const BrandModelManagement: React.FC = () => {
     }
   }, [editingBrand, editBrandForm]);
 
+  useEffect(() => {
+    if(brands) {
+      console.log('brands from brand management',brands)
+    }
+  },[brands]);
   // Get status badge variant
   const getStatusBadge = (status: "active" | "blocked") => {
     switch (status) {

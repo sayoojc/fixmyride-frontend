@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import { ServicePackageFormData } from "@/types/service-packages";
 
 const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   AddBrandApi : async (brandName:string,imageUrl:string) => {
@@ -142,6 +143,39 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
         providerId
       });
       return response.data;
+    } catch (error) {
+      throw error
+    }
+  },
+  addServicePackage:async(data:ServicePackageFormData) => {
+    try {
+      const response = await axiosPrivate.post('/api/admin/add-service-package',data);
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+  getServicePackages:async() => {
+    try {
+      const response = await axiosPrivate.get('/api/admin/get-service-packages');
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+  updateServicePackage:async(id:string,data:ServicePackageFormData) => {
+    try {
+      const response = await axiosPrivate.patch('/api/admin/update-service-package',{id,data});
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+  toggleBlockStatus:async(id:string,actionType:string) => {
+    try {
+      console.log('The toggle block unblock from the admin api',id,actionType);
+      const response = await axiosPrivate.patch('/api/admin/toggle-block-status',{id,actionType});
+      return response.data
     } catch (error) {
       throw error
     }
