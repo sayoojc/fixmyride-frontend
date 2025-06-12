@@ -11,16 +11,7 @@ export interface Address {
   addressType: string;
 }
 
-export interface IVehicle {
-  _id: string
-  userId:string
-  brandId: IBrand
-  modelId: IModel
-  year: number;
-  isDefault:boolean;
-  registrationNumber: string;
-  fuel: string;
-}
+
 export interface IModel{
   _id: string;
   name: string;
@@ -35,7 +26,16 @@ export interface IBrand {
   imageUrl:string;
   status:string;
 }
-
+export interface IVehicle {
+  _id: string
+  userId:string
+  brandId: IBrand
+  modelId: IModel
+  year: number;
+  isDefault:boolean;
+  registrationNumber: string;
+  fuel: string;
+}
 export interface User {
   name:string,
   id:string,

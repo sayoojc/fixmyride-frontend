@@ -39,6 +39,7 @@ export interface IServicePackage {
   isBlocked: boolean
   createdAt: string
   updatedAt?: string
+  isAdded:boolean
 }
 
 // Form data types

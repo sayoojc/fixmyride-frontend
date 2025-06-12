@@ -45,10 +45,10 @@ type Model = {
 };
 
 type AddVehicleModalProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  setUser:(user:UserType) => void
-  user:UserType
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  setUser?:(user:UserType) => void
+  user?:UserType
 };
 
 // Animation variants
@@ -179,16 +179,21 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
    
         setSubmitSuccess(true);
   const newVehicle = response.vehicle;
-
+  if(user && setUser){
   setUser({
     ...user,
     vehicles: [...user.vehicles, newVehicle],
   });
 
+  }
+
+
 
         toast.success("Vehicle added successfully");
       
-
+      if(!onOpenChange){
+        return 
+      }
       setTimeout(() => {
         onOpenChange(false);
       }, 1500);
