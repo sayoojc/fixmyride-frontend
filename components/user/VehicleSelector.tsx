@@ -21,6 +21,7 @@ export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpen
  const selectVehicleHandler = async(vehicleId:string) => {
   try {
     const response = await userApi.addVehicleToCart(vehicleId);
+    console.log('the response after selecting vehicle',response);
     const cart = response.cart;
        const selectedVehicleData = {
         id:cart.vehicleId._id,
@@ -34,7 +35,6 @@ export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpen
           fuelType:cart.vehicleId.fuel,
         },
       };
-      console.log('selectedVehicle data',selectedVehicleData)
       dispatch(setVehicleData(selectedVehicleData));
       setCart(cart);
   } catch (error) {

@@ -21,11 +21,7 @@ export interface IFrontendServiceDetails {
   createdAt: string;
 }
 
-export interface IFrontendService {
-  serviceId: IFrontendServiceDetails;
-  scheduledDate?: string;
-  notes?: string;
-}
+
 
 export interface IFrontendCoupon {
   code?: string;
@@ -65,7 +61,9 @@ export interface IFrontendCart {
   _id: string;
   userId: string;
   vehicleId: IFrontendVehicle;
-  services: IFrontendService[];
+  services: Array<{
+    serviceId: IFrontendServiceDetails;
+  }>;
   coupon?: IFrontendCoupon;
   totalAmount?: number;
   finalAmount?: number;

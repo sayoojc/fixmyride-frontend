@@ -73,7 +73,7 @@ export const ServicePackages:React.FC<CartSummaryProps> = ({setCart}) => {
           >
             RECOMMENDED
           </div>
-          <div className="p-4" onClick={() => handleAddToCart(service._id,vehicle.id)}>
+          <div className="p-4" >
             <div className="flex flex-col md:flex-row">
               <div className="md:w-1/4 mb-4 md:mb-0">
                 {service.modelId?.imageUrl ? (
@@ -173,7 +173,7 @@ export const ServicePackages:React.FC<CartSummaryProps> = ({setCart}) => {
                 </div>
               ) : (
                 <button
-                  // onClick={() => addToCart(service._id)}
+                 onClick={() => handleAddToCart(service._id,vehicle.id)}
                   className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
                 >
                   Add

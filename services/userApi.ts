@@ -1,6 +1,8 @@
 import { AxiosInstance } from "axios";
 import { Address } from "@/types/user";
 import { IVehicle } from "@/types/vehicle";
+import { AvailableDate } from "@/types/checkout";
+import { TimeSlot } from "@/types/checkout";
 import axios from "axios";
 
 const createUserApi = (axiosPrivate: AxiosInstance) => ({
@@ -219,6 +221,67 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/remove-service-from-cart`,
         { cartId, packageId }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getAddresses() {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-addresses`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getCart(cartId: string) {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-cart`,
+        { params: { cartId } }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async createRazorPayOrder(amount: number) {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/create-razorpay-order`,
+        { amount }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async verifyRazorpayPayment(
+    orderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+    cartId: string,
+    paymentMethod: string,
+    selectedAddressId: string,
+    selectedDate: AvailableDate,
+    selectedSlot: TimeSlot
+  ) {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/verify-payment`,
+        {
+          orderId,
+          razorpayPaymentId,
+          razorpaySignature,
+          cartId,
+          paymentMethod,
+          selectedAddressId,
+          selectedDate,
+          selectedSlot,
+        }
       );
       return response.data;
     } catch (error) {

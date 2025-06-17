@@ -55,8 +55,8 @@ export interface Brand {
   brandName: string;
   imageUrl: string;
   status: string;
-  createdAt?: string; // optional datetime
-  updatedAt?: string; // optional datetime
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 

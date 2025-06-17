@@ -4,7 +4,7 @@ import { ServicePackageFormData } from "@/types/service-packages";
 const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   AddBrandApi : async (brandName:string,imageUrl:string) => {
     try {
-        const response = await axiosPrivate.post("/api/admin/add-brand",{
+        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-brand`,{
             brandName,
             imageUrl
         });
@@ -15,7 +15,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   AddModelApi : async (model:string,imageUrl:string,brandId:string,fuelTypes:string[]) => {
     try {
-        const response = await axiosPrivate.post("/api/admin/add-model",{
+        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-model`,{
             model,
             imageUrl,
             brandId,
@@ -28,7 +28,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   getBrandsApi : async () => {
     try {
-        const response = await axiosPrivate.get("/api/admin/get-brands");
+        const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-brands`);
         return response.data;
     } catch (error) {
         console.error('Fetching Brand Data Failed');
@@ -36,7 +36,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   updateBrandStatusApi: async (brandId:string,newStatus:string) => {
     try {
-      const response = await axiosPrivate.patch("/api/admin/toggle-brand-status",{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-brand-status`,{
         brandId,
         newStatus
       })
@@ -47,7 +47,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   updateModelStatusApi: async (brandId:string,modelId:string,newStatus:string) => {
     try {
-      const response = await axiosPrivate.patch("/api/admin/toggle-Model-status",{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-Model-status`,{
         brandId,
         modelId,
         newStatus
@@ -61,7 +61,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
     name:string, 
     imageUrl:string) => {
     try {
-      const response = await axiosPrivate.patch("/api/admin/update-brand",{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-brand`,{
       id,
       name,
       imageUrl,
@@ -75,7 +75,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
     name:string, 
     imageUrl:string) => {
     try {
-      const response = await axiosPrivate.patch("/api/admin/update-model",{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-model`,{
       id,
       name,
       imageUrl,
@@ -87,7 +87,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   getUsersApi:async () => {
     try {
-      const response = await axiosPrivate.get("/api/admin/get-users");
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-users`);
       return response;
     } catch (error) {
        console.error('fetching data failed',error);
@@ -96,7 +96,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   toggleListing:async (email:string) => {
     try {
-      const response = await axiosPrivate.patch("/api/admin/toggle-user-listing",{email});
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-user-listing`,{email});
       return response;
     } catch (error) {
        console.error('Toggling the status failed');
@@ -104,7 +104,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   getProvidersList : async () => {
     try {
-      const response = await axiosPrivate.get("/api/admin/get-providers");
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-providers`);
         return response;
     } catch (error) {
             throw error
@@ -112,7 +112,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
       },
   getVerificationData : async (id:string) => {
     try {
-      const response = await axiosPrivate.get(`/api/admin/get-verification-data?id=${id}`,);
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-verification-data?id=${id}`,);
       return response
     } catch (error) {
        throw error
@@ -120,7 +120,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   getProviderById : async (id:string) => {
     try {
-      const response = await axiosPrivate.get(`/api/admin/get-provider?id=${id}`);
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-provider?id=${id}`);
         return response;
     } catch (error) {
             throw error
@@ -128,7 +128,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
       },
   verifyProviderApi: async (providerId:string,verificationAction:string,adminNotes:string) => {
     try {
-      const response = await axiosPrivate.patch('/api/admin/verify-provider',{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/verify-provider`,{
            providerId,
            verificationAction
       })
@@ -139,7 +139,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   toggleProviderListing: async (providerId:string) => {
     try {
-      const response = await axiosPrivate.patch('/api/admin/toggle-provider-listing',{
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-provider-listing`,{
         providerId
       });
       return response.data;
@@ -149,7 +149,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   addServicePackage:async(data:ServicePackageFormData) => {
     try {
-      const response = await axiosPrivate.post('/api/admin/add-service-package',data);
+      const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-service-package`,data);
       return response.data
     } catch (error) {
       throw error
@@ -157,7 +157,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   getServicePackages:async() => {
     try {
-      const response = await axiosPrivate.get('/api/admin/get-service-packages');
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-service-packages`);
       return response.data
     } catch (error) {
       throw error
@@ -165,7 +165,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   },
   updateServicePackage:async(id:string,data:ServicePackageFormData) => {
     try {
-      const response = await axiosPrivate.patch('/api/admin/update-service-package',{id,data});
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-service-package`,{id,data});
       return response.data
     } catch (error) {
       throw error
@@ -174,7 +174,7 @@ const createAdminApi = (axiosPrivate:AxiosInstance) => ( {
   toggleBlockStatus:async(id:string,actionType:string) => {
     try {
       console.log('The toggle block unblock from the admin api',id,actionType);
-      const response = await axiosPrivate.patch('/api/admin/toggle-block-status',{id,actionType});
+      const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-block-status`,{id,actionType});
       return response.data
     } catch (error) {
       throw error

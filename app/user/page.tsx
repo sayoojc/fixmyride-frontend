@@ -27,6 +27,10 @@ const CarServiceBooking = () => {
     fetchVehicles();
   }, []);
 
+useEffect(() => {
+  console.log('the cart',cart);
+},[cart]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <CategoryBar />

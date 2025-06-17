@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MapPin, Plus, Edit, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,31 +16,10 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { CheckoutStepProps, Address } from "../../../../types/checkout"
+import type { CheckoutAddressStepProps } from "../../../../types/checkout"
+import { Address } from "@/types/user"
 
-const savedAddresses: Address[] = [
-  {
-    id: "1",
-    name: "Home",
-    street: "123 Main Street",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    name: "Office",
-    street: "456 Business Ave",
-    city: "New York",
-    state: "NY",
-    zipCode: "10002",
-    isDefault: false,
-  },
-]
-
-export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutStepProps) {
-  const [addresses, setAddresses] = useState<Address[]>(savedAddresses)
+export function AddressSelection({ data, onUpdate, onNext, onBack, addresses }: CheckoutAddressStepProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newAddress, setNewAddress] = useState({
     name: "",
@@ -54,18 +33,23 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
     onUpdate({ selectedAddress: address })
   }
 
-  const handleAddAddress = () => {
-    const address: Address = {
-      id: Date.now().toString(),
-      ...newAddress,
-      isDefault: false,
-    }
-    setAddresses([...addresses, address])
-    setNewAddress({ name: "", street: "", city: "", state: "", zipCode: "" })
-    setShowAddForm(false)
-    onUpdate({ selectedAddress: address })
-  }
-
+  // const handleAddAddress = () => {
+  //   const address: Address = {
+  //     id: Date.now().toString(),
+  //     ...newAddress,
+  //     isDefault: false,
+  //   }
+  //   setAddresses([...addresses, address])
+  //   setNewAddress({ name: "", street: "", city: "", state: "", zipCode: "" })
+  //   setShowAddForm(false)
+  //   onUpdate({ selectedAddress: address })
+  // }
+  useEffect(() => {
+    console.log('data.selected address',data.selectedAddress)
+  },[data])
+useEffect(() => {
+  console.log('address',addresses)
+},[addresses])
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -84,9 +68,9 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <AnimatePresence>
-              {addresses.map((address) => (
+              {addresses?.map((address) => (
                 <motion.div
-                  key={address.id}
+                  key={address._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -95,7 +79,7 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
                 >
                   <Card
                     className={`cursor-pointer transition-all ${
-                      data.selectedAddress?.id === address.id
+                      data.selectedAddress?._id === address._id
                         ? "ring-2 ring-red-500 ring-offset-2 bg-red-50 border-red-200"
                         : "hover:shadow-md hover:bg-gray-50"
                     }`}
@@ -105,12 +89,12 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{address.name}</h4>
+                            <h4 className="font-medium">{address.addressLine1}</h4>
                             {address.isDefault && (
                               <span className="text-xs bg-gray-800 text-white px-2 py-1 rounded">Default</span>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{address.street}</p>
+                          <p className="text-sm text-muted-foreground">{address.addressLine2}</p>
                           <p className="text-sm text-muted-foreground">
                             {address.city}, {address.state} {address.zipCode}
                           </p>
@@ -196,7 +180,7 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
                 <Button variant="outline" onClick={() => setShowAddForm(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddAddress} className="bg-red-500 hover:bg-red-600 text-white">
+                <Button  className="bg-red-500 hover:bg-red-600 text-white">
                   Add Address
                 </Button>
               </DialogFooter>
@@ -210,7 +194,7 @@ export function AddressSelection({ data, onUpdate, onNext, onBack }: CheckoutSte
               className="mt-6 p-4 bg-gray-50 rounded-lg border"
             >
               <p className="text-sm text-gray-600">
-                Selected address: <span className="font-semibold text-gray-900">{data.selectedAddress.name}</span>
+                Selected address: <span className="font-semibold text-gray-900">{data.selectedAddress.addressLine1}</span>
               </p>
             </motion.div>
           )}
