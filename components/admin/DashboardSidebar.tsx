@@ -8,16 +8,15 @@
  import { axiosPrivate } from '@/api/axios';
  import { useRouter } from "next/navigation"; 
  import { toast } from 'react-toastify';
-
+import { usePathname } from 'next/navigation';
  const authApi = createAuthApi(axiosPrivate);
-
  const DashboardSidebar: React.FC = () => {
-
+const pathname = usePathname();
   const router = useRouter()
     const [sidebarOpen, setSidebarOpen] = useState(false);
 const adminLogout = async ():Promise<void>  => {
   try {
-    const response = await authApi.adminLogoutApi();
+    await authApi.adminLogoutApi();
     toast.success('successfully logged out');
     router.push('/');
   } catch (error) {
@@ -27,10 +26,10 @@ const adminLogout = async ():Promise<void>  => {
  
 }
  
+const isActive = (path:string) => pathname === path;
  return (
 
     <>
-     {/* Mobile sidebar toggle */}
  <div className="md:hidden fixed top-4 left-4 z-50">
  <button 
    onClick={() => setSidebarOpen(!sidebarOpen)} 
@@ -49,41 +48,26 @@ const adminLogout = async ():Promise<void>  => {
    </div>
    
    <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-  <Link href="/admin/dashboard" className="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-blue-50 text-blue-600">
+  <Link href="/admin/dashboard" className={`flex items-center px-4 py-3 text-sm font-medium rounded-md
+    ${isActive("/admin/dashboard") ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+  >
     <Calendar className="mr-3 h-5 w-5" />
     Dashboard
   </Link>
-  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-    <Car className="mr-3 h-5 w-5" />
-    Appointments
-  </Link>
-  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+  <Link href="/admin/dashboard/customer-management"  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md
+    ${isActive("/admin/dashboard/customer-management") ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
     <Users className="mr-3 h-5 w-5" />
     Customers
   </Link>
-  <Link href="/admin/dashboard/provider-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+  <Link href="/admin/dashboard/provider-management"  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md
+    ${isActive("/admin/dashboard/provider-management") ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
     <Users className="mr-3 h-5 w-5" />
     Provider Management
   </Link>
-  <Link href="/admin/dashboard/vehicle-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-    <Car className="mr-3 h-5 w-5" />
-    Vehicle Management
-  </Link>
-  <Link href="/admin/dashboard/make&model-management" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+  <Link href="/admin/dashboard/make&model-management"  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md
+    ${isActive("/admin/dashboard/make&model-management") ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}>
     <Car className="mr-3 h-5 w-5" />
     Make&Model Management
-  </Link>
-  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-    <Wrench className="mr-3 h-5 w-5" />
-    Services
-  </Link>
-  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-    <BarChart className="mr-3 h-5 w-5" />
-    Reports
-  </Link>
-  <Link href="#" className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-    <Settings className="mr-3 h-5 w-5" />
-    Settings
   </Link>
   <div className="p-4 border-t border-gray-200">
   <button

@@ -1,4 +1,5 @@
 export interface IServiceProvider {
+    _id:string;
     name: string;
     ownerName: string;
     email: string;

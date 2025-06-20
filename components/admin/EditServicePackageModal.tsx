@@ -185,6 +185,7 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
       try {
         const updatedPackage =
           await adminApi.updateServicePackage(servicePackage._id, data);
+          console.log('the service package updated',updatedPackage);
           onSuccess(updatedPackage.servicePackage);
       } catch (error) {
         console.error("Error updating service package:", error);

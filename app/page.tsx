@@ -189,7 +189,7 @@ const CarServiceLandingPage: React.FC = () => {
 
   const handleforgotPassword = async (email: string) => {
     try {
-      await authApi.forgotPasswordApi(email);
+      // await authApi.forgotPasswordApi(email);
       setShowLoginModal(false)
       setShowEmailInputModal(true)
     } catch (error) {

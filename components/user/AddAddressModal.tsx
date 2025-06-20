@@ -19,7 +19,7 @@ import { axiosPrivate } from "@/api/axios";
 import { toast } from 'react-toastify';
 const userApi = createUserApi(axiosPrivate);
 import {User,Address} from '../../types/user'
-
+import { fetchLocationFromPincode } from "@/services/pinCodeApi"
 
 interface AddAddressModalProps {
   open: boolean;
@@ -61,7 +61,7 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddressChange = async(e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setAddressForm(prev => ({ ...prev, [name]: value }));
     
@@ -73,6 +73,16 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
         return newErrors;
       });
     }
+      if (name === "zipCode" && value.trim().length === 6) {
+    const location = await fetchLocationFromPincode(value);
+    if (location) {
+      setAddressForm(prev => ({
+        ...prev,
+        city: location.city,
+        state: location.state,
+      }));
+    }
+  }
   };
 
   const handleSubmitAddress = async() => {
@@ -95,7 +105,7 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({
           ...prevUser,
           addresses: [...prevUser.addresses, newAddress],
           defaultAddress: newAddress.isDefault
-            ? newAddress._id
+            ? newAddress.id
             : prevUser.defaultAddress
         };
       });

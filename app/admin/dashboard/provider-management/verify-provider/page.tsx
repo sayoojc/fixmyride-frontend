@@ -50,10 +50,12 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
       if (!providerId) return
       try {
         setLoading(true)
-        const verificationData = await adminApi.getVerificationData(providerId)
+        const verificationData = await adminApi.getVerificationData(providerId);
+        console.log('the verification data from the verify provider',verificationData)
         setVerificationData(verificationData.data.verificationData)
         const response = await adminApi.getProviderById(providerId)
-        setProvider(response.data.providers)
+        console.log('the provider',response);
+        setProvider(response.data.provider)
         setLoading(false)
       } catch (error) {
         console.error("Failed to fetch provider details:", error)

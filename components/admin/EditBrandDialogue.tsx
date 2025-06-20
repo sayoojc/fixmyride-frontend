@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
   image: z
     .instanceof(File)
     .refine((file) => file.size > 0, "Image file is required")
-    .optional()
+    
 });
 
 
@@ -29,6 +29,7 @@ interface EditBrandDialogProps {
   setIsEditBrandDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   editingBrand: { brandName: string; imageUrl: string } | null;
   updateBrand: (data: z.infer<typeof brandSchema>) => void;
+  
 }
 
 const EditBrandDialog: React.FC<EditBrandDialogProps> = ({

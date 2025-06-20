@@ -14,18 +14,14 @@ interface SignupFormData {
 const createAuthApi = (axiosPrivate:AxiosInstance) => ({
 
   loginApi: async(email:string,password:string) => {
-  const response = await axiosPrivate.post("/api/user/login",{
+  const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/login`,{
     email,
     password,
   })
   return response.data
   },
-  // googleAuthApi: async() => {
-  //   const response = await axiosPrivate.get("/api/user/google");
-  //   return response.data;
-  // },
   registerTempApi: async (name:string,email:string,phone:string,password:string) => {
-    const response = await axiosPrivate.post("/api/user/register-temp",{
+    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/register-temp`,{
         name,
         email,
         phone,
@@ -34,7 +30,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
     return response.data
   },
   registerApi: async (otpValue:string,email:string,phone:string) => {
-    const response = await axiosPrivate.post("/api/user/signup",{
+    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/signup`,{
         otpValue,
         email,
         phone
@@ -44,20 +40,20 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
   //forgot password
 
   forgotPasswordApi: async (email:string) => {
-    const response = await axiosPrivate.post("/api/user/forgotPassword",{
+    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/forgotPassword`,{
         email,
     })
     return response.data
   },
   resetPasswordApi: async(email:string,otp:string,newPassword:string) => {
-    const response =  await axiosPrivate.post("/api/user/resetPassword",{
+    const response =  await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/resetPassword`,{
       email,
       otp,
       newPassword
     })
   },
   adminLoginApi: async(email:string,password:string) => {
-    const response = await axiosPrivate.post("/api/admin/adminlogin",{
+    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/adminlogin`,{
       email,
       password,
     })
@@ -65,7 +61,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
     },
     providerLoginApi: async(email:string,password:string) => {
       try {
-        const response = await axiosPrivate.post("/api/provider/provider-login",{
+        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-login`,{
           email,
           password,
         })
@@ -77,7 +73,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       },
       logoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/user/logout");
+          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/logout`);
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
@@ -86,7 +82,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       },
     ProviderLogoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/provider/providerlogout");
+          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/providerlogout`);
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
@@ -95,7 +91,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       },
       adminLogoutApi: async () => {
         try {
-          const response = await axiosPrivate.post("/api/admin/logout");
+          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/logout`);
           return response.data;
         } catch (error) {
           console.error("Logout API failed:", error);
@@ -106,7 +102,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
       providerRegisterTempApi: async (data:SignupFormData) => {
         try {
           console.log('provider register temp api')
-          const response = await axiosPrivate.post("/api/provider/provider-register-temp",data)
+          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-register-temp`,data)
           return response.data
         } catch (error) {
           console.error('Provider registration failed');
@@ -115,7 +111,7 @@ const createAuthApi = (axiosPrivate:AxiosInstance) => ({
 
       },
       providerRegisterApi: async (otp:string,email:string,phone:string) => {
-        const response = await axiosPrivate.post("/api/provider/provider-register",{
+        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-register`,{
             otp,
             email,
             phone

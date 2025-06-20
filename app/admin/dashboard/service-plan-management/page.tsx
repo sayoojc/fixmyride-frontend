@@ -36,7 +36,7 @@ const ServicePlanManagement: React.FC = () => {
     fuelType: "all",
   })
 
-  // Modal states
+
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false)
@@ -44,16 +44,20 @@ const ServicePlanManagement: React.FC = () => {
   const [actionType, setActionType] = useState<ActionType>("block")
   const [brands,setBrands] = useState<Brand[]>([])
   const [servicePackages,setServicePackages] = useState<IServicePackage[]>([]);
-useEffect(() => {
+  
+      const [currentPage, setCurrentPage] = useState<number>(1);
+      const [totalPages,setTotalPages] = useState<number>(1)
+       const [searchTerm, setSearchTerm] = useState<string>("");
+        const [statusFilter, setStatusFilter] = useState<string>("all");
+        const [fuelFilter,setFuelFilter] = useState<string>("");
+
+  useEffect(() => {
    const fetchData = async () => {
       try {
 
-        const brandResponse = await adminApi.getBrandsApi()
-                setBrands(brandResponse.brand);
-
-        const servicePackageResponse = await adminApi.getServicePackages()
-     
-        setServicePackages(servicePackageResponse.servicePackages)
+        const brandResponse = await adminApi.getBrandsApi("",-1,"")
+        setBrands(brandResponse.BrandObject.formattedBrands);
+      
       } catch (error) {
         console.error("Error fetching brands:", error);
       }
@@ -61,71 +65,20 @@ useEffect(() => {
 
     fetchData();
 },[])
+useEffect(() => {
+   const fetchData = async () => {
+      try {
+      const response = await adminApi.getServicePackages(searchTerm,currentPage,statusFilter,fuelFilter)
+      setServicePackages(response.servicePackageResponse.servicePackages)
+      setTotalPages(response.servicePackageResponse.totalCount)
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
 
+    fetchData();
+},[searchTerm,currentPage,statusFilter,fuelFilter])
 
-
-
-  // Filtered packages using useMemo for performance
-  const filteredPackages = useMemo<IServicePackage[]>(() => {
-    let filtered = servicePackages
-
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      filtered = filtered.filter(
-        (pkg: IServicePackage) =>
-          pkg.title.toLowerCase().includes(searchLower) ||
-          pkg.description.toLowerCase().includes(searchLower) ||
-          pkg.brandId.brandName.toLowerCase().includes(searchLower) ||
-          pkg.modelId.name.toLowerCase().includes(searchLower),
-      )
-    }
-
-    // Status filter
-    if (filters.status !== "all") {
-      filtered = filtered.filter((pkg: IServicePackage) =>
-        filters.status === "active" ? !pkg.isBlocked : pkg.isBlocked,
-      )
-    }
-
-    // Fuel type filter
-    if (filters.fuelType !== "all") {
-      filtered = filtered.filter((pkg: IServicePackage) => pkg.fuelType === filters.fuelType)
-    }
-
-    return filtered
-  }, [servicePackages, filters])
-
-  // Filter update handlers
-  const updateFilter = useCallback(
-    <K extends keyof ServicePackageFilters>(key: K, value: ServicePackageFilters[K]): void => {
-      setFilters((prev) => ({ ...prev, [key]: value }))
-    },
-    [],
-  )
-
-  const handleSearchChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>): void => {
-      updateFilter("search", event.target.value)
-    },
-    [updateFilter],
-  )
-
-  const handleStatusChange = useCallback(
-    (value: FilterStatus): void => {
-      updateFilter("status", value)
-    },
-    [updateFilter],
-  )
-
-  const handleFuelTypeChange = useCallback(
-    (value: FuelTypeFilter): void => {
-      updateFilter("fuelType", value)
-    },
-    [updateFilter],
-  )
-
-  // Action handlers
   const handleEdit = useCallback((pkg: IServicePackage): void => {
     setSelectedPackage(pkg)
     setIsEditModalOpen(true)
@@ -153,7 +106,6 @@ useEffect(() => {
       toast.success(`Service package ${actionType}ed successfully`)
     } catch (error) {
       console.error(`Error ${actionType}ing service package:`, error)
-      // Error is already handled in the hook
     } finally {
       setIsConfirmDialogOpen(false)
       setSelectedPackage(null)
@@ -241,12 +193,14 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <Input
                   placeholder="Search packages..."
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                  className="pl-10 text-sm"
+                   className="pl-10 text-sm"
+                   value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+                 
+          
                 />
               </div>
-              <Select value={filters.status} onValueChange={handleStatusChange}>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -256,7 +210,7 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
                   <SelectItem value="blocked">Blocked</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={filters.fuelType} onValueChange={handleFuelTypeChange}>
+              <Select value={fuelFilter} onValueChange={(value) => setFuelFilter(value)}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Filter by fuel type" />
                 </SelectTrigger>
@@ -264,12 +218,12 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
                   <SelectItem value="all">All Fuel Types</SelectItem>
                   <SelectItem value="Petrol">Petrol</SelectItem>
                   <SelectItem value="Diesel">Diesel</SelectItem>
-                  <SelectItem value="Electric">Electric</SelectItem>
+                  <SelectItem value="LPG">LPG</SelectItem>
                   <SelectItem value="CNG">CNG</SelectItem>
                 </SelectContent>
               </Select>
               <div className="text-xs lg:text-sm text-gray-600 flex items-center justify-center lg:justify-start">
-                Total: {filteredPackages.length} packages
+                Total:  packages
               </div>
             </div>
           </CardContent>
@@ -384,9 +338,42 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
 </TableBody>
 
               </Table>
+              
             </div>
           </CardContent>
         </Card>
+        <div className="flex justify-center items-center gap-4 mt-6">
+  {/* Minus / Prev Button */}
+  <button
+    onClick={() => setCurrentPage(currentPage - 1)}
+    disabled={currentPage === 1}
+    className={`px-4 py-2 rounded-md border text-sm font-medium ${
+      currentPage === 1
+        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+        : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
+    }`}
+  >
+    Prev
+  </button>
+
+  {/* Current Page Display */}
+  <span className="px-4 py-2 border rounded-md text-sm font-semibold bg-blue-100 text-blue-700">
+    Page {currentPage}
+  </span>
+
+  {/* Plus / Next Button */}
+  <button
+    onClick={() => setCurrentPage(currentPage + 1)}
+    disabled={currentPage === totalPages}
+    className={`px-4 py-2 rounded-md border text-sm font-medium ${
+      currentPage === totalPages
+        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+        : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
+    }`}
+  >
+    Next
+  </button>
+</div>
       </motion.div>
 
       {/* Modals */}

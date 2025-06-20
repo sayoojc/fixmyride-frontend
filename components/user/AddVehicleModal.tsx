@@ -17,7 +17,8 @@ import { FuelIcon as GasPump, Droplet, Zap, Flame } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { toast } from "react-toastify";
-import type { User as UserType, Address } from "../../types/user"
+import type { User as UserType, Address } from "../../types/user";
+import { IVehicle } from "../../types/user";
 
 const userApi = createUserApi(axiosPrivate);
 
@@ -47,8 +48,10 @@ type Model = {
 type AddVehicleModalProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  setUser?:(user:UserType) => void
-  user?:UserType
+  setUser?: (user: UserType) => void;
+  user?: UserType;
+  setVehicles?: React.Dispatch<React.SetStateAction<IVehicle[]>>;
+
 };
 
 // Animation variants
@@ -79,7 +82,6 @@ const itemVariants = {
   exit: { opacity: 0, y: -20 },
 };
 
-// Fuel type icons and colors mapping
 const fuelTypeConfig = {
   Petrol: {
     icon: GasPump,
@@ -112,7 +114,8 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
   open,
   onOpenChange,
   setUser,
-  user
+  user,
+  setVehicles
 }) => {
   const [step, setStep] = useState<"brand" | "model" | "fuel" | "final">(
     "brand"
@@ -144,7 +147,7 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
     setError(null);
     try {
       const response = await userApi.getBrandsApi();
-      console.log('response',response);
+      console.log("response", response);
       if (response && response.brands) {
         setBrands(response.brands);
       }
@@ -174,25 +177,25 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
         fuelType: selectedFuel,
       };
 
-      // Send data to backend
       const response = await userApi.addVehicleApi(vehicleData);
-   
-        setSubmitSuccess(true);
-  const newVehicle = response.vehicle;
-  if(user && setUser){
-  setUser({
-    ...user,
-    vehicles: [...user.vehicles, newVehicle],
-  });
 
-  }
-
-
-
-        toast.success("Vehicle added successfully");
+      setSubmitSuccess(true);
+      const newVehicle = response.vehicle;
       
-      if(!onOpenChange){
-        return 
+     if (setVehicles) {
+  setVehicles(prev => [...prev, newVehicle]);
+}
+      if (user && setUser) {
+        setUser({
+          ...user,
+          vehicles: [...user.vehicles, newVehicle],
+        });
+      }
+
+      toast.success("Vehicle added successfully");
+
+      if (!onOpenChange) {
+        return;
       }
       setTimeout(() => {
         onOpenChange(false);

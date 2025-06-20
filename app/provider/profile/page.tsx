@@ -75,7 +75,7 @@ const defaultProvider: IServiceProvider = {
     ifscCode: "",
     bankName: "",
   },
-  startedYear: 0,
+  startedYear: 1997,
   description: "",
 }
 const providerApi = createProviderApi(axiosPrivate)

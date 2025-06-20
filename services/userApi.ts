@@ -30,6 +30,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   },
   addAddressApi: async (addressData: Address) => {
     try {
+      console.log('the add address data from the add address api',addressData);
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-address`,
         addressData

@@ -70,7 +70,7 @@ useEffect(() => {
             <AnimatePresence>
               {addresses?.map((address) => (
                 <motion.div
-                  key={address._id}
+                  key={address.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -79,7 +79,7 @@ useEffect(() => {
                 >
                   <Card
                     className={`cursor-pointer transition-all ${
-                      data.selectedAddress?._id === address._id
+                      data.selectedAddress?.id === address.id
                         ? "ring-2 ring-red-500 ring-offset-2 bg-red-50 border-red-200"
                         : "hover:shadow-md hover:bg-gray-50"
                     }`}

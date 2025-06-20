@@ -52,6 +52,10 @@ export default function CheckoutPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    console.log('the addresses ',addresses);
+  },[addresses])
+
   const updateCheckoutData = (data: Partial<CheckoutData>) => {
     setCheckoutData((prev) => ({ ...prev, ...data }));
   };

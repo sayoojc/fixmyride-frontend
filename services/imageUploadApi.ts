@@ -8,7 +8,7 @@ const createimageUploadApi = (axiosPublic:AxiosInstance) => ( {
         data.append("upload_preset","fixmyride");
         data.append("cloud_name","dokhjooln");
         const response = await axiosPublic.post(   
-        "https://api.cloudinary.com/v1_1/dokhjooln/image/upload",
+        `${process.env.NEXT_PUBLIC_CLOUDINARY_API_END_POINT}`,
         data,
     {
         headers:{
@@ -29,7 +29,7 @@ const createimageUploadApi = (axiosPublic:AxiosInstance) => ( {
         data.append("upload_preset","fixmyride");
         data.append("cloud_name","dokhjooln");
         const response = await axiosPublic.post(   
-        "https://api.cloudinary.com/v1_1/dokhjooln/image/upload",
+        `${process.env.NEXT_PUBLIC_CLOUDINARY_API_END_POINT}`,
         data,
     {
         headers:{

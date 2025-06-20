@@ -68,13 +68,13 @@ export const CustomerProfile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
+useEffect(() => {
+  console.log('the user details',user)
+},[user]);
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        console.log("fetch user detail function from the front end page");
         const response = await userApi.getProfileDataApi();
-        console.log("response from the fetch user", response);
         setUser(response.user);
         setName(response.user.name);
         setPhone(response.user.phone);
@@ -105,11 +105,9 @@ export const CustomerProfile = () => {
 
         setUser((prevUser) => {
           if (!prevUser) return prevUser;
-
-          // Update the isDefault property of all addresses
           const updatedAddresses = prevUser.addresses.map((address) => ({
             ...address,
-            isDefault: address._id === addressId,
+            isDefault: address.id === addressId,
           }));
 
           return {
@@ -139,7 +137,7 @@ export const CustomerProfile = () => {
           if (!prevUser) return prevUser;
 
           const updatedAddresses = prevUser.addresses.filter(
-            (addr) => addr._id !== addressId
+            (addr) => addr.id !== addressId
           );
 
           const isDeletedDefault = prevUser.defaultAddress === addressId;
@@ -148,7 +146,7 @@ export const CustomerProfile = () => {
             ...prevUser,
             addresses: updatedAddresses,
             defaultAddress: isDeletedDefault
-              ? updatedAddresses[0]?._id || ""
+              ? updatedAddresses[0]?.id || ""
               : prevUser.defaultAddress,
           };
         });
@@ -440,8 +438,9 @@ export const CustomerProfile = () => {
                 </div>
 
                 {user?.addresses && user.addresses.length > 0 ? (
+                  
                   user.addresses.map((address) => (
-                    <motion.div key={address._id} variants={fadeIn}>
+                    <motion.div key={address.id} variants={fadeIn}>
                       <Card className="mb-3 overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-300">
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -481,8 +480,8 @@ export const CustomerProfile = () => {
                                 variant="ghost"
                                 className="flex-1 h-10 text-slate-700 justify-center rounded-none hover:bg-slate-100"
                                 onClick={() => {
-                                  address._id && user.id
-                                    ? handleDeleteAddress(address._id, user.id)
+                                  address.id && user.id
+                                    ? handleDeleteAddress(address.id, user.id)
                                     : null;
                                 }}
                               >
@@ -496,9 +495,9 @@ export const CustomerProfile = () => {
                                     variant="ghost"
                                     className="flex-1 h-10 text-blue-500 justify-center rounded-none hover:bg-slate-100"
                                     onClick={() => {
-                                      address._id && user.id
+                                      address.id && user.id
                                         ? handleSetDefaultAddress(
-                                            address._id,
+                                            address.id,
                                             user.id
                                           )
                                         : null;
@@ -562,11 +561,6 @@ export const CustomerProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {user &&
                     user.vehicles.map((vehicle) => {
-                      console.log(
-                        "Vehicle brand imageUrl:",
-                        vehicle.brandId.imageUrl
-                      );
-
                       return (
                         <motion.div key={vehicle._id} variants={fadeIn}>
                           <Card className="overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-300">

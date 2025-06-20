@@ -97,7 +97,7 @@ export function PaymentSection({
             response.razorpay_signature,
             cart._id,
             data.paymentMethod,
-            data.selectedAddress?._id || " ",
+            data.selectedAddress?.id || " ",
             data.selectedDate,
             data.selectedSlot || {
               id:"",

@@ -13,10 +13,10 @@ import { IVehicle } from "@/types/user";
 import { IFrontendCart } from "@/types/cart";
 
 const userApi = createUserApi(axiosPrivate);
-   
+
 const CarServiceBooking = () => {
   const vehicle = useSelector((state: RootState) => state.vehicle);
-      const [cart,setCart] = useState<IFrontendCart>();
+  const [cart, setCart] = useState<IFrontendCart>();
   const [vehicles, setVehicles] = useState<IVehicle[]>([]);
   const [openAddVehicleModal, setOpenAddVehicleModal] = useState(false);
   useEffect(() => {
@@ -27,9 +27,9 @@ const CarServiceBooking = () => {
     fetchVehicles();
   }, []);
 
-useEffect(() => {
-  console.log('the cart',cart);
-},[cart]);
+  useEffect(() => {
+    console.log("the cart", cart);
+  }, [cart]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -41,17 +41,21 @@ useEffect(() => {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ServicePackages setCart = {setCart}/>
+          <ServicePackages setCart={setCart} />
           {cart ? (
-            <CartSummary cart = {cart} setCart={setCart}/>
+            <CartSummary cart={cart} setCart={setCart} />
           ) : (
             <VehicleSelector
               vehicles={vehicles}
               setOpenAddVehicleModal={setOpenAddVehicleModal}
-              setCart = {setCart}
+              setCart={setCart}
             />
           )}
-          <AddVehicleModal open={openAddVehicleModal} onOpenChange={setOpenAddVehicleModal} />
+          <AddVehicleModal
+            open={openAddVehicleModal}
+            onOpenChange={setOpenAddVehicleModal}
+            setVehicles={setVehicles}
+          />
         </div>
       </div>
     </div>

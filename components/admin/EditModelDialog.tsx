@@ -27,7 +27,7 @@ const modelSchema = z.object({
   image: z
     .instanceof(File)
     .refine((file) => file.size > 0, "Image file is required")
-    .optional()
+    
 });
 
 type ModelFormType = z.infer<typeof modelSchema>;
