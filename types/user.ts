@@ -78,3 +78,12 @@ export interface Vehicle {
   modelId: Model;
   fuel: string;
 }
+
+export interface IAdminUserInterface {
+email:string;
+isListed:boolean;
+name:string;
+phone:string;
+role:string
+_id:string;
+}

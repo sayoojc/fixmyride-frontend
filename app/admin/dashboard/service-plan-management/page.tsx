@@ -1,83 +1,74 @@
 "use client"
 
-import type React from "react"
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { motion } from "framer-motion"
 import { Plus, Edit, Shield, ShieldOff, Search, Filter } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "react-toastify"
-import { Brand, Model } from "@/types/brand";
 import createAdminApi from "@/services/adminApi"
 import { axiosPrivate } from "@/api/axios"
-const adminApi = createAdminApi(axiosPrivate);
-import type {
-  IServicePackage,
-  ServicePackageFilters,
-  FilterStatus,
-  FuelTypeFilter,
-  ActionType,
-} from "../../../../types/service-packages"
-
+import { UniversalTable, TableBadge, type TableColumn, type TableAction } from "../../../../components/Table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Brand } from "@/types/brand"
+import type { IServicePackage, ActionType } from "../../../../types/service-packages"
 import AddServicePackageModal from "../../../../components/admin/AddServicePckageModal"
 import EditServicePackageModal from "../../../../components/admin/EditServicePackageModal"
 import ConfirmationDialog from "../../../../components/admin/ConfirmationDialoge"
 
-const ServicePlanManagement: React.FC = () => {
-   const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ServicePackageFilters>({
-    search: "",
-    status: "all",
-    fuelType: "all",
-  })
+const adminApi = createAdminApi(axiosPrivate)
 
+const ServicePlanManagement = () => {
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [fuelFilter, setFuelFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [totalPages, setTotalPages] = useState<number>(1)
+  const [servicePackages, setServicePackages] = useState<IServicePackage[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
 
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false)
   const [selectedPackage, setSelectedPackage] = useState<IServicePackage | null>(null)
   const [actionType, setActionType] = useState<ActionType>("block")
-  const [brands,setBrands] = useState<Brand[]>([])
-  const [servicePackages,setServicePackages] = useState<IServicePackage[]>([]);
-  
-      const [currentPage, setCurrentPage] = useState<number>(1);
-      const [totalPages,setTotalPages] = useState<number>(1)
-       const [searchTerm, setSearchTerm] = useState<string>("");
-        const [statusFilter, setStatusFilter] = useState<string>("all");
-        const [fuelFilter,setFuelFilter] = useState<string>("");
 
+  // Fetch brands data
   useEffect(() => {
-   const fetchData = async () => {
+    const fetchBrands = async () => {
       try {
-
-        const brandResponse = await adminApi.getBrandsApi("",-1,"")
-        setBrands(brandResponse.BrandObject.formattedBrands);
-      
+        const brandResponse = await adminApi.getBrandsApi("", -1, "")
+        setBrands(brandResponse.BrandObject.formattedBrands)
       } catch (error) {
-        console.error("Error fetching brands:", error);
+        console.error("Error fetching brands:", error)
       }
-    };
+    }
+    fetchBrands()
+  }, [])
 
-    fetchData();
-},[])
-useEffect(() => {
-   const fetchData = async () => {
+  // Fetch service packages data
+  useEffect(() => {
+    const fetchServicePackages = async () => {
       try {
-      const response = await adminApi.getServicePackages(searchTerm,currentPage,statusFilter,fuelFilter)
-      setServicePackages(response.servicePackageResponse.servicePackages)
-      setTotalPages(response.servicePackageResponse.totalCount)
+        setLoading(true)
+        const response = await adminApi.getServicePackages(searchTerm, currentPage, statusFilter, fuelFilter)
+        setServicePackages(response.servicePackageResponse.servicePackages)
+        setTotalPages(response.servicePackageResponse.totalCount)
       } catch (error) {
-        console.error("Error fetching brands:", error);
+        console.error("Error fetching service packages:", error)
+        setError("Failed to fetch service packages")
+        toast.error("Failed to fetch service packages")
+      } finally {
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-},[searchTerm,currentPage,statusFilter,fuelFilter])
+    fetchServicePackages()
+  }, [searchTerm, currentPage, statusFilter, fuelFilter])
 
   const handleEdit = useCallback((pkg: IServicePackage): void => {
     setSelectedPackage(pkg)
@@ -94,93 +85,148 @@ useEffect(() => {
     if (!selectedPackage) return
 
     try {
-      setLoading(true);
-      const response = await adminApi.toggleBlockStatus(selectedPackage._id, actionType);
-        setServicePackages((prev) => (prev.map((pkg) => {
-       if(pkg._id === response.servicePackage._id){
-        return response.servicePackage
-       }
-       return pkg
-      })))
-      setLoading(false);
+      setLoading(true)
+      const response = await adminApi.toggleBlockStatus(selectedPackage._id, actionType)
+      setServicePackages((prev) =>
+        prev.map((pkg) => {
+          if (pkg._id === response.servicePackage._id) {
+            return response.servicePackage
+          }
+          return pkg
+        }),
+      )
       toast.success(`Service package ${actionType}ed successfully`)
     } catch (error) {
       console.error(`Error ${actionType}ing service package:`, error)
+      toast.error(`Failed to ${actionType} service package`)
     } finally {
+      setLoading(false)
       setIsConfirmDialogOpen(false)
       setSelectedPackage(null)
-    
     }
-  }, [selectedPackage, actionType,])
+  }, [selectedPackage, actionType])
 
-  const handleAddSuccess = useCallback(async (newPackage: IServicePackage): Promise<void> => {
-    toast.success("Service package added successfully")
-    setIsAddModalOpen(false)
-  }, [])
-const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
-  toast.success("Service package updated successfully");
-   console.log('The updated service package returned',updatedPackage)
-  setServicePackages((prev) =>
-    prev.map((pkg) =>
-      pkg._id === updatedPackage._id ? updatedPackage : pkg
-    )
-  );
+  const handleAddSuccess = useCallback(
+    async (newPackage: IServicePackage): Promise<void> => {
+      toast.success("Service package added successfully")
+      setIsAddModalOpen(false)
+      // Refresh the data
+      const response = await adminApi.getServicePackages(searchTerm, currentPage, statusFilter, fuelFilter)
+      setServicePackages(response.servicePackageResponse.servicePackages)
+    },
+    [searchTerm, currentPage, statusFilter, fuelFilter],
+  )
 
-  setIsEditModalOpen(false);
-}, []);
-
-
-  // Modal close handlers
-  const closeAddModal = useCallback((): void => setIsAddModalOpen(false), [])
-  const closeEditModal = useCallback((): void => {
+  const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
+    toast.success("Service package updated successfully")
+    setServicePackages((prev) => prev.map((pkg) => (pkg._id === updatedPackage._id ? updatedPackage : pkg)))
     setIsEditModalOpen(false)
-    setSelectedPackage(null)
-  }, [])
-  const closeConfirmDialog = useCallback((): void => {
-    setIsConfirmDialogOpen(false)
-    setSelectedPackage(null)
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+  // Define table columns for UniversalTable
+  const columns: TableColumn<IServicePackage>[] = [
+    {
+      key: "package",
+      header: "Package Details",
+      render: (_, pkg) => (
+        <div>
+          <div className="font-medium text-sm lg:text-base">{pkg.title}</div>
+          <div className="text-xs lg:text-sm text-gray-600 truncate max-w-[180px] lg:max-w-xs">{pkg.description}</div>
         </div>
-      </div>
-    )
+      ),
+    },
+    {
+      key: "vehicle",
+      header: "Vehicle",
+      render: (_, pkg) => (
+        <div className="text-xs lg:text-sm">
+          <div className="font-medium">{pkg.brandId?.brandName ?? "Unknown Brand"}</div>
+          <div className="text-gray-600">{pkg.modelId?.name ?? "Unknown Model"}</div>
+        </div>
+      ),
+    },
+    {
+      key: "fuelType",
+      header: "Fuel Type",
+      render: (fuelType) => <TableBadge variant="outline">{fuelType}</TableBadge>,
+    },
+    {
+      key: "services",
+      header: "Services",
+      render: (_, pkg) => (
+        <div className="text-xs lg:text-sm">
+          {pkg.servicesIncluded.slice(0, 2).map((service: string, idx: number) => (
+            <div key={idx} className="text-gray-600 truncate max-w-[130px]">
+              • {service}
+            </div>
+          ))}
+          {pkg.servicesIncluded.length > 2 && (
+            <div className="text-gray-400 text-xs">+{pkg.servicesIncluded.length - 2} more</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "price",
+      header: "Price",
+      render: (_, pkg) => <div className="font-medium text-sm lg:text-base">₹{pkg.priceBreakup?.total ?? 0}</div>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (_, pkg) => (
+        <TableBadge variant={pkg.isBlocked ? "destructive" : "default"}>
+          {pkg.isBlocked ? "Blocked" : "Active"}
+        </TableBadge>
+      ),
+    },
+  ]
+
+  // Define table actions for UniversalTable
+  const actions: TableAction<IServicePackage>[] = [
+    {
+      label: "Edit",
+      onClick: (pkg) => handleEdit(pkg),
+      variant: "outline",
+      icon: <Edit className="h-4 w-4" />,
+    },
+    {
+      label: (pkg) => (pkg.isBlocked ? "Unblock" : "Block"),
+      onClick: (pkg) => handleBlockUnblock(pkg, pkg.isBlocked ? "unblock" : "block"),
+      variant: (pkg) => (pkg.isBlocked ? "default" : "destructive"),
+      icon: (pkg) => (pkg.isBlocked ? <Shield className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />),
+    },
+  ]
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
   }
 
   return (
-   <div className="p-4 lg:p-6 pl-8 space-y-4 lg:space-y-6 max-w-7xl ml-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
-        <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Service Plan Management</h1>
-          <p className="text-sm lg:text-base text-gray-600">Manage service packages and pricing</p>
+    <div className="flex-1 md:ml-64 transition-all duration-200 ease-in-out overflow-y-auto">
+      {/* Top header */}
+      <header className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-4 md:px-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Service Plan Management</h2>
+            <p className="text-sm text-slate-500">Manage service packages and pricing</p>
+          </div>
+          <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
+            <Plus size={16} />
+            Add Service Package
+          </Button>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 text-sm lg:text-base">
-          <Plus size={16} />
-          Add Service Package
-        </Button>
-      </motion.div>
+      </header>
 
       {/* Filters */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card>
+      <div className="p-4 md:p-6">
+        <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Filter size={16} />
@@ -193,11 +239,9 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <Input
                   placeholder="Search packages..."
-                   className="pl-10 text-sm"
-                   value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-                 
-          
+                  className="pl-10 text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
@@ -223,179 +267,103 @@ const handleEditSuccess = useCallback((updatedPackage: IServicePackage) => {
                 </SelectContent>
               </Select>
               <div className="text-xs lg:text-sm text-gray-600 flex items-center justify-center lg:justify-start">
-                Total:  packages
+                Total: {servicePackages.length} packages
               </div>
             </div>
           </CardContent>
         </Card>
-      </motion.div>
 
-      {/* Service Packages Table */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        {/* Main content */}
         <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">Package Details</TableHead>
-                    <TableHead className="min-w-[120px]">Vehicle</TableHead>
-                    <TableHead className="min-w-[100px]">Fuel Type</TableHead>
-                    <TableHead className="min-w-[150px]">Services</TableHead>
-                    <TableHead className="min-w-[80px]">Price</TableHead>
-                    <TableHead className="min-w-[80px]">Status</TableHead>
-                    <TableHead className="min-w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-               <TableBody>
-  <AnimatePresence>
-    {servicePackages.map((pkg: IServicePackage, index: number) => (
-      <motion.tr
-        key={pkg._id}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
-        transition={{ delay: index * 0.05 }}
-        className="hover:bg-gray-50"
-      >
-        {/* Package Title & Description */}
-        <TableCell className="p-3">
-          <div>
-            <div className="font-medium text-sm lg:text-base">{pkg.title}</div>
-            <div className="text-xs lg:text-sm text-gray-600 truncate max-w-[180px] lg:max-w-xs">
-              {pkg.description}
-            </div>
-          </div>
-        </TableCell>
-
-        {/* Vehicle Info */}
-        <TableCell className="p-3">
-          <div className="text-xs lg:text-sm">
-            <div className="font-medium">{pkg.brandId?.brandName ?? "Unknown Brand"}</div>
-            <div className="text-gray-600">{pkg.modelId?.name ?? "Unknown Model"}</div>
-          </div>
-        </TableCell>
-
-        {/* Fuel Type */}
-        <TableCell className="p-3">
-          <Badge variant="outline" className="text-xs">
-            {pkg.fuelType}
-          </Badge>
-        </TableCell>
-
-        {/* Services Included */}
-        <TableCell className="p-3">
-          <div className="text-xs lg:text-sm">
-            {pkg.servicesIncluded.slice(0,2).map((service: string, idx: number) => (
-              <div key={idx} className="text-gray-600 truncate max-w-[130px]">
-                • {service}
+          <CardHeader className="pb-3">
+            <CardTitle>Service Packages</CardTitle>
+            <CardDescription>{servicePackages.length} packages found</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex flex-col gap-4 py-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center space-x-4 animate-pulse">
+                    <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="h-8 bg-slate-200 rounded w-24"></div>
+                  </div>
+                ))}
               </div>
-            ))}
-            {pkg.servicesIncluded.length > 2 && (
-              <div className="text-gray-400 text-xs">+{pkg.servicesIncluded.length - 2} more</div>
+            ) : (
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="overflow-x-auto">
+                <UniversalTable
+                  title="Service Package Management"
+                  description="Manage service packages and their status"
+                  data={servicePackages}
+                  columns={columns}
+                  actions={actions}
+                  loading={false}
+                  emptyMessage="No service packages found matching your filters"
+                />
+              </motion.div>
             )}
-          </div>
-        </TableCell>
-
-        {/* Price */}
-        <TableCell className="p-3">
-          <div className="font-medium text-sm lg:text-base">
-            ₹{pkg.priceBreakup?.total ?? 0}
-          </div>
-        </TableCell>
-
-        {/* Status */}
-        <TableCell className="p-3">
-          <Badge variant={pkg.isBlocked ? "destructive" : "default"} className="text-xs">
-            {pkg.isBlocked ? "Blocked" : "Active"}
-          </Badge>
-        </TableCell>
-
-        {/* Actions */}
-        <TableCell className="p-3">
-          <div className="flex items-center gap-1 lg:gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleEdit(pkg)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit size={12} />
-            </Button>
-            <Button
-              variant={pkg.isBlocked ? "default" : "destructive"}
-              size="sm"
-              onClick={() => handleBlockUnblock(pkg, pkg.isBlocked ? "unblock" : "block")}
-              className="h-8 w-8 p-0"
-            >
-              {pkg.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />}
-            </Button>
-          </div>
-        </TableCell>
-      </motion.tr>
-    ))}
-  </AnimatePresence>
-</TableBody>
-
-              </Table>
-              
-            </div>
           </CardContent>
         </Card>
+
+        {/* Pagination */}
         <div className="flex justify-center items-center gap-4 mt-6">
-  {/* Minus / Prev Button */}
-  <button
-    onClick={() => setCurrentPage(currentPage - 1)}
-    disabled={currentPage === 1}
-    className={`px-4 py-2 rounded-md border text-sm font-medium ${
-      currentPage === 1
-        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-        : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
-    }`}
-  >
-    Prev
-  </button>
-
-  {/* Current Page Display */}
-  <span className="px-4 py-2 border rounded-md text-sm font-semibold bg-blue-100 text-blue-700">
-    Page {currentPage}
-  </span>
-
-  {/* Plus / Next Button */}
-  <button
-    onClick={() => setCurrentPage(currentPage + 1)}
-    disabled={currentPage === totalPages}
-    className={`px-4 py-2 rounded-md border text-sm font-medium ${
-      currentPage === totalPages
-        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-        : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
-    }`}
-  >
-    Next
-  </button>
-</div>
-      </motion.div>
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-md border text-sm font-medium ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
+            }`}
+          >
+            Prev
+          </button>
+          <span className="px-4 py-2 border rounded-md text-sm font-semibold bg-blue-100 text-blue-700">
+            Page {currentPage}
+          </span>
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-md border text-sm font-medium ${
+              currentPage === totalPages
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white hover:bg-gray-100 text-gray-800 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Modals */}
       <AddServicePackageModal
         isOpen={isAddModalOpen}
-        onClose={closeAddModal}
+        onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleAddSuccess}
-        brands={brands || [] }
+        brands={brands || []}
       />
 
       <EditServicePackageModal
         isOpen={isEditModalOpen}
-        onClose={closeEditModal}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedPackage(null)
+        }}
         onSuccess={handleEditSuccess}
         servicePackage={selectedPackage}
-         brands={brands || [] }
-        
+        brands={brands || []}
       />
 
       <ConfirmationDialog
         isOpen={isConfirmDialogOpen}
-        onClose={closeConfirmDialog}
+        onClose={() => {
+          setIsConfirmDialogOpen(false)
+          setSelectedPackage(null)
+        }}
         onConfirm={confirmBlockUnblock}
         title={`${actionType === "block" ? "Block" : "Unblock"} Service Package`}
         message={`Are you sure you want to ${actionType} "${selectedPackage?.title}"? This action will ${

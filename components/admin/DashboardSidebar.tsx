@@ -69,6 +69,17 @@ const isActive = (path:string) => pathname === path;
     <Car className="mr-3 h-5 w-5" />
     Make&Model Management
   </Link>
+  <Link
+  href="/admin/dashboard/service-plan-management"
+  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md
+    ${isActive("/admin/dashboard/service-plan-management") 
+      ? "bg-blue-50 text-blue-600" 
+      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+>
+  <Wrench className="mr-3 h-5 w-5" />
+  Service Plan Management
+</Link>
+
   <div className="p-4 border-t border-gray-200">
   <button
   onClick={adminLogout}

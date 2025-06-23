@@ -102,10 +102,10 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       return response;
     } catch (error) {}
   },
-  getUsersApi: async () => {
+  getUsersApi: async (debouncedSearchTerm:string, currentPage:number, statusFilter:string) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-users`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-users?search=${debouncedSearchTerm}&page=${currentPage}&statusFilter=${statusFilter}`
       );
       return response;
     } catch (error) {
