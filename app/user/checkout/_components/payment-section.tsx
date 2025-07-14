@@ -60,7 +60,7 @@ export function PaymentSection({
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.src = process.env.NEXT_PUBLIC_RAZORPAY_CHECKOUT_URL!;
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -82,6 +82,7 @@ export function PaymentSection({
       const response = await userApi.createRazorPayOrder(finalAmount);
       console.log("razor pay response", response);
       const orderData = response.order;
+     
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         amount: orderData.amount,
@@ -91,13 +92,14 @@ export function PaymentSection({
         order_id: orderData.id,
         handler: async (response: any) => {
           console.log("Razorpay Handler Response:", response);
+    
           const verifyRes = await userApi.verifyRazorpayPayment(
             response.razorpay_order_id,
             response.razorpay_payment_id,
             response.razorpay_signature,
             cart._id,
             data.paymentMethod,
-            data.selectedAddress?.id || " ",
+            data.selectedAddress,
             data.selectedDate,
             data.selectedSlot || {
               id:"",

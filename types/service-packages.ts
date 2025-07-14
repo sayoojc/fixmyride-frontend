@@ -37,9 +37,11 @@ export interface IServicePackage {
   servicesIncluded: string[]
   priceBreakup: IPriceBreakup
   isBlocked: boolean
+  imageUrl:string
   createdAt: string
   updatedAt?: string
   isAdded:boolean
+  servicePackageCategory:"general" | "ac" | "brake" | "washing"
 }
 
 // Form data types
@@ -51,6 +53,8 @@ export interface ServicePackageFormData {
   fuelType: "petrol" | "diesel" | "lpg" | "cng"
   servicesIncluded: string[]
   priceBreakup: IPriceBreakup
+  imageUrl:string
+  servicePackageCategory:"general" | "ac" | "brake" | "washing"
 }
 
 // API response types

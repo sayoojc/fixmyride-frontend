@@ -30,7 +30,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   },
   addAddressApi: async (addressData: Address) => {
     try {
-      console.log('the add address data from the add address api',addressData);
+      console.log("the add address data from the add address api", addressData);
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-address`,
         addressData
@@ -165,10 +165,15 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-  getServicePackages: async () => {
+  getServicePackages: async (
+    vehicleId: string,
+    serviceCategory: string,
+    fuelType: string
+  ) => {
     try {
+      if (!vehicleId || !serviceCategory) return;
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-service-packages`
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-service-packages?vehicleId=${vehicleId}&serviceCategory=${serviceCategory}&fuelType=${fuelType}`
       );
       return response.data;
     } catch (error) {
@@ -260,13 +265,26 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+
   async verifyRazorpayPayment(
     orderId: string,
     razorpayPaymentId: string,
     razorpaySignature: string,
     cartId: string,
     paymentMethod: string,
-    selectedAddressId: string,
+    selectedAddressId: {
+      addressLine1: string;
+      addressLine2:string;
+      addressType: string;
+      city: string;
+      id?: string;
+      isDefault: boolean;
+      latitude: number;
+      longitude: number;
+      state: string;
+      userId: string;
+      zipCode: string;
+    },
     selectedDate: AvailableDate,
     selectedSlot: TimeSlot
   ) {

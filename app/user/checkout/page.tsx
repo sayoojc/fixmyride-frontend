@@ -9,7 +9,7 @@ import { PaymentSection } from "./_components/payment-section";
 import type { CheckoutData } from "../../../types/checkout";
 import createUserApi from "@/services/userApi";
 import { IFrontendCart } from "@/types/cart";
-import { Address } from "../../../types/user";
+import {Address} from '../../../types/checkout'
 import { axiosPrivate } from "@/api/axios";
 const userApi = createUserApi(axiosPrivate);
 import { useSearchParams } from "next/navigation";
@@ -19,12 +19,25 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     selectedSlot: null,
-    selectedAddress: null,
+    selectedAddress: {
+        id:'',
+  userId:'',
+  addressLine1: '',
+  addressLine2:'',
+  city:'',
+  state:'',
+  zipCode:'',
+  isDefault:false,
+  addressType:'',
+  latitude:0,
+  longitude:0,
+    },
     paymentMethod: "online",
     selectedDate:{
       date:"",
       available:true,
-      timeSlots:[]
+      timeSlots:[],
+      isEmergency:false
     },
   });
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -67,6 +80,10 @@ export default function CheckoutPage() {
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
+
+  useEffect(() => {
+    console.log('the checkout data',checkoutData);
+  },[checkoutData])
 
   const renderStep = () => {
     const stepProps = {

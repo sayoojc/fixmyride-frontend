@@ -9,6 +9,8 @@ export interface Address {
   zipCode: string;
   isDefault: boolean;
   addressType: string;
+  latitude:number;
+  longitude:number;
 }
 
 

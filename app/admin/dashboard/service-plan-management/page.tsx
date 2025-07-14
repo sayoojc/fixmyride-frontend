@@ -50,13 +50,13 @@ const ServicePlanManagement = () => {
     fetchBrands()
   }, [])
 
-  // Fetch service packages data
   useEffect(() => {
     const fetchServicePackages = async () => {
       try {
         setLoading(true)
         const response = await adminApi.getServicePackages(searchTerm, currentPage, statusFilter, fuelFilter)
         setServicePackages(response.servicePackageResponse.servicePackages)
+        console.log(response.servicePackageResponse.servicePackages)
         setTotalPages(response.servicePackageResponse.totalCount)
       } catch (error) {
         console.error("Error fetching service packages:", error)

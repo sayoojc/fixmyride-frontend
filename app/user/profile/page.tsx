@@ -35,7 +35,8 @@ import AddVehicleModal from "@/components/user/AddVehicleModal";
 import EditAddressModal from "@/components/user/EditAddressModal";
 import { toast } from "react-toastify";
 import type { User as UserType, Address } from "../../../types/user";
-
+import { updateProfileSchema } from "../../../validations/profileValidation";
+import z from 'zod'
 const userApi = createUserApi(axiosPrivate);
 
 const fadeIn = {
@@ -158,24 +159,38 @@ useEffect(() => {
       toast.error("Something went wrong while deleting address.");
     }
   };
-  const updateProfile = async (
-    phone: string,
-    userId: string,
-    userName: string
-  ) => {
-    try {
-      const response = await userApi.updateProfileApi(phone, userId, userName);
 
-      if (response.success) {
-        toast.success("Profile updated successfully!");
-      } else {
-        toast.error("Failed to update profile.");
-      }
-    } catch (error) {
+
+const updateProfile = async (
+  phone: string,
+  userId: string,
+  userName: string
+) => {
+  try {
+    // ✅ Validate before API call
+    const validatedData = updateProfileSchema.parse({ phone, userId, userName });
+
+    const response = await userApi.updateProfileApi(
+      validatedData.phone,
+      validatedData.userId,
+      validatedData.userName
+    );
+
+    if (response.success) {
+      toast.success("Profile updated successfully!");
+    } else {
+      toast.error("Failed to update profile.");
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      toast.error(error.errors[0].message);
+    } else {
       console.error("Error updating profile:", error);
       toast.error("Something went wrong while updating profile.");
     }
-  };
+  }
+};
+
 
   const toggleEdit = async () => {
     if (isEditing) {

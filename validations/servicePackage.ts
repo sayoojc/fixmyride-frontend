@@ -19,6 +19,8 @@ export const ServicePackageSchema = z.object({
   description: z.string().min(1, "Description is required").max(500, "Description too long").trim(),
   brandId: z.string().min(1, "Brand is required"),
   modelId: z.string().min(1, "Model is required"),
+  imageUrl:z.string(),
+  servicePackageCategory : z.enum(["general", "ac", "brake", "washing"]),
   fuelType: z.enum(['petrol','diesel','lpg','cng'], {
     required_error: "Fuel type is required",
     invalid_type_error: "Invalid fuel type",

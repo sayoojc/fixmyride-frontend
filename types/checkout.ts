@@ -1,21 +1,33 @@
 import { IFrontendCart } from "./cart"
-import { Address } from "./user"
 export interface TimeSlot {
   id: string
   time: string
   available: boolean
 }
-
+export interface Address {
+  id?:string,
+  userId: string | undefined;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  isDefault: boolean;
+  addressType: string;
+  latitude:number;
+  longitude:number;
+}
 export interface AvailableDate {
   date: string
   available: boolean
   timeSlots: TimeSlot[]
+  isEmergency:boolean
 }
 
 
 export interface CheckoutData {
   selectedSlot: TimeSlot | null
-  selectedAddress: Address | null
+  selectedAddress: Address
   paymentMethod: "online" |"cash"
   selectedDate:AvailableDate
 }

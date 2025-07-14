@@ -2,13 +2,7 @@
 
 import type React from "react";
 import { useState, useCallback, useEffect } from "react";
-import {
-  useForm,
-  useFieldArray,
-  UseFormReturn,
-  type FieldErrors,
-  type Control,
-} from "react-hook-form";
+import { useForm, useFieldArray, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2 } from "lucide-react";
@@ -37,10 +31,13 @@ import {
 import type { IServicePackage, IPart } from "../../types/service-packages";
 import { toast } from "react-toastify";
 import { Brand, Model } from "@/types/brand";
-import { set } from "date-fns";
 import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
 const adminApi = createAdminApi(axiosPrivate);
+import createimageUploadApi from "@/services/imageUploadApi";
+import { axiosPublic } from "@/api/axiosPublic";
+const imageUploadApi = createimageUploadApi(axiosPublic);
+const serviceCategoryOptions = ["general", "ac", "brake", "washing","dent",'detailing','emergency','tyres','battery'];  
 
 interface AddServicePackageModalProps {
   isOpen: boolean;
@@ -66,53 +63,72 @@ const AddServicePackageModal: React.FC<AddServicePackageModalProps> = ({
   });
 
   const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors },
-  }: UseFormReturn<ServicePackageFormData> = useForm<ServicePackageFormData>({
-    resolver: zodResolver(ServicePackageSchema),
-    defaultValues: {
-      servicesIncluded: [],
-      priceBreakup: {
-        parts: [{ name: "", price: 0, quantity: 1 }],
-        laborCharge: 0,
-        discount: 0,
-        tax: 0,
-        total: 0,
-      },
+  register,
+  handleSubmit,
+  watch,
+  setValue,
+  reset,
+  control,
+  formState: { errors },
+} = useForm<ServicePackageFormData>({
+  defaultValues: {
+    title: '',
+    description: '',
+    brandId: '',
+    modelId: '',
+    fuelType: undefined,
+    imageUrl:'',
+    servicePackageCategory: 'general', 
+    servicesIncluded: [],
+    priceBreakup: {
+      parts: [{ name: '', price: 0, quantity: 1 }],
+      laborCharge: 0,
+      discount: 0,
+      tax: 0,
+      total: 0,
     },
-  });
+  },
+});
+
   const [selectedBrand, setSelectedBrand] = useState<Brand>();
-  const [selectedModel,setSelectedModel] = useState<Model>();
-  const [selectedFuel,setSelectedFuel] = useState<string>()
+  const [selectedModel, setSelectedModel] = useState<Model>();
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log(file);
+      setSelectedImage(file);
+      
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+  useEffect(() => {
+    console.log('selected image',selectedImage)
+  },[selectedImage])
   const { fields, append, remove } = useFieldArray({
     control,
     name: "priceBreakup.parts",
   });
 
   const watchedValues = watch();
-const parts = watch("priceBreakup.parts");
-const laborCharge = watch("priceBreakup.laborCharge");
-const discount = watch("priceBreakup.discount");
-const tax = watch("priceBreakup.tax");
-  // Calculate total automatically
-useEffect(() => {
-  const partsTotal = (parts || []).reduce(
-    (sum: number, part: IPart) => sum + (part?.price || 0) * (part?.quantity || 0),
-    0
-  );
+  const parts = watch("priceBreakup.parts");
+  const laborCharge = watch("priceBreakup.laborCharge");
+  const discount = watch("priceBreakup.discount");
+  const tax = watch("priceBreakup.tax");
 
-  const subtotal = (partsTotal || 0) + (laborCharge || 0) - (discount || 0);
-  const total = subtotal + (tax || 0);
+  useEffect(() => {
+    const partsTotal = (parts || []).reduce(
+      (sum: number, part: IPart) =>
+        sum + (part?.price || 0) * (part?.quantity || 0),
+      0
+    );
 
-  setValue("priceBreakup.total", Math.max(0, total));
-}, [parts, laborCharge, discount, tax, setValue]);
+    const subtotal = (partsTotal || 0) + (laborCharge || 0) - (discount || 0);
+    const total = subtotal + (tax || 0);
 
-
+    setValue("priceBreakup.total", Math.max(0, total));
+  }, [parts, laborCharge, discount, tax, setValue]);
 
   const updateServiceInput = useCallback((value: string): void => {
     setFormState((prev) => ({ ...prev, serviceInput: value }));
@@ -160,13 +176,23 @@ useEffect(() => {
     [remove]
   );
 
-  const onSubmit = useCallback(
+  const onSubmit = 
     async (data: ServicePackageFormData): Promise<void> => {
       setLoading(true);
       try {
-        const newPackage: IServicePackage = await adminApi.addServicePackage(data);
+            if (!selectedImage?.name) {
+              console.log('the selected image from the on submit no selected image block',selectedImage)
+          throw Error("selected image is not found");
+        }
+             const imageUrl = await imageUploadApi.uploadImageApi(
+          selectedImage
+        );
+        const newPackage: IServicePackage = await adminApi.addServicePackage(
+         { ...data,imageUrl }
+        ); 
         await onSuccess(newPackage);
         reset();
+        setPreviewUrl("");
         updateServiceInput("");
         onClose();
       } catch (error) {
@@ -175,18 +201,13 @@ useEffect(() => {
       } finally {
         setLoading(false);
       }
-    },
-    [
-      onSuccess,
-      reset,
-      updateServiceInput,
-      onClose,
-      setLoading,
-    ]
-  );
+    }
+    
+  
 
   const handleClose = useCallback((): void => {
     reset();
+    setPreviewUrl("");
     updateServiceInput("");
     onClose();
   }, [reset, updateServiceInput, onClose]);
@@ -209,9 +230,9 @@ useEffect(() => {
   );
 
   const handleFuelTypeChange = useCallback(
-    (value: 'petrol'|'diesel'|'lpg'|'cng'): void => {
+    (value: "petrol" | "diesel" | "lpg" | "cng"): void => {
       setValue("fuelType", value);
-      setSelectedFuel(value);
+      // setSelectedFuel(value);
     },
     [setValue]
   );
@@ -228,10 +249,12 @@ useEffect(() => {
   const handleModelChange = useCallback(
     (value: string): void => {
       setValue("modelId", value);
-      const selected = selectedBrand?.models.find((model) => model._id === value);
+      const selected = selectedBrand?.models.find(
+        (model) => model._id === value
+      );
       setSelectedModel(selected);
     },
-    [setValue,selectedBrand]
+    [setValue, selectedBrand]
   );
 
   return (
@@ -242,7 +265,6 @@ useEffect(() => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -266,7 +288,10 @@ useEffect(() => {
                   <div>
                     <Label htmlFor="brandId">Brand</Label>
 
-                    <Select onValueChange={handleBrandChange}  value={watch("brandId")}>
+                    <Select
+                      onValueChange={handleBrandChange}
+                      value={watch("brandId")}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
                       </SelectTrigger>
@@ -286,13 +311,18 @@ useEffect(() => {
                   </div>
                   <div>
                     <Label htmlFor="modelId">Model</Label>
-                    <Select onValueChange={handleModelChange}  value={watch("modelId")}>
+                    <Select
+                      onValueChange={handleModelChange}
+                      value={watch("modelId")}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select model" />
                       </SelectTrigger>
                       <SelectContent>
                         {selectedBrand?.models.map((model) => (
-                          <SelectItem value={model._id}>{model.name}</SelectItem>
+                          <SelectItem value={model._id} key={model._id}>
+                            {model.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -305,22 +335,78 @@ useEffect(() => {
                 </div>
                 <div>
                   <Label htmlFor="fuelType">Fuel Type</Label>
-                  <Select onValueChange={handleFuelTypeChange}  value={watch("fuelType")}>
+                  <Select
+                    onValueChange={handleFuelTypeChange}
+                    value={watch("fuelType")}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select fuel type" />
                     </SelectTrigger>
                     <SelectContent>
                       {selectedModel?.fuelTypes.map((fuel) => (
-                      <SelectItem value={fuel}>{fuel}</SelectItem>
+                        <SelectItem key={fuel} value={fuel}>
+                          {fuel}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
                   {errors.fuelType && (
                     <p className="text-sm text-red-600 mt-1">
                       {errors.fuelType.message}
                     </p>
                   )}
                 </div>
+              </div>
+              <div>
+                <div className="mt-4">
+                  <Label htmlFor="imageUpload">Upload Image</Label>
+                  <input
+                    type="file"
+                    id="imageUpload"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block mt-1 text-sm"
+                  />
+
+                  {previewUrl && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-1">
+                        Image Preview:
+                      </p>
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="w-48 h-32 object-cover rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="servicePackageCategory">Service Category</Label>
+                <Select
+                  onValueChange={(value) =>
+                     setValue("servicePackageCategory", value as ServicePackageFormData["servicePackageCategory"])
+                  }
+                  value={watch("servicePackageCategory")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select service category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceCategoryOptions.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.servicePackageCategory && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.servicePackageCategory.message}
+                  </p>
+                )}
               </div>
 
               <div>

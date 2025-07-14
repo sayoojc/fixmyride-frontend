@@ -14,8 +14,8 @@ export interface IServiceProvider {
     pinCode:string,
     }
     location?: {
-      latitude: number;
-      longitude: number;
+      type:string,
+      coordinates:[number,number]
     };
     isListed: boolean;
     verificationStatus?: 'pending' | 'approved' | 'rejected';

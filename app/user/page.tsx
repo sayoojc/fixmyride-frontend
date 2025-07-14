@@ -11,14 +11,63 @@ import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import { IVehicle } from "@/types/user";
 import { IFrontendCart } from "@/types/cart";
+import { IServicePackage } from "@/types/service-packages";
 
 const userApi = createUserApi(axiosPrivate);
+const serviceCategories = [
+  {
+    key: "general",
+    name: "Periodic Services",
+    icon: "/icons/periodic.png",
+    isActive: true,
+  },
+  {
+    key: "ac",
+    name: "AC Service & Repair",
+    icon: "/icons/ac.png",
+    isActive: false,
+  },
+  {
+    key: "battery",
+    name: "Batteries",
+    icon: "/icons/battery.png",
+    isActive: false,
+  },
+  {
+    key: "tyres",
+    name: "Tyres & Wheel Care",
+    icon: "/icons/tyre.png",
+    isActive: false,
+  },
+  {
+    key: "dent",
+    name: "Denting & Painting",
+    icon: "/icons/denting.png",
+    isActive: false,
+  },
+  {
+    key: "detailing",
+    name: "Detailing Services",
+    icon: "/icons/detailing.png",
+    isActive: false,
+  },
+  {
+    key: "emergency",
+    name: "Emergency Services",
+    icon: "/icons/sos.png",
+    isActive: false,
+  },
+];
 
 const CarServiceBooking = () => {
-  const vehicle = useSelector((state: RootState) => state.vehicle);
+  const [selectedServiceCategory, setSelectedServiceCategory] =
+    useState<string>('general');
   const [cart, setCart] = useState<IFrontendCart>();
   const [vehicles, setVehicles] = useState<IVehicle[]>([]);
   const [openAddVehicleModal, setOpenAddVehicleModal] = useState(false);
+  useEffect(() => {
+    console.log(selectedServiceCategory)
+  },[selectedServiceCategory])
   useEffect(() => {
     const fetchVehicles = async () => {
       const response = await userApi.getVehiclesApi();
@@ -26,14 +75,13 @@ const CarServiceBooking = () => {
     };
     fetchVehicles();
   }, []);
-
-  useEffect(() => {
-    console.log("the cart", cart);
-  }, [cart]);
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <CategoryBar />
+      <CategoryBar
+        serviceCategories={serviceCategories}
+        selectedServiceCategory={selectedServiceCategory}
+        setSelectedServiceCategory={setSelectedServiceCategory}
+      />
 
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
@@ -41,7 +89,14 @@ const CarServiceBooking = () => {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ServicePackages setCart={setCart} />
+          {cart?.vehicleId.modelId._id && (
+            <ServicePackages
+              setCart={setCart}
+              serviceCategory={selectedServiceCategory}
+              modelId={cart.vehicleId.modelId._id}
+              fuelType={cart.vehicleId.fuel}
+            />
+          )}
           {cart ? (
             <CartSummary cart={cart} setCart={setCart} />
           ) : (
