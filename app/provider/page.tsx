@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Car,
@@ -30,7 +29,6 @@ import LoginModal from "../../components/provider/LoginModal"
 
 
 export default function Home() {
-  const router = useRouter()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)
 

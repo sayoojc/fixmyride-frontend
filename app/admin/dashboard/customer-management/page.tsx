@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
+import { toast } from "react-toastify";
 import type { IAdminUserInterface } from "@/types/user"
 import {
   AlertDialog,
@@ -41,9 +42,9 @@ const CustomerManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await adminApi.getUsersApi(debouncedSearchTerm, currentPage, statusFilter)
+      const response = await adminApi.getUsersApi(debouncedSearchTerm, currentPage, statusFilter);
       setUsers(response.data.users)
-      setTotalPages(response.data.totalPages || 1)
+      setTotalPages(response.data.totalCount)
     } catch (error) {
       console.error("Failed to fetch users:", error)
     } finally {
@@ -55,23 +56,19 @@ const CustomerManagement = () => {
     try {
       setActionLoading(user._id )
       const response = await adminApi.toggleListing(user.email);
+      toast.success('User status updated successfuly')
       setUsers((prevUsers) =>
         prevUsers.map((u) =>
           (u._id ) === (user._id ) ? { ...u, isListed: action === "unblock" } : u,
         ),
       )
-      console.log(`User ${user.name} has been ${action}ed successfully`)
     } catch (error) {
-      console.error(`Failed to ${action} user:`, error)
+   toast.error('User status updation failed');
     } finally {
       setActionLoading(null)
       setConfirmAction(null)
     }
   }
-
-  useEffect(() => {
-    console.log("user", users)
-  }, [users])
 
   useEffect(() => {
     const timer = setTimeout(() => {

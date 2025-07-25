@@ -2,10 +2,11 @@ import { AxiosInstance } from "axios";
 import { ServicePackageFormData } from "@/types/service-packages";
 
 const createAdminApi = (axiosPrivate: AxiosInstance) => ({
+  ///Brand management///
   AddBrandApi: async (brandName: string, imageUrl: string) => {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-brand`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/brands`,
         {
           brandName,
           imageUrl,
@@ -16,6 +17,41 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       console.error("Adding brand failed");
     }
   },
+  getBrandsApi: async (search: string, page: number, statusFilter: string) => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/brands?search=${search}&page=${page}&statusFilter=${statusFilter}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Fetching Brand Data Failed", error);
+    }
+  },
+  updateBrandStatusApi: async (brandId: string, newStatus: string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/brands/${brandId}/status`,
+        {
+          newStatus,
+        }
+      );
+      return response;
+    } catch (error) {}
+  },
+  updateBrandApi: async (id: string, name: string, imageUrl: string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/brands/${id}`,
+        {
+          name,
+          imageUrl,
+        }
+      );
+      return response;
+    } catch (error) {}
+  },
+
+  /// Model management ///
   AddModelApi: async (
     model: string,
     imageUrl: string,
@@ -24,7 +60,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ) => {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-model`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/model`,
         {
           model,
           imageUrl,
@@ -37,28 +73,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       console.error("Adding model failed");
     }
   },
-  getBrandsApi: async (search: string, page: number, statusFilter: string) => {
-    try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-brands?search=${search}&page=${page}&statusFilter=${statusFilter}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Fetching Brand Data Failed", error);
-    }
-  },
-  updateBrandStatusApi: async (brandId: string, newStatus: string) => {
-    try {
-      const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-brand-status`,
-        {
-          brandId,
-          newStatus,
-        }
-      );
-      return response;
-    } catch (error) {}
-  },
+
   updateModelStatusApi: async (
     brandId: string,
     modelId: string,
@@ -66,46 +81,47 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-Model-status`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/Model/${modelId}/status`,
         {
           brandId,
-          modelId,
           newStatus,
         }
       );
       return response;
     } catch (error) {}
   },
-  updateBrandApi: async (id: string, name: string, imageUrl: string) => {
+
+  updateModelApi: async (
+    id: string,
+    name: string,
+    imageUrl: string,
+    fuelTypes: string[],
+    brandId: string
+  ) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-brand`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/model/${id}`,
         {
-          id,
           name,
           imageUrl,
+          fuelTypes,
+          brandId
         }
       );
       return response;
     } catch (error) {}
   },
-  updateModelApi: async (id: string, name: string, imageUrl: string) => {
-    try {
-      const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-model`,
-        {
-          id,
-          name,
-          imageUrl,
-        }
-      );
-      return response;
-    } catch (error) {}
-  },
-  getUsersApi: async (debouncedSearchTerm:string, currentPage:number, statusFilter:string) => {
+
+  /////User management ////
+
+  getUsersApi: async (
+    debouncedSearchTerm: string,
+    currentPage: number,
+    statusFilter: string
+  ) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-users?search=${debouncedSearchTerm}&page=${currentPage}&statusFilter=${statusFilter}`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/users?search=${debouncedSearchTerm}&page=${currentPage}&statusFilter=${statusFilter}`
       );
       return response;
     } catch (error) {
@@ -116,14 +132,14 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   toggleListing: async (email: string) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-user-listing`,
-        { email }
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/users/${email}`
       );
       return response;
     } catch (error) {
       console.error("Toggling the status failed");
     }
   },
+  ///Provider management///
   getProvidersList: async (
     search: string,
     page: number,
@@ -131,7 +147,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-providers?search=${search}&page=${page}&statusFilter=${statusFilter}`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/providers?search=${search}&page=${page}&statusFilter=${statusFilter}`
       );
       return response;
     } catch (error) {
@@ -141,7 +157,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   getVerificationData: async (id: string) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-verification-data?id=${id}`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/verification/${id}`
       );
       return response;
     } catch (error) {
@@ -151,7 +167,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   getProviderById: async (id: string) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-provider?id=${id}`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/provider/${id}`
       );
       return response;
     } catch (error) {
@@ -165,10 +181,10 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/verify-provider`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/verification/${providerId}`,
         {
-          providerId,
           verificationAction,
+          adminNotes,
         }
       );
       return response;
@@ -179,20 +195,18 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   toggleProviderListing: async (providerId: string) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-provider-listing`,
-        {
-          providerId,
-        }
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/provider/${providerId}`
       );
       return response.data;
     } catch (error) {
       throw error;
     }
   },
+  ////Service package management////
   addServicePackage: async (data: ServicePackageFormData) => {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/add-service-package`,
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/service-package`,
         data
       );
       return response.data;
@@ -208,7 +222,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ) => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/get-service-packages?search=${searchTerm}&page=${currentPage}&statusFilter=${statusFilter}&fuelFilter=${fuelFilter}`
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/service-packages?search=${searchTerm}&page=${currentPage}&statusFilter=${statusFilter}&fuelFilter=${fuelFilter}`
       );
       return response.data;
     } catch (error) {
@@ -218,24 +232,19 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   updateServicePackage: async (id: string, data: ServicePackageFormData) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/update-service-package`,
-        { id, data }
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/service-package/${id}`,
+        { data }
       );
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  toggleBlockStatus: async (id: string, actionType: string) => {
+  toggleServicePackageStatus: async (id: string, actionType: string) => {
     try {
-      console.log(
-        "The toggle block unblock from the admin api",
-        id,
-        actionType
-      );
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/toggle-block-status`,
-        { id, actionType }
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/service-package/${id}/status`,
+        { actionType }
       );
       return response.data;
     } catch (error) {

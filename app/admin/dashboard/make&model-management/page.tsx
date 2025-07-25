@@ -19,32 +19,16 @@ import createimageUploadApi from "@/services/imageUploadApi";
 import { axiosPublic } from "@/api/axiosPublic";
 const imageUploadApi = createimageUploadApi(axiosPublic);
 import { toast } from "react-toastify";
-
 import { Badge } from "@/components/ui/badge";
-import { Pagination } from "@/components/ui/pagination";
+import { Brand } from "@/types/editBrandInterface";
+import { ModelType } from "@/types/editBrandInterface";
 
-// Define interfaces
-interface Model {
-  _id: string;
-  name: string;
-  imageUrl: string;
-  status: "active" | "blocked";
-}
-
-interface Brand {
-  _id: string;
-  brandName: string;
-  status: "active" | "blocked";
-  imageUrl: string;
-  models: Model[];
-}
-
-// Define form schemas for validation
 export const brandSchema = z.object({
   name: z.string().min(1, "Brand name is required"),
   image: z
     .instanceof(File)
-    .refine((file) => file.size > 0, "Image file is required"),
+    .refine((file) => file.size > 0, "Image file is required")
+    .optional(),
 });
 
 const modelSchema = z.object({
@@ -57,19 +41,12 @@ const modelSchema = z.object({
 });
 
 const BrandModelManagement: React.FC = () => {
-  const [brandImagePreview, setBrandImagePreview] = useState<string | null>(
-    null
-  );
-  const [modelImagePreview, setModelImagePreview] = useState<string | null>(
-    null
-  );
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalPages,setTotalPages] = useState<number>(1)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [isAddBrandDialogOpen, setIsAddBrandDialogOpen] =
     useState<boolean>(false);
   const [isAddModelDialogOpen, setIsAddModelDialogOpen] =
@@ -79,22 +56,10 @@ const BrandModelManagement: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] =
     useState<boolean>(false);
-  const [editingModel, setEditingModel] = useState<{
-    name: string;
-    imageUrl: string;
-    _id: string;
-  } | null>(null);
-
-  const editModelForm = useForm({
-    defaultValues: {
-      name: "",
-      image: null,
-    },
-  });
-
-  const itemsPerPage = 10;
-
-  // Initialize forms
+  const [editingModel, setEditingModel] = useState<ModelType | null>(null);
+  useEffect(() => {
+    console.log("the editing model", editingModel);
+  }, [editingModel]);
   const addBrandForm = useForm<z.infer<typeof brandSchema>>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -120,49 +85,27 @@ const BrandModelManagement: React.FC = () => {
     },
   });
 
-  const handleDialogChange = (isOpen: boolean) => {
-    setIsAddBrandDialogOpen(isOpen);
-    if (!isOpen) {
-      // Reset form values
-      addBrandForm.reset();
-      setBrandImagePreview(null);
-    }
-  };
-
-  const handleDialogToggle = (
-    isOpen: boolean,
-    setOpen: React.Dispatch<React.SetStateAction<boolean>>,
-    resetForm?: () => void,
-    resetImagePreview?: () => void
-  ) => {
-    setOpen(isOpen);
-    if (!isOpen) {
-      resetForm?.();
-      resetImagePreview?.();
-    }
-  };
-
-  // Load brands on component mount
   useEffect(() => {
     const fetchBrandsWithModels = async () => {
-      console.log('the useEffect triggers');
       try {
-        const brands = await adminApi.getBrandsApi(searchTerm,currentPage,statusFilter);
-        console.log('the brands inth useeffect',brands);
+        const brands = await adminApi.getBrandsApi(
+          searchTerm,
+          currentPage,
+          statusFilter
+        );
         setBrands(brands.BrandObject.formattedBrands);
-        setCurrentPage(currentPage)
-        setTotalPages(brands.totalPages)
-            } catch (error) {
-        console.error("Failed to fetch brands:", error);
+        setCurrentPage(currentPage);
+        setTotalPages(brands.BrandObject.totalPage);
+      } catch (error) {
+        toast.error("fetching brands failed");
       } finally {
         setLoading(false);
       }
     };
 
     fetchBrandsWithModels();
-  }, [searchTerm,currentPage,statusFilter]);
+  }, [searchTerm, currentPage, statusFilter]);
 
-  // Set edit form values when editingBrand changes
   useEffect(() => {
     if (editingBrand) {
       editBrandForm.reset({
@@ -172,12 +115,6 @@ const BrandModelManagement: React.FC = () => {
     }
   }, [editingBrand, editBrandForm]);
 
-  useEffect(() => {
-    if (brands) {
-      console.log("brands from brand management", brands);
-    }
-  }, [brands]);
-  // Get status badge variant
   const getStatusBadge = (status: "active" | "blocked") => {
     switch (status) {
       case "active":
@@ -197,9 +134,12 @@ const BrandModelManagement: React.FC = () => {
     }
   };
 
-  // CRUD operations
   const addBrand = async (brandData: z.infer<typeof brandSchema>) => {
     try {
+      if (!brandData.image) {
+        toast.error("please select an image");
+        return;
+      }
       const imageUrl = await imageUploadApi.uploadBrandImageApi(
         brandData.image
       );
@@ -209,14 +149,13 @@ const BrandModelManagement: React.FC = () => {
       setIsAddBrandDialogOpen(false);
       addBrandForm.reset();
     } catch (error) {
-      toast.error('Adding Brand Failed');
-      console.error("Error adding brand:", error);
+      toast.error("Adding Brand Failed");
     }
   };
 
   const updateBrand = async (updatedBrandData: z.infer<typeof brandSchema>) => {
-    console.log("updatebrand function fired");
     if (!editingBrand) return;
+
     try {
       let imageUrl = editingBrand.imageUrl;
 
@@ -225,7 +164,7 @@ const BrandModelManagement: React.FC = () => {
           updatedBrandData.image
         );
       }
-      const response = await adminApi.updateBrandApi(
+      await adminApi.updateBrandApi(
         editingBrand._id,
         updatedBrandData.name,
         imageUrl
@@ -238,13 +177,11 @@ const BrandModelManagement: React.FC = () => {
         )
       );
       toast.success("Brand Updated Successfully");
-
       setIsEditBrandDialogOpen(false);
       setEditingBrand(null);
       editBrandForm.reset();
     } catch (error) {
-      toast.error('Updating Brand Failed')
-      console.error("Error updating brand:", error);
+      toast.error("Updating Brand Failed");
     }
   };
 
@@ -285,7 +222,7 @@ const BrandModelManagement: React.FC = () => {
         console.warn("Model status update failed or response malformed");
         return;
       }
-      toast.success('Model updated Successfully');
+      toast.success("Model updated Successfully");
 
       setBrands((prevBrands) =>
         prevBrands.map((brand) => {
@@ -301,88 +238,44 @@ const BrandModelManagement: React.FC = () => {
         })
       );
     } catch (error) {
-      toast.error('Failed to update Model')
+      toast.error("Failed to update Model");
       console.error(`Error toggling model status:`, error);
     }
   };
 
   const addModel = async (modelData: z.infer<typeof modelSchema>) => {
     try {
-          const imageUrl = await imageUploadApi.uploadBrandImageApi(modelData.image);
-    console.log("The image url from the add model", imageUrl);
-    const response = await adminApi.AddModelApi(
-      modelData.name,
-      imageUrl,
-      modelData.brandId,
-      modelData.fuelTypes
-    );
-toast.success('Model Added Successfully')
-    setBrands((prevBrands) =>
-      prevBrands.map((brand) => {
-        if (brand._id === modelData.brandId) {
-          const updatedModels = brand.models
-            ? [...brand.models, response.model]
-            : [response.model];
-          return { ...brand, models: updatedModels };
-        }
-        return brand;
-      })
-    );
-    setIsAddModelDialogOpen(false);
-    addModelForm.reset();
-    } catch (error) {
-      toast.error('Adding Model Failed');
-      console.log('the adding model failed')
-    }
-
-  };
-
-  const updateModel = async (updatedModelData: z.infer<typeof modelSchema>) => {
-    console.log("updateModel function fired");
-    if (!editingModel) return;
-
-    try {
-      let imageUrl = editingModel.imageUrl;
-      if (updatedModelData.image && updatedModelData.image.size > 0) {
-        imageUrl = await imageUploadApi.uploadBrandImageApi(
-          updatedModelData.image
-        );
-      }
-      const response = await adminApi.updateModelApi(
-        editingModel._id,
-        updatedModelData.name,
-        imageUrl
+      const imageUrl = await imageUploadApi.uploadBrandImageApi(
+        modelData.image
       );
-
-      const updatedModel = response?.data?.model;
-      if (!updatedModel) {
-        console.warn("Model update failed or response malformed");
-        return;
-      }
+      console.log("The image url from the add model", imageUrl);
+      const response = await adminApi.AddModelApi(
+        modelData.name,
+        imageUrl,
+        modelData.brandId,
+        modelData.fuelTypes
+      );
+      toast.success("Model Added Successfully");
       setBrands((prevBrands) =>
         prevBrands.map((brand) => {
-          // Only update the brand that owns the model
-          const hasModel = brand.models.some(
-            (model) => model._id === editingModel._id
-          );
-          if (!hasModel) return brand;
-
-          const updatedModels = brand.models.map((model) =>
-            model._id === editingModel._id ? updatedModel : model
-          );
-
-          return { ...brand, models: updatedModels };
+          if (brand._id === modelData.brandId) {
+            const updatedModels = brand.models
+              ? [...brand.models, response.model]
+              : [response.model];
+            return { ...brand, models: updatedModels };
+          }
+          return brand;
         })
       );
-       toast.success('Model updated successfully');
-      setIsEditModelDialogOpen(false);
-      setEditingModel(null);
-      editModelForm.reset();
+      setIsAddModelDialogOpen(false);
+      addModelForm.reset();
     } catch (error) {
-      toast.error('Adding Model failed');
-      console.error("Error updating model:", error);
+      toast.error("Adding Model Failed");
+      console.log("the adding model failed");
     }
   };
+
+ 
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -394,9 +287,9 @@ toast.success('Model Added Successfully')
         />
 
         <BrandList
-        setCurrentPage={setCurrentPage}
-        currentPage={currentPage}
-        totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+          currentPage={currentPage}
+          totalPages={totalPages}
           brands={brands}
           loading={loading}
           searchTerm={searchTerm}
@@ -440,16 +333,14 @@ toast.success('Model Added Successfully')
         brands={brands}
       />
 
-   
-
-        <EditModelDialog
-          isEditModelDialogOpen={isEditModelDialogOpen}
-          setIsEditModelDialogOpen={setIsEditModelDialogOpen}
-          editingModel={editingModel}
-          editModelForm={editModelForm}
-          updateModel={updateModel}
-        />
-   
+      <EditModelDialog
+        isEditModelDialogOpen={isEditModelDialogOpen}
+        setIsEditModelDialogOpen={setIsEditModelDialogOpen}
+        editingModel={editingModel}
+        setBrands={setBrands}
+        brands={brands}
+        setEditingModel={setEditingModel}
+      />
     </div>
   );
 };

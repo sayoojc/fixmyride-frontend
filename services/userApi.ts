@@ -6,33 +6,21 @@ import { TimeSlot } from "@/types/checkout";
 import axios from "axios";
 
 const createUserApi = (axiosPrivate: AxiosInstance) => ({
-  getProfileDataApi: async () => {
+  ///////Address Api/////////////////////
+    async getAddresses() {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/getProfileData`
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses`
       );
       return response.data;
     } catch (error) {
-      console.error("Fetching the user profile data is failed");
-      throw new Error("Failed fetching the profile");
+      throw error;
     }
   },
-  getBrandAndModels: async () => {
+   addAddressApi: async (addressData: Address) => {
     try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-brands`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Fetching Brand Data Failed");
-      throw new Error("Failed to fetch brand Data");
-    }
-  },
-  addAddressApi: async (addressData: Address) => {
-    try {
-      console.log("the add address data from the add address api", addressData);
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-address`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses`,
         addressData
       );
       return response;
@@ -41,11 +29,10 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Failed to add address");
     }
   },
-  setDefaultAddress: async (addressId: string, userId: string) => {
+  setDefaultAddress: async (addressId: string) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/set-default-address`,
-        { addressId, userId }
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}/default`,
       );
       return response;
     } catch (error) {
@@ -56,15 +43,12 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   updateAddressApi: async (
     addressForm: Address,
     _id: string,
-    userId: string
   ) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/update-address`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${_id}`,
         {
-          addressForm,
-          _id,
-          userId,
+          addressForm
         }
       );
       return response;
@@ -73,30 +57,104 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Editing the address failed");
     }
   },
-  deleteAddress: async (addressId: string, userId: string) => {
+  deleteAddress: async (addressId: string) => {
     try {
       const response = await axiosPrivate.delete(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/delete-address`,
-        {
-          params: {
-            addressId,
-            userId,
-          },
-        }
-      );
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}`);
       return response;
     } catch (error) {
       console.error("Deleting address failed");
       throw new Error("Deleting address failed");
     }
   },
-  updateProfileApi: async (phone: string, userId: string, userName: string) => {
+  /////////Brand API///////
+    getBrandsApi: async () => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/brands`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error while fetching the brand model data");
+      throw new Error("Error while fetching the brand model data");
+    }
+  },
+  ////////Cart APIs//////////
+  
+    async getCart(cartId: string) {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart`,
+        { params: { cartId } }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+    fetchCart: async (vehicleId: string) => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart`,
+        {
+          params: { vehicleId },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  addToCart: async (serviceId: string, vehicleId: string) => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart/services`,
+        { serviceId, vehicleId }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  addVehicleToCart: async (vehicleId: string) => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart/vehicle`,
+        { vehicleId }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  removeFromCart: async (cartId: string, packageId: string) => {
+    try {
+      const response = await axiosPrivate.delete(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart/${cartId}/services/${packageId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+   /////////Profile APIs///////
+  getProfileDataApi: async () => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/profile`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Fetching the user profile data is failed");
+      throw new Error("Failed fetching the profile");
+    }
+  },
+
+   updateProfileApi: async (phone: string,userName: string) => {
     try {
       const response = await axiosPrivate.put(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/update-profile`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/profile`,
         {
           phone,
-          userId,
           userName,
         }
       );
@@ -107,15 +165,13 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   changePasswordApi: async (
-    userId: string,
     currentPassword: string,
     newPassword: string
   ) => {
     try {
       const response = await axiosPrivate.put(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/change-password`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/profile/password`,
         {
-          userId,
           currentPassword,
           newPassword,
         }
@@ -126,21 +182,11 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Changing the password failed");
     }
   },
-  getBrandsApi: async () => {
-    try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-brand-model-data`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error while fetching the brand model data");
-      throw new Error("Error while fetching the brand model data");
-    }
-  },
+//////Vehicle APIs///////
   addVehicleApi: async (vehicleData: Partial<IVehicle>) => {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-vehicle`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles`,
         vehicleData
       );
       return response.data;
@@ -158,7 +204,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   getVehiclesApi: async () => {
     try {
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-vehicles`
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles`
       );
       return response.data;
     } catch (error) {
@@ -173,7 +219,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     try {
       if (!vehicleId || !serviceCategory) return;
       const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-service-packages?vehicleId=${vehicleId}&serviceCategory=${serviceCategory}&fuelType=${fuelType}`
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/service-packages?vehicleId=${vehicleId}&serviceCategory=${serviceCategory}&fuelType=${fuelType}`
       );
       return response.data;
     } catch (error) {
@@ -187,77 +233,11 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Unknown error while getting the service packages");
     }
   },
-  fetchCart: async (vehicleId: string) => {
-    try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-cart`,
-        {
-          params: { vehicleId },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  addToCart: async (serviceId: string, vehicleId: string) => {
-    try {
-      const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-to-cart`,
-        { serviceId, vehicleId }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  addVehicleToCart: async (vehicleId: string) => {
-    try {
-      const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/add-vehicle-to-cart`,
-        { vehicleId }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  removeFromCart: async (cartId: string, packageId: string) => {
-    try {
-      const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/remove-service-from-cart`,
-        { cartId, packageId }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  async getAddresses() {
-    try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-addresses`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-  async getCart(cartId: string) {
-    try {
-      const response = await axiosPrivate.get(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/get-cart`,
-        { params: { cartId } }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+//////payment APIs/////////
   async createRazorPayOrder(amount: number) {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/create-razorpay-order`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/payments/razorpay/order`,
         { amount }
       );
       return response.data;
@@ -290,7 +270,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   ) {
     try {
       const response = await axiosPrivate.post(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/verify-payment`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/payments/razorpay/verify`,
         {
           orderId,
           razorpayPaymentId,

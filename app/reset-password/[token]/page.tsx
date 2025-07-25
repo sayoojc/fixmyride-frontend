@@ -7,10 +7,15 @@ import { useState } from "react"
 import axios from "axios"
 import { toast } from "react-toastify"
 import { Loader2 } from "lucide-react"
+import createAuthApi from "@/services/authApi"
+import { axiosPrivate } from "@/api/axios"
+const authApi = createAuthApi(axiosPrivate);
+
 
 const ResetPasswordPage = () => {
   const router = useRouter()
-  const { token } = useParams()
+  const params = useParams();
+const token = params.token as string;
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -28,10 +33,10 @@ const ResetPasswordPage = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/user/reset-password", {
+      const response = await authApi.resetPasswordApi(
         token,
         password,
-      })
+      )
 
       setMessage("Password reset successful! Redirecting to login...")
       toast.success("Password reset successful! Redirecting to login...")

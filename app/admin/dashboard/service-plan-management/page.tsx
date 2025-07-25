@@ -56,10 +56,8 @@ const ServicePlanManagement = () => {
         setLoading(true)
         const response = await adminApi.getServicePackages(searchTerm, currentPage, statusFilter, fuelFilter)
         setServicePackages(response.servicePackageResponse.servicePackages)
-        console.log(response.servicePackageResponse.servicePackages)
         setTotalPages(response.servicePackageResponse.totalCount)
       } catch (error) {
-        console.error("Error fetching service packages:", error)
         setError("Failed to fetch service packages")
         toast.error("Failed to fetch service packages")
       } finally {
@@ -86,7 +84,7 @@ const ServicePlanManagement = () => {
 
     try {
       setLoading(true)
-      const response = await adminApi.toggleBlockStatus(selectedPackage._id, actionType)
+      const response = await adminApi.toggleServicePackageStatus(selectedPackage._id, actionType)
       setServicePackages((prev) =>
         prev.map((pkg) => {
           if (pkg._id === response.servicePackage._id) {

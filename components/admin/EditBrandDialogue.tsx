@@ -1,17 +1,14 @@
 import React,{useState,useEffect} from 'react';
 import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
- // Define form schemas for validation
+import { UseFormReturn } from "react-hook-form";
+
  export const brandSchema = z.object({
   name: z.string().min(1, "Brand name is required"),
   image: z
     .instanceof(File)
-    .refine((file) => file.size > 0, "Image file is required")
+    .refine((file) => file.size > 0, "Image file is required").optional()
     
 });
-
-
   import { Button } from "@/components/ui/button";
   import { Input } from "@/components/ui/input";
   import {
@@ -29,6 +26,7 @@ interface EditBrandDialogProps {
   setIsEditBrandDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   editingBrand: { brandName: string; imageUrl: string } | null;
   updateBrand: (data: z.infer<typeof brandSchema>) => void;
+  editBrandForm: UseFormReturn<z.infer<typeof brandSchema>>;
   
 }
 
@@ -37,24 +35,27 @@ const EditBrandDialog: React.FC<EditBrandDialogProps> = ({
   setIsEditBrandDialogOpen,
   editingBrand,
   updateBrand,
+  editBrandForm
 }) => {
-  const editBrandForm = useForm<z.infer<typeof brandSchema>>({
-    resolver: zodResolver(brandSchema),
-    defaultValues: {
-      name: "",
-      image: undefined,
-    },
-  });
+
   const [editBrandImagePreview,setEditBrandImagePreview] = useState<string|null>(editingBrand?.imageUrl ?? null);
   useEffect(() => {
     if (editingBrand) {
       editBrandForm.reset({
         name: editingBrand.brandName,
-        image: undefined, // or null, based on how you handle it
+        image: undefined,
       });
       setEditBrandImagePreview(editingBrand.imageUrl ?? null);
     }
   }, [editingBrand, editBrandForm]);
+useEffect(() => {
+  const subscription = editBrandForm.watch((value) => {
+    console.log('Form values changed:', value);
+  });
+
+  return () => subscription.unsubscribe();
+}, [editBrandForm]);
+
   return (
     <Dialog open={isEditBrandDialogOpen} onOpenChange={setIsEditBrandDialogOpen}>
       <DialogContent className="sm:max-w-[600px]">

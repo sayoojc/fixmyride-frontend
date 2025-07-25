@@ -10,7 +10,6 @@ import {
   TableBadge,
   TableAvatar,
   type TableColumn,
-  type TableAction,
 } from "../../../../components/Table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -41,16 +40,7 @@ const ProviderManagement = () => {
   const [confirmAction, setConfirmAction] = useState<{
     provider: IServiceProvider
     action: "list" | "unlist"
-  } | null>(null)
-type TableAction<T> = {
-  label: string | ((item: T) => string);
-  onClick: (item: T) => void;
-  icon?: React.ReactNode;
-  variant?: string | ((item: T) => string);
-  disabled?: (item: T) => boolean;
-  loading?: (item: T) => boolean;
-};
-
+  } | null>(null);
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
@@ -66,7 +56,6 @@ type TableAction<T> = {
         setProviders(response.data.providerResponse.sanitizedProviders)
         setTotalPages(response.data.providerResponse.totalPage)
       } catch (error) {
-        console.error("Failed to fetch providers:", error)
         toast.error("Failed to fetch providers")
       } finally {
         setLoading(false)
@@ -75,7 +64,9 @@ type TableAction<T> = {
 
     fetchProviders()
   }, [debouncedSearchTerm, currentPage, statusFilter])
-
+useEffect(() => {
+  console.log('the total pages',totalPages)
+},[totalPages]);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -87,13 +78,6 @@ type TableAction<T> = {
   }
 
   const actions = [
-    // {
-    //   label: "Verify",
-    //   onClick: () => {},
-    //   variant: "outline",
-    //   icon: <Eye className="h-4 w-4" />,
-    //   disabled: (provider:IServiceProvider) => !provider.verificationStatus || provider.verificationStatus !== "pending",
-    // },
     {
       label: (item:IServiceProvider) => (item.isListed ? "Unlist" : "List"),
       onClick: (provider:IServiceProvider) => {
@@ -142,7 +126,6 @@ type TableAction<T> = {
       setProviders(providers.map((p) => (p._id === provider._id ? { ...p, isListed: updatedStatus } : p)))
       toast.success(`Provider ${action}ed successfully`)
     } catch (error) {
-      console.error(`Failed to ${action} provider:`, error)
       toast.error(`Failed to ${action} provider`)
     } finally {
       setActionLoading(null)

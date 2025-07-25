@@ -11,6 +11,7 @@ export const NotificationListener = ({
 }: {
   providerId: string;
   providerLocation: { lat: number; lng: number };
+
 }) => {
   useEffect(() => {
     const socket = getSocket();

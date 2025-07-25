@@ -91,15 +91,9 @@ useEffect(() => {
       console.log("✅ Updated user state:", user);
     }
   }, [user]);
-  const handleSetDefaultAddress = async (addressId: string, userId: string) => {
+  const handleSetDefaultAddress = async (addressId: string) => {
     try {
-      const response = await axiosPrivate.patch(
-        "/api/user/set-default-address",
-        {
-          addressId,
-          userId,
-        }
-      );
+      const response = await userApi.setDefaultAddress(addressId)
 
       if (response.status === 200) {
         toast.success("Default address updated successfully!");
@@ -126,10 +120,10 @@ useEffect(() => {
     }
   };
 
-  const handleDeleteAddress = async (addressId: string, userId: string) => {
+  const handleDeleteAddress = async (addressId: string) => {
     try {
       console.log("the delete address handler function");
-      const response = await userApi.deleteAddress(addressId, userId);
+      const response = await userApi.deleteAddress(addressId);
 
       if (response?.status === 200) {
         toast.success("Address deleted successfully!");
@@ -167,7 +161,6 @@ const updateProfile = async (
   userName: string
 ) => {
   try {
-    // ✅ Validate before API call
     const validatedData = updateProfileSchema.parse({ phone, userId, userName });
 
     const response = await userApi.updateProfileApi(
@@ -496,7 +489,7 @@ const updateProfile = async (
                                 className="flex-1 h-10 text-slate-700 justify-center rounded-none hover:bg-slate-100"
                                 onClick={() => {
                                   address.id && user.id
-                                    ? handleDeleteAddress(address.id, user.id)
+                                    ? handleDeleteAddress(address.id)
                                     : null;
                                 }}
                               >
@@ -513,7 +506,6 @@ const updateProfile = async (
                                       address.id && user.id
                                         ? handleSetDefaultAddress(
                                             address.id,
-                                            user.id
                                           )
                                         : null;
                                     }}

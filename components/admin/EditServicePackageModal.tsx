@@ -37,7 +37,10 @@ import type { IServicePackage, IPart } from "../../types/service-packages";
 import { toast } from "react-toastify";
 import { Brand, Model } from "@/types/brand";
 import createAdminApi from "@/services/adminApi";
+import createimageUploadApi from "@/services/imageUploadApi";
 import { axiosPrivate } from "@/api/axios";
+import { axiosPublic } from "@/api/axiosPublic";
+const imageUploadApi = createimageUploadApi(axiosPublic);
 const adminApi = createAdminApi(axiosPrivate);
 
 interface EditServicePackageModalProps {
@@ -46,7 +49,6 @@ interface EditServicePackageModalProps {
   onSuccess: (updatedPackage: IServicePackage) => void;
   brands: Brand[];
   servicePackage: IServicePackage | null;
- 
 }
 
 interface FormState {
@@ -87,19 +89,38 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
   });
   const [selectedBrand, setSelectedBrand] = useState<Brand>();
   const [selectedModel, setSelectedModel] = useState<Model>();
-  const [selectedFuel, setSelectedFuel] = useState<string>();
+  // const [selectedFuel, setSelectedFuel] = useState<string>();
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "priceBreakup.parts",
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (servicePackage?.imageUrl) {
+      setPreviewUrl(servicePackage?.imageUrl);
+    }
+  }, [servicePackage]);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log(file);
+      setSelectedImage(file);
 
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+  useEffect(() => {
+    console.log("the service packages", servicePackage);
+  }, [servicePackage, isOpen]);
 
-  // Populate form when servicePackage changes
   useEffect(() => {
     if (servicePackage && isOpen) {
       const formData: ServicePackageFormData = {
         title: servicePackage.title,
         description: servicePackage.description,
+        imageUrl: servicePackage.imageUrl,
+        servicePackageCategory: servicePackage.servicePackageCategory,
         brandId: servicePackage.brandId._id,
         modelId: servicePackage.modelId._id,
         fuelType: servicePackage.fuelType,
@@ -110,14 +131,12 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
       replace(servicePackage.priceBreakup.parts);
     }
   }, [servicePackage, isOpen, reset, replace]);
-
-  // Calculate total automatically
+ 
   const watchedValues = watch();
   const parts = watch("priceBreakup.parts");
   const laborCharge = watch("priceBreakup.laborCharge");
   const discount = watch("priceBreakup.discount");
   const tax = watch("priceBreakup.tax");
-  // Calculate total automatically
   useEffect(() => {
     const partsTotal = (parts || []).reduce(
       (sum: number, part: IPart) =>
@@ -183,10 +202,23 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
 
       setLoading(true);
       try {
-        const updatedPackage =
-          await adminApi.updateServicePackage(servicePackage._id, data);
-          console.log('the service package updated',updatedPackage);
-          onSuccess(updatedPackage.servicePackage);
+        let updatedData = { ...data };
+        if (selectedImage) {
+          const url = await imageUploadApi.uploadImageApi(selectedImage);
+          console.log(
+            " a new image selected and the url from the image upload api is",
+            url
+          );
+
+          updatedData = { ...data, imageUrl: url };
+        }
+        const updatedPackage = await adminApi.updateServicePackage(
+          servicePackage._id,
+          updatedData
+        );
+
+        console.log("Service package updated", updatedPackage);
+        onSuccess(updatedPackage.servicePackage);
       } catch (error) {
         console.error("Error updating service package:", error);
         toast.error("Failed to update service package");
@@ -194,7 +226,7 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
         setLoading(false);
       }
     },
-    [servicePackage, onSuccess, onClose, setLoading]
+    [servicePackage, onSuccess, onClose, setLoading, selectedImage] // Add selectedImage
   );
 
   const handleClose = useCallback((): void => {
@@ -371,7 +403,27 @@ const EditServicePackageModal: React.FC<EditServicePackageModalProps> = ({
               </div>
             </CardContent>
           </Card>
+          <div className="mt-4">
+            <Label htmlFor="imageUpload">Upload Image</Label>
+            <input
+              type="file"
+              id="imageUpload"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="block mt-1 text-sm"
+            />
 
+            {previewUrl && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-600 mb-1">Image Preview:</p>
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-48 h-32 object-cover rounded border"
+                />
+              </div>
+            )}
+          </div>
           {/* Services Included */}
           <Card>
             <CardHeader>

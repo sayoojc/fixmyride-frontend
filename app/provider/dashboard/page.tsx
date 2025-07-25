@@ -16,36 +16,10 @@ import { getSocket } from "../../../lib/socket";
 import {NotificationListener} from "../../../components/provider/NotificationListner";
 
 const providerApi = createProviderApi(axiosPrivate)
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 100 },
-  },
-}
-
-
-
-
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [providerData, setProviderData] = useState<IServiceProvider | null>(null)
   const [notifications, setNotifications] = useState<any[]>([]);
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {

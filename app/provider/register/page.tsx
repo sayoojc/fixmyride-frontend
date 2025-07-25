@@ -13,7 +13,6 @@ import { axiosPrivate } from "@/api/axios";
 import createAuthApi from "@/services/authApi";
 import GoogleSignupButton from "@/components/GoogleSignUpButton";
 import { MapPin, Home, Briefcase, Map } from "lucide-react";
-import { fetchLocationFromPincode } from "@/services/pinCodeApi";
 import dynamic from "next/dynamic";
 import { useJsApiLoader } from "@react-google-maps/api";
 const authApi = createAuthApi(axiosPrivate);

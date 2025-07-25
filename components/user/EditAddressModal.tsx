@@ -46,6 +46,8 @@ export const EditAddressModal: React.FC<EditAddressModalProps> = ({
     zipCode: "",
     isDefault: false,
     addressType: "Home",
+    latitude:0,
+    longitude:0
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,6 +65,8 @@ export const EditAddressModal: React.FC<EditAddressModalProps> = ({
         zipCode: address.zipCode || "",
         isDefault: address.isDefault || false,
         addressType: address.addressType || "Home",
+        latitude:address.latitude,
+        longitude:address.longitude
       });
     }
   }, [address, userId]);
@@ -98,7 +102,7 @@ export const EditAddressModal: React.FC<EditAddressModalProps> = ({
 
     try {
         if(address?.id && userId){
-            const response = await userApi.updateAddressApi(addressForm,address.id,userId);
+            const response = await userApi.updateAddressApi(addressForm,address.id);
             if (response && response.data.address) {
               const updatedAddress = response.data.address;
               console.log('updated address',updatedAddress);

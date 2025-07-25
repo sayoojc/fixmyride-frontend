@@ -2,8 +2,7 @@
 
 import type React from "react";
 import { useState, useCallback, useEffect } from "react";
-import { useForm, useFieldArray, UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useFieldArray } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2 } from "lucide-react";
 import {
@@ -25,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ServicePackageSchema,
   type ServicePackageFormData,
 } from "../../validations/servicePackage";
 import type { IServicePackage, IPart } from "../../types/service-packages";

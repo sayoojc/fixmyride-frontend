@@ -11,113 +11,149 @@ interface SignupFormData {
   };
 }
 
-const createAuthApi = (axiosPrivate:AxiosInstance) => ({
-
-  loginApi: async(email:string,password:string) => {
-  const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/login`,{
-    email,
-    password,
-  })
-  return response.data
+const createAuthApi = (axiosPrivate: AxiosInstance) => ({
+  //// User Auth ////
+  loginApi: async (email: string, password: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/login`,
+      {
+        email,
+        password,
+      }
+    );
+    return response.data;
   },
-  registerTempApi: async (name:string,email:string,phone:string,password:string) => {
-    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/register-temp`,{
+  registerTempApi: async (
+    name: string,
+    email: string,
+    phone: string,
+    password: string
+  ) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/register-temp`,
+      {
         name,
         email,
         phone,
-        password
-    })
-    return response.data
+        password,
+      }
+    );
+    return response.data;
   },
-  registerApi: async (otpValue:string,email:string,phone:string) => {
-    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/signup`,{
+  registerApi: async (otpValue: string, email: string, phone: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/signup`,
+      {
         otpValue,
         email,
-        phone
-    })
-    return response.data
+        phone,
+      }
+    );
+    return response.data;
   },
-  //forgot password
-
-  forgotPasswordApi: async (email:string) => {
-    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/forgotPassword`,{
+  forgotPasswordApi: async (email: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/forgot`,
+      {
         email,
-    })
-    return response.data
+      }
+    );
+    return response.data;
   },
-  resetPasswordApi: async(email:string,otp:string,newPassword:string) => {
-    const response =  await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/resetPassword`,{
-      email,
-      otp,
-      newPassword
-    })
+  resetPasswordApi: async (token: string,password: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/reset`,
+      {
+      token,
+      password
+      }
+    );
   },
-  adminLoginApi: async(email:string,password:string) => {
-    const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/adminlogin`,{
-      email,
-      password,
-    })
-    return response.data
-    },
-    providerLoginApi: async(email:string,password:string) => {
-      try {
-        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-login`,{
+  logoutApi: async () => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/logout`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Logout API failed:", error);
+      throw error;
+    }
+  },
+  ///Admin Auth ////
+  adminLoginApi: async (email: string, password: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/login`,
+      {
+        email,
+        password,
+      }
+    );
+    return response.data;
+  },
+  adminLogoutApi: async () => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/logout`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Logout API failed:", error);
+      throw error;
+    }
+  },
+  //// Provider Auth ////
+  providerLoginApi: async (email: string, password: string) => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/login`,
+        {
           email,
           password,
-        })
-        return response.data
-      } catch (error) {
-        throw error
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  ProviderLogoutApi: async () => {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/logout`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Logout API failed:", error);
+      throw error;
+    }
+  },
+
+  //provider register
+  providerRegisterTempApi: async (data: SignupFormData) => {
+    try {
+      console.log("provider register temp api");
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/register-temp`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Provider registration failed");
+    }
+  },
+  providerRegisterApi: async (otp: string, email: string, phone: string) => {
+    const response = await axiosPrivate.post(
+      `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/register`,
+      {
+        otp,
+        email,
+        phone,
       }
-    
-      },
-      logoutApi: async () => {
-        try {
-          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/logout`);
-          return response.data;
-        } catch (error) {
-          console.error("Logout API failed:", error);
-          throw error;
-        }
-      },
-    ProviderLogoutApi: async () => {
-        try {
-          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/providerlogout`);
-          return response.data;
-        } catch (error) {
-          console.error("Logout API failed:", error);
-          throw error;
-        }
-      },
-      adminLogoutApi: async () => {
-        try {
-          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/logout`);
-          return response.data;
-        } catch (error) {
-          console.error("Logout API failed:", error);
-          throw error;
-        }
-      },
-      //provider register
-      providerRegisterTempApi: async (data:SignupFormData) => {
-        try {
-          console.log('provider register temp api')
-          const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-register-temp`,data)
-          return response.data
-        } catch (error) {
-          console.error('Provider registration failed');
-
-        }
-
-      },
-      providerRegisterApi: async (otp:string,email:string,phone:string) => {
-        const response = await axiosPrivate.post(`${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/provider-register`,{
-            otp,
-            email,
-            phone
-        })
-        return response.data
-      },
+    );
+    return response.data;
+  },
 });
 
 export default createAuthApi;

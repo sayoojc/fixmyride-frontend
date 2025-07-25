@@ -19,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define available fuel types
 const FUEL_TYPES = [
   { id: "petrol", label: "Petrol" },
   { id: "diesel", label: "Diesel" },

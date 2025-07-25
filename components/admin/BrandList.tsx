@@ -17,10 +17,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { set } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
 
 interface Model {
+  brand:string,
+  fuelTypes:[string]
   _id: string;
   name: string;
   imageUrl: string;
@@ -214,7 +214,13 @@ const BrandList: React.FC<BrandListProps> = ({
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() => {
-                                            setEditingModel(model);
+                                            setEditingModel({name:model.name,
+                                              fuelTypes:model.fuelTypes,
+                                              imageUrl:model.imageUrl,
+                                              brand:brand.brandName,
+                                              _id:model._id,
+                                              status:model.status                               
+                                            });
                                             setIsEditModelDialogOpen(true);
                                           }}
                                         >
