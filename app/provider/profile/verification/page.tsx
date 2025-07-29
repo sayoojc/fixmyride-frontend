@@ -138,8 +138,6 @@ export default function VerificationPage() {
   // Validate fields for the current step
   const validateCurrentStep = async () => {
     let fieldsToValidate: string[] = []
-
-    // Determine which fields to validate based on current step
     if (currentStep === 1) {
       fieldsToValidate = ["licenseImage", "idProofImage"]
     } else if (currentStep === 2) {
@@ -147,11 +145,7 @@ export default function VerificationPage() {
     } else if (currentStep === 3) {
       fieldsToValidate = ["startedYear", "description"]
     }
-
-    // Trigger validation for the fields
     const result = await trigger(fieldsToValidate as any)
-
-    // If validation fails, collect errors for the current step
     if (!result) {
       const currentErrors: Record<string, string> = {}
       fieldsToValidate.forEach((field) => {

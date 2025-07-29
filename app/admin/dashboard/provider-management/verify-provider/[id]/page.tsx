@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import createAdminApi from "@/services/adminApi"
@@ -41,10 +41,10 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false)
   const [verificationAction, setVerificationAction] = useState<"Verified" | "Rejected" | null>(null)
   const [adminNotes, setAdminNotes] = useState<string>("")
-  const searchParams = useSearchParams()
+  const params = useParams()
   const router = useRouter()
-  const providerId = searchParams.get("id")
-  // Fetch provider data
+  const rawProviderId = params.id;
+  const providerId = Array.isArray(rawProviderId) ? rawProviderId[0] : rawProviderId;
   useEffect(() => {
     const fetchProvider = async () => {
       if (!providerId) return
@@ -55,8 +55,8 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
         setVerificationData(verificationData.data.verificationData)
         const response = await adminApi.getProviderById(providerId)
         console.log('the provider',response);
-        setProvider(response.data.provider)
-        setLoading(false)
+        setProvider(response.data.provider);
+        setLoading(false);
       } catch (error) {
         console.error("Failed to fetch provider details:", error)
         setLoading(false)
@@ -72,19 +72,14 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
     setVerificationAction(action)
     setIsConfirmModalOpen(true)
   }
-
-  // Close confirmation modal
   const closeConfirmModal = () => {
     setIsConfirmModalOpen(false)
     setVerificationAction(null)
   }
-
-  // Handle verification
   const handleVerification = async () => {
     if (!provider || !verificationAction || !providerId) return
 
     try {
-      // Include admin notes in the verification request
       const response = adminApi.verifyProviderApi(providerId, verificationAction, adminNotes)
       toast.success(`provider ${verificationAction} successfully`)
       router.push("/admin/dashboard/provider-management")
@@ -94,8 +89,6 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
       toast.error("Failed to update verification status")
     }
   }
-
-  // Animation variants for Framer Motion
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },

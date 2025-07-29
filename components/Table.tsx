@@ -27,6 +27,7 @@ export interface TableAction<T> {
   className?: MaybeFn<string, T>
   disabled?: MaybeFn<boolean, T>
   icon?: MaybeFn<React.ReactNode, T>
+  shouldShow?: MaybeFn<boolean, T> 
 }
 
 export interface UniversalTableProps<T> {
@@ -153,46 +154,59 @@ export function UniversalTable<T extends Record<string, any>>({
                       </TableCell>
                     )
                   })}
-                  {actions.length > 0 && (
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {actions.map((action, actionIndex) => {
-                          const label = typeof action.label === "function" ? action.label(item, index) : action.label
+{actions.length > 0 && (
+  <TableCell className="text-right">
+    <div className="flex justify-end gap-2">
+      {actions
+        .filter((action) => {
+          // ✅ FILTER actions using shouldShow
+          if (typeof action.shouldShow === "function") {
+            return action.shouldShow(item, index)
+          }
+          if (typeof action.shouldShow === "boolean") {
+            return action.shouldShow
+          }
+          return true // Default to showing if shouldShow is not provided
+        })
+        .map((action, actionIndex) => {
+          const label = typeof action.label === "function" ? action.label(item, index) : action.label
 
-                          const variant =
-                            typeof action.variant === "function"
-                              ? action.variant(item, index)
-                              : (action.variant ?? "outline")
+          const variant =
+            typeof action.variant === "function"
+              ? action.variant(item, index)
+              : action.variant ?? "outline"
 
-                          const size = typeof action.size === "function" ? action.size(item, index) : action.size
+          const size = typeof action.size === "function" ? action.size(item, index) : action.size
 
-                          const className =
-                            typeof action.className === "function" ? action.className(item, index) : action.className
+          const className =
+            typeof action.className === "function" ? action.className(item, index) : action.className
 
-                          const isDisabled =
-                            typeof action.disabled === "function" ? action.disabled(item, index) : action.disabled
+          const isDisabled =
+            typeof action.disabled === "function" ? action.disabled(item, index) : action.disabled
 
-                          const icon = typeof action.icon === "function" ? action.icon(item, index) : action.icon
-                          return (
-                            <Button
-                              key={actionIndex}
-                              variant={variant}
-                              size={size || "sm"}
-                              className={className}
-                              disabled={isDisabled}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                action.onClick(item, index)
-                              }}
-                            >
-                              {icon && <span className="mr-1">{icon}</span>}
-                              {label}
-                            </Button>
-                          )
-                        })}
-                      </div>
-                    </TableCell>
-                  )}
+          const icon = typeof action.icon === "function" ? action.icon(item, index) : action.icon
+
+          return (
+            <Button
+              key={actionIndex}
+              variant={variant}
+              size={size || "sm"}
+              className={className}
+              disabled={isDisabled}
+              onClick={(e) => {
+                e.stopPropagation()
+                action.onClick(item, index)
+              }}
+            >
+              {icon && <span className="mr-1">{icon}</span>}
+              {label}
+            </Button>
+          )
+        })}
+    </div>
+  </TableCell>
+)}
+
                 </TableRow>
               ))
             )}

@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import type React from "react"
@@ -36,8 +34,8 @@ interface IServiceProvider {
     pinCode:string,
   }
   location?: {
-    latitude: number
-    longitude: number
+type:string,
+coordinates:[number,number]
   }
   isListed: boolean
   verificationStatus?: "pending" | "approved" | "rejected"
@@ -106,9 +104,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await providerApi.getProfileData()
-
-        // Parse address if it exists
+        const response = await providerApi.getProfileData();
+        console.log('the response',response);
         if (response.provider?.address) {
           const addressParts = response.provider.address.split(",")
           const street = addressParts[0]?.trim() || ""
@@ -121,8 +118,6 @@ export default function ProfilePage() {
             state = statePincodeParts.slice(0, -1).join(" ").trim()
             pinCode = statePincodeParts[statePincodeParts.length - 1]?.trim() || ""
           }
-
-          // Update the provider data with parsed address components
           setProviderData({
             ...response.provider,
           })
