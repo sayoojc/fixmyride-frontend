@@ -7,7 +7,7 @@ import axios from "axios";
 
 const createUserApi = (axiosPrivate: AxiosInstance) => ({
   ///////Address Api/////////////////////
-    async getAddresses() {
+  async getAddresses() {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses`
@@ -17,7 +17,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-   addAddressApi: async (addressData: Address) => {
+  addAddressApi: async (addressData: Address) => {
     try {
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses`,
@@ -32,7 +32,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   setDefaultAddress: async (addressId: string) => {
     try {
       const response = await axiosPrivate.patch(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}/default`,
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}/default`
       );
       return response;
     } catch (error) {
@@ -40,15 +40,12 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Setting default address failed");
     }
   },
-  updateAddressApi: async (
-    addressForm: Address,
-    _id: string,
-  ) => {
+  updateAddressApi: async (addressForm: Address, _id: string) => {
     try {
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${_id}`,
         {
-          addressForm
+          addressForm,
         }
       );
       return response;
@@ -60,7 +57,8 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   deleteAddress: async (addressId: string) => {
     try {
       const response = await axiosPrivate.delete(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}`);
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/addresses/${addressId}`
+      );
       return response;
     } catch (error) {
       console.error("Deleting address failed");
@@ -68,7 +66,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   /////////Brand API///////
-    getBrandsApi: async () => {
+  getBrandsApi: async () => {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/brands`
@@ -80,8 +78,8 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   ////////Cart APIs//////////
-  
-    async getCart(cartId: string) {
+
+  async getCart(cartId: string) {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart`,
@@ -92,7 +90,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-    fetchCart: async (vehicleId: string) => {
+  fetchCart: async (vehicleId: string) => {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart`,
@@ -130,13 +128,14 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   removeFromCart: async (cartId: string, packageId: string) => {
     try {
       const response = await axiosPrivate.delete(
-        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart/${cartId}/services/${packageId}`);
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/cart/${cartId}/services/${packageId}`
+      );
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-   /////////Profile APIs///////
+  /////////Profile APIs///////
   getProfileDataApi: async () => {
     try {
       const response = await axiosPrivate.get(
@@ -149,7 +148,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
 
-   updateProfileApi: async (phone: string,userName: string) => {
+  updateProfileApi: async (phone: string, userName: string) => {
     try {
       const response = await axiosPrivate.put(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/profile`,
@@ -164,10 +163,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Updating profile failed");
     }
   },
-  changePasswordApi: async (
-    currentPassword: string,
-    newPassword: string
-  ) => {
+  changePasswordApi: async (currentPassword: string, newPassword: string) => {
     try {
       const response = await axiosPrivate.put(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/profile/password`,
@@ -182,7 +178,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Changing the password failed");
     }
   },
-//////Vehicle APIs///////
+  //////Vehicle APIs///////
   addVehicleApi: async (vehicleData: Partial<IVehicle>) => {
     try {
       const response = await axiosPrivate.post(
@@ -233,7 +229,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw new Error("Unknown error while getting the service packages");
     }
   },
-//////payment APIs/////////
+  //////payment APIs/////////
   async createRazorPayOrder(amount: number) {
     try {
       const response = await axiosPrivate.post(
@@ -254,7 +250,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     paymentMethod: string,
     selectedAddressId: {
       addressLine1: string;
-      addressLine2:string;
+      addressLine2: string;
       addressType: string;
       city: string;
       id?: string;
@@ -287,6 +283,15 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+  //// Order Apis////
+  async getOrderdetails(id:string) {
+    try {
+      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/${id}`);
+      return  response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 });
 
 export default createUserApi;

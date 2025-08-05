@@ -15,8 +15,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import type { CheckoutPaymentStepProps } from "@/types/checkout";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 const userApi = createUserApi(axiosPrivate);
@@ -32,13 +33,11 @@ export function PaymentSection({
   cart,
 }: CheckoutPaymentStepProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const router = useRouter();
   const handlePaymentMethodChange = (method: "online" | "cash") => {
     onUpdate({ paymentMethod: method });
   };
-  useEffect(() => {
-    console.log("The checkout data", data);
-  }, [data]);
+
   const calculateSubtotal = () => {
     if (!cart?.services || !Array.isArray(cart.services)) return 0;
 
@@ -66,23 +65,18 @@ export function PaymentSection({
       document.body.appendChild(script);
     });
   };
-
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
     const isLoaded = await loadRazorpayScript();
-
     if (!isLoaded) {
       toast.error("Failed to load Razorpay SDK");
       setIsProcessing(false);
       return;
     }
-
     try {
-      console.log('the final amount from the razorpay handler function in the front end',finalAmount)
       const response = await userApi.createRazorPayOrder(finalAmount);
-      console.log("razor pay response", response);
       const orderData = response.order;
-     
+
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         amount: orderData.amount,
@@ -91,24 +85,26 @@ export function PaymentSection({
         description: "Service Payment",
         order_id: orderData.id,
         handler: async (response: any) => {
-          console.log("Razorpay Handler Response:", response);
-    
           const verifyRes = await userApi.verifyRazorpayPayment(
             response.razorpay_order_id,
             response.razorpay_payment_id,
             response.razorpay_signature,
             cart._id,
             data.paymentMethod,
-            data.selectedAddress,
+            {
+              ...data.selectedAddress,
+              userId: data.selectedAddress.userId || "",
+            },
             data.selectedDate,
             data.selectedSlot || {
-              id:"",
-              time:"",
-              available:false
-            } 
+              id: "",
+              time: "",
+              available: false,
+            }
           );
-        console.log('the verifyRes.ok from the payment component',verifyRes);
           if (verifyRes.success) {
+            console.log("the response for the verify payment", verifyRes);
+             router.push(`/user/checkout/success/${verifyRes.orderId}`);
             toast.success("Payment successful!");
           } else {
             toast.error("Payment verification failed!");
@@ -146,8 +142,6 @@ export function PaymentSection({
       );
     }
   };
-
-  // Get service details from cart
   const serviceNames =
     cart?.services?.map((item) => item.serviceId.title).join(", ") ||
     "Vehicle Service";
@@ -209,8 +203,6 @@ export function PaymentSection({
             </div>
           </CardContent>
         </Card>
-
-        {/* Payment Method */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -62,14 +62,6 @@ export const ServicePackages: React.FC<ServicePackagesProps> = ({
     try {
       const response = await userApi.addToCart(serviceId, vehicleId);
       setCart(response.cart);
-      // setServicePackages((prev) =>
-      //   prev.map((service) => {
-      //     if (service._id === serviceId) {
-      //       return { ...service, isAdded: true };
-      //     }
-      //     return service;
-      //   })
-      // );
     } catch (error) {
       console.error("Failed to add to cart:", error);
       throw error;

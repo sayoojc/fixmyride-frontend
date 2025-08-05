@@ -13,6 +13,7 @@ import {Address} from '../../../types/checkout'
 import { axiosPrivate } from "@/api/axios";
 const userApi = createUserApi(axiosPrivate);
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
@@ -43,17 +44,19 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [cart, setCart] = useState<IFrontendCart>();
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       try {
         const cartId = searchParams.get("cartId");
+        if(!cartId) {
+          router.push("/user")
+        }
         if (cartId) {
-          const cartResponse = await userApi.getCart(cartId);
-          console.log("cart response", cartResponse);
+          const cartResponse = await userApi.getCart(cartId);        
           setCart(cartResponse.cart);
         }
         const addressResponse = await userApi.getAddresses();
-        console.log("address response", addressResponse);
         setAddresses(addressResponse.address);
       } catch (error) {
         console.error("Error fetching checkout data", error);
@@ -64,11 +67,6 @@ export default function CheckoutPage() {
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    console.log('the addresses ',addresses);
-  },[addresses])
-
   const updateCheckoutData = (data: Partial<CheckoutData>) => {
     setCheckoutData((prev) => ({ ...prev, ...data }));
   };
@@ -80,11 +78,6 @@ export default function CheckoutPage() {
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
-
-  useEffect(() => {
-    console.log('the checkout data',checkoutData);
-  },[checkoutData])
-
   const renderStep = () => {
     const stepProps = {
       data: checkoutData,
