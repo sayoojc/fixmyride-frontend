@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
 import { CategoryBar } from "@/components/user/CategoryBar";
 import { ServicePackages } from "@/components/user/ServicePackages";
 import { CartSummary } from "@/components/user/CartSummary";
@@ -11,7 +9,6 @@ import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import { IVehicle } from "@/types/user";
 import { IFrontendCart } from "@/types/cart";
-import { IServicePackage } from "@/types/service-packages";
 
 const userApi = createUserApi(axiosPrivate);
 const serviceCategories = [
@@ -66,9 +63,6 @@ const CarServiceBooking = () => {
   const [vehicles, setVehicles] = useState<IVehicle[]>([]);
   const [openAddVehicleModal, setOpenAddVehicleModal] = useState(false);
   useEffect(() => {
-    console.log(selectedServiceCategory)
-  },[selectedServiceCategory])
-  useEffect(() => {
     const fetchVehicles = async () => {
       const response = await userApi.getVehiclesApi();
       setVehicles(response.vehicles);
@@ -91,6 +85,7 @@ const CarServiceBooking = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {cart?.vehicleId.modelId._id && (
             <ServicePackages
+              cart={cart}
               setCart={setCart}
               serviceCategory={selectedServiceCategory}
               modelId={cart.vehicleId.modelId._id}

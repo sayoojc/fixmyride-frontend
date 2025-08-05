@@ -47,15 +47,15 @@ const GoogleMapDirections: React.FC<GoogleMapDirectionsProps> = ({
           if (status === google.maps.DirectionsStatus.OK && result) {
             setDirections(result);
 
-            // Voice directions
-            const steps = result.routes[0].legs[0].steps;
-            const directionsText = steps
-              .map((step) => step.instructions.replace(/<[^>]*>/g, ""))
-              .join(". ");
+            // // Voice directions
+            // const steps = result.routes[0].legs[0].steps;
+            // const directionsText = steps
+            //   .map((step) => step.instructions.replace(/<[^>]*>/g, ""))
+            //   .join(". ");
 
-            const utterance = new SpeechSynthesisUtterance(directionsText);
-            utterance.lang = "en-US";
-            window.speechSynthesis.speak(utterance);
+            // const utterance = new SpeechSynthesisUtterance(directionsText);
+            // utterance.lang = "en-US";
+            // window.speechSynthesis.speak(utterance);
           } else {
             console.error("Directions request failed:", status);
           }

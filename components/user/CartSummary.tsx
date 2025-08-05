@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 import type { IFrontendCart } from "@/types/cart";
@@ -39,7 +39,9 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
   } | null>(null);
   const [useWallet, setUseWallet] = useState(false);
   const walletBalance = 500;
-
+  useEffect(() => {
+    console.log("the fornt end cart", cart);
+  }, [cart]);
   const calculateSubtotal = () => {
     if (!cart.services || !Array.isArray(cart.services)) return 0;
 
@@ -154,7 +156,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
           Array.isArray(cart.services) &&
           cart.services.map((item, index) => (
             <div
-              key={item.serviceId._id|| index}
+              key={item.serviceId._id || index}
               className="border p-3 rounded-lg mb-4 relative"
             >
               <div className="flex justify-between items-start pr-8">
@@ -200,7 +202,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
           ))}
 
         {/* Membership Section */}
-        <div className="bg-gray-800 text-white p-4 rounded flex justify-between items-center mb-6">
+        {/* <div className="bg-gray-800 text-white p-4 rounded flex justify-between items-center mb-6">
           <div>
             <div className="font-semibold">Membership</div>
             <div className="mt-2 text-sm">• ₹20,000 Annual Savings</div>
@@ -211,10 +213,10 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
               <ChevronRight className="w-5 h-5" />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Wallet Section */}
-        <div className="border rounded-lg p-4 mb-6">
+        {/* <div className="border rounded-lg p-4 mb-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Wallet className="w-5 h-5 mr-2 text-green-600" />
@@ -234,7 +236,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
               <Label htmlFor="use-wallet">Use Wallet</Label>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Price Breakdown */}
         <div className="mb-6 space-y-2">
@@ -267,7 +269,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
         </div>
 
         {/* Coupon Section */}
-        <div className="border border-dashed p-3 rounded-lg flex justify-between items-center mb-6 cursor-pointer hover:bg-gray-50">
+        {/* <div className="border border-dashed p-3 rounded-lg flex justify-between items-center mb-6 cursor-pointer hover:bg-gray-50">
           <div className="flex items-center">
             <Info className="w-6 h-6 text-blue-500 mr-2" />
             <span className="font-medium">
@@ -275,17 +277,19 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
             </span>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
-        </div>
+        </div> */}
 
         {/* Checkout Button */}
-        <Link href={`/user/checkout?cartId=${cart._id}`}>
-          <Button
-            className="w-full bg-red-500 text-white py-3 text-lg font-semibold hover:bg-red-600"
-            size="lg"
-          >
-            CHECKOUT
-          </Button>
-        </Link>
+        {cart?.services?.length > 0 && (
+          <Link href={`/user/checkout?cartId=${cart._id}`} passHref>
+            <Button
+              className="w-full bg-red-500 text-white py-3 text-lg font-semibold hover:bg-red-600"
+              size="lg"
+            >
+              CHECKOUT
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Confirmation Dialog */}

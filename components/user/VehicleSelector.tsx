@@ -12,19 +12,22 @@ import { setVehicleData } from "../../redux/features/vehicleSlice";
 import { IServicePackage } from "@/types/service-packages";
 const userApi = createUserApi(axiosPrivate);
 interface VehicleSelectorProps {
-  vehicles:IVehicle[],
-  setOpenAddVehicleModal:(state:boolean) => void,
-  setCart:(state:IFrontendCart) => void
+  vehicles: IVehicle[];
+  setOpenAddVehicleModal: (state: boolean) => void;
+  setCart: (state: IFrontendCart) => void;
 }
-export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpenAddVehicleModal,setCart}) => {
+export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
+  vehicles,
+  setOpenAddVehicleModal,
+  setCart,
+}) => {
   const dispatch = useDispatch();
- const selectVehicleHandler = async(vehicleId:string) => {
-  try {
-    const response = await userApi.addVehicleToCart(vehicleId);
-    console.log('the response after selecting vehicle',response);
-    const cart = response.cart;
-       const selectedVehicleData = {
-        id:cart.vehicleId._id,
+  const selectVehicleHandler = async (vehicleId: string) => {
+    try {
+      const response = await userApi.addVehicleToCart(vehicleId);
+      const cart = response.cart;
+      const selectedVehicleData = {
+        id: cart.vehicleId._id,
         brand: {
           name: cart.vehicleId.brandId?.brandName,
           imageUrl: cart.vehicleId.brandId?.imageUrl,
@@ -32,17 +35,15 @@ export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpen
         model: {
           name: cart.vehicleId.modelId?.name,
           imageUrl: cart.vehicleId.modelId?.imageUrl,
-          fuelType:cart.vehicleId.fuel,
+          fuelType: cart.vehicleId.fuel,
         },
       };
       dispatch(setVehicleData(selectedVehicleData));
       setCart(cart);
-  } catch (error) {
-    throw error 
-  }
- }
-
-
+    } catch (error) {
+      throw error;
+    }
+  };
 
   return (
     <div className="lg:col-span-1">
@@ -64,7 +65,10 @@ export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpen
                 className="cursor-pointer"
               >
                 <Card className="overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-3 flex flex-col items-center text-center" onClick={() => selectVehicleHandler(vehicle._id)}>
+                  <CardContent
+                    className="p-3 flex flex-col items-center text-center"
+                    onClick={() => selectVehicleHandler(vehicle._id)}
+                  >
                     <motion.div
                       className="relative h-20 w-28 mb-2 overflow-hidden rounded-md"
                       whileHover={{ scale: 1.1 }}
@@ -99,7 +103,9 @@ export const VehicleSelector:React.FC<VehicleSelectorProps> = ({vehicles,setOpen
                   <Button
                     variant="ghost"
                     className="w-full h-full flex flex-col items-center justify-center"
-                    onClick={() => {setOpenAddVehicleModal(true)}}
+                    onClick={() => {
+                      setOpenAddVehicleModal(true);
+                    }}
                   >
                     <Plus className="h-8 w-8 text-gray-400 mb-1" />
                     <span className="text-sm font-medium text-gray-600">

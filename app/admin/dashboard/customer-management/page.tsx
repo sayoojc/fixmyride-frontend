@@ -76,7 +76,7 @@ const CustomerManagement = () => {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [searchTerm])
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchUsers()
