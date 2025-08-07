@@ -32,11 +32,17 @@ import {
 } from "lucide-react";
 import AddAddressModal from "@/components/user/AddAddressModal";
 import AddVehicleModal from "@/components/user/AddVehicleModal";
+import EditVehicleModal from "@/components/user/EditVehicleModal";
 import EditAddressModal from "@/components/user/EditAddressModal";
 import { toast } from "react-toastify";
 import type { User as UserType, Address } from "../../../types/user";
 import { updateProfileSchema } from "../../../validations/profileValidation";
-import z from 'zod'
+import z from "zod";
+import {
+  ConfirmationModal,
+  ConfirmationConfig,
+} from "@/components/ConfirmationModal";
+import { IVehicle, EditVehicleFormData } from "@/types/vehicle";
 const userApi = createUserApi(axiosPrivate);
 
 const fadeIn = {
@@ -60,8 +66,11 @@ export const CustomerProfile = () => {
     useState<boolean>(false);
   const [addVehicleModalOpen, setAddVehicleModalOpen] =
     useState<boolean>(false);
+  const [editVehicleModalOpen, setEditVehicleModalOpen] =
+    useState<boolean>(false);
   const [editAddressModalOpen, setEditAddressModalOpen] =
     useState<boolean>(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<IVehicle | null>(null);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
@@ -69,9 +78,38 @@ export const CustomerProfile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-useEffect(() => {
-  console.log('the user details',user)
-},[user]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<ConfirmationConfig | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
+  const handleDeleteVehicle = async (vehicleId: string) => {
+    try {
+      setIsDeleting(true);
+      const response = await userApi.deleteVehicleApi(vehicleId);
+      if (response.success) {
+        toast.success("Vehicle deleted successfully");
+        setUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            vehicles: prev.vehicles.filter(
+              (vehicle) => vehicle._id !== vehicleId
+            ),
+          };
+        });
+      } else {
+        toast.error("Deleting vehicle failed");
+      }
+    } catch (error) {
+      toast.error("Deleting vehicle failed");
+      console.error("Failed to delete vehicle:", error);
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmOpen(false);
+    }
+  };
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -86,14 +124,10 @@ useEffect(() => {
 
     fetchUserDetails();
   }, []);
-  useEffect(() => {
-    if (user) {
-      console.log("✅ Updated user state:", user);
-    }
-  }, [user]);
+
   const handleSetDefaultAddress = async (addressId: string) => {
     try {
-      const response = await userApi.setDefaultAddress(addressId)
+      const response = await userApi.setDefaultAddress(addressId);
 
       if (response.status === 200) {
         toast.success("Default address updated successfully!");
@@ -154,36 +188,37 @@ useEffect(() => {
     }
   };
 
+  const updateProfile = async (
+    phone: string,
+    userId: string,
+    userName: string
+  ) => {
+    try {
+      const validatedData = updateProfileSchema.parse({
+        phone,
+        userId,
+        userName,
+      });
 
-const updateProfile = async (
-  phone: string,
-  userId: string,
-  userName: string
-) => {
-  try {
-    const validatedData = updateProfileSchema.parse({ phone, userId, userName });
+      const response = await userApi.updateProfileApi(
+        validatedData.phone,
+        validatedData.userName
+      );
 
-    const response = await userApi.updateProfileApi(
-      validatedData.phone,
-      validatedData.userId,
-      validatedData.userName
-    );
-
-    if (response.success) {
-      toast.success("Profile updated successfully!");
-    } else {
-      toast.error("Failed to update profile.");
+      if (response.success) {
+        toast.success("Profile updated successfully!");
+      } else {
+        toast.error("Failed to update profile.");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        console.error("Error updating profile:", error);
+        toast.error("Something went wrong while updating profile.");
+      }
     }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      toast.error(error.errors[0].message);
-    } else {
-      console.error("Error updating profile:", error);
-      toast.error("Something went wrong while updating profile.");
-    }
-  }
-};
-
+  };
 
   const toggleEdit = async () => {
     if (isEditing) {
@@ -213,7 +248,6 @@ const updateProfile = async (
     }
     try {
       const response = await userApi.changePasswordApi(
-        user.id,
         currentPassword,
         newPassword
       );
@@ -232,7 +266,31 @@ const updateProfile = async (
     }
   };
 
-  // Helper function to format address
+  const handleSaveVehicle = async (
+    vehicleId: string,
+    data: EditVehicleFormData
+  ) => {
+    const response = await userApi.editVehicleApi(vehicleId, data);
+    if (response.success) {
+      toast.success("Vehicle updated successfully");
+      setUser((prev) => {
+        if (!prev) return prev;
+        const updatedVehicles = prev.vehicles.map((vehicle) => {
+          if (vehicle._id === vehicleId) {
+            return response.vehicle;
+          } else {
+            return vehicle;
+          }
+        });
+
+        return {
+          ...prev,
+          vehicles: updatedVehicles,
+        };
+      });
+    }
+  };
+  // // Helper function to format address
   const formatAddress = (address: Address) => {
     return [
       address.addressLine1,
@@ -446,7 +504,6 @@ const updateProfile = async (
                 </div>
 
                 {user?.addresses && user.addresses.length > 0 ? (
-                  
                   user.addresses.map((address) => (
                     <motion.div key={address.id} variants={fadeIn}>
                       <Card className="mb-3 overflow-hidden border border-slate-200 hover:shadow-md transition-shadow duration-300">
@@ -504,9 +561,7 @@ const updateProfile = async (
                                     className="flex-1 h-10 text-blue-500 justify-center rounded-none hover:bg-slate-100"
                                     onClick={() => {
                                       address.id && user.id
-                                        ? handleSetDefaultAddress(
-                                            address.id,
-                                          )
+                                        ? handleSetDefaultAddress(address.id)
                                         : null;
                                     }}
                                   >
@@ -588,12 +643,6 @@ const updateProfile = async (
                                     {vehicle.brandId.brandName}
                                   </p>
                                   <p className="text-sm text-slate-600">
-                                    Reg:{" "}
-                                  </p>
-                                  <p className="text-sm text-slate-600">
-                                    Year:{" "}
-                                  </p>
-                                  <p className="text-sm text-slate-600">
                                     fuel: {vehicle.fuel}
                                   </p>
                                 </div>
@@ -601,10 +650,30 @@ const updateProfile = async (
                                   <Button
                                     variant="ghost"
                                     className="h-8 text-red-500 justify-start px-2 hover:bg-red-50"
+                                    onClick={() => {
+                                      console.log(
+                                        "the edit vehicle button clicked"
+                                      );
+                                      setSelectedVehicle(vehicle);
+                                      setEditVehicleModalOpen(true);
+                                    }}
                                   >
                                     <Pencil className="h-4 w-4 mr-2" /> Edit
                                   </Button>
                                   <Button
+                                    onClick={() => {
+                                      setConfirmConfig({
+                                        title: "Delete Vehicle",
+                                        description:
+                                          "Are you sure you want to delete this vehicle? This action cannot be undone.",
+                                        confirmText: "Delete",
+                                        cancelText: "Cancel",
+                                        variant: "destructive",
+                                        onConfirm: () =>
+                                          handleDeleteVehicle(vehicle._id), // your ID
+                                      });
+                                      setIsConfirmOpen(true);
+                                    }}
                                     variant="ghost"
                                     className="h-8 text-slate-700 justify-start px-2 hover:bg-slate-100"
                                   >
@@ -617,6 +686,12 @@ const updateProfile = async (
                         </motion.div>
                       );
                     })}
+                  <EditVehicleModal
+                    isOpen={editVehicleModalOpen}
+                    onClose={() => setEditVehicleModalOpen(false)}
+                    vehicle={selectedVehicle}
+                    onSave={handleSaveVehicle}
+                  />
                 </div>
               </motion.div>
             </TabsContent>
@@ -727,6 +802,12 @@ const updateProfile = async (
           </Tabs>
         </CardContent>
       </Card>
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        config={confirmConfig}
+        isLoading={isDeleting}
+      />
     </motion.div>
   );
 };

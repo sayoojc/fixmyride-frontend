@@ -3,6 +3,7 @@ import { Address } from "@/types/user";
 import { IVehicle } from "@/types/vehicle";
 import { AvailableDate } from "@/types/checkout";
 import { TimeSlot } from "@/types/checkout";
+import { EditVehicleFormData } from "@/types/vehicle";
 import axios from "axios";
 
 const createUserApi = (axiosPrivate: AxiosInstance) => ({
@@ -207,6 +208,26 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+  deleteVehicleApi: async (vehicleId:string) => {
+    try {
+      const response = await axiosPrivate.delete(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles/${vehicleId}`
+      )
+      return response.data;
+    } catch (error) {
+      throw error
+    }
+  },
+  editVehicleApi: async (vehicleId:string,data:EditVehicleFormData) => {
+    try {
+    const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles/${vehicleId}`, {...data});
+    return response.data;
+  } catch (error) {
+    console.error("Error editing vehicle:", error);
+    throw error; 
+  }
+  },
+  //// service package api///
   getServicePackages: async (
     vehicleId: string,
     serviceCategory: string,

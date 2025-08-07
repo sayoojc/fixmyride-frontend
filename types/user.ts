@@ -28,16 +28,6 @@ export interface IBrand {
   imageUrl:string;
   status:string;
 }
-export interface IVehicle {
-  _id: string
-  userId:string
-  brandId: IBrand
-  modelId: IModel
-  year: number;
-  isDefault:boolean;
-  registrationNumber: string;
-  fuel: string;
-}
 export interface User {
   name:string,
   id:string,
@@ -77,6 +67,7 @@ export interface Vehicle {
   _id: string;
   userId: string;
   brandId: Brand;
+  isDefault:boolean;
   modelId: Model;
   fuel: string;
 }
