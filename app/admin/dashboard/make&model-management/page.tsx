@@ -193,9 +193,20 @@ const BrandModelManagement: React.FC = () => {
       const response = await adminApi.updateBrandStatusApi(brandId, newStatus);
       if (response && response.status === 200) {
         setBrands(
-          brands.map((brand) =>
-            brand._id === brandId ? { ...brand, status: newStatus } : brand
-          )
+          brands.map((brand) => {
+            if (brand._id === brandId) {
+              return {
+                ...brand,
+                status: newStatus,
+                models: brand.models.map((model) => ({
+                  ...model,
+                  status: newStatus,
+                })),
+              };
+            } else {
+              return brand;
+            }
+          })
         );
         toast.success("Brand Updated Successfully");
       } else {
@@ -274,8 +285,6 @@ const BrandModelManagement: React.FC = () => {
       console.log("the adding model failed");
     }
   };
-
- 
 
   return (
     <div className="flex h-screen bg-slate-50">
