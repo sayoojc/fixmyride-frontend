@@ -51,7 +51,7 @@ const navigationItems = [
   },
   {
     title: "Slot Management",
-    url: "/provider/slots",
+    url: "/provider/slot",
     icon: Calendar,
   },
   {

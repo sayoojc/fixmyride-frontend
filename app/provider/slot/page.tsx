@@ -24,108 +24,106 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, Clock, Wrench, AlertTriangle, CheckCircle, XCircle, Save, RotateCcw, Zap } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  Wrench,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Save,
+  RotateCcw,
+  Zap,
+} from "lucide-react";
 import { toast } from "react-toastify";
-
-// Types for vehicle service slot management
-interface TimeSlot {
-  id: string;
-  startTime: string;
-  endTime: string;
-  displayTime: string;
-}
-
-interface WeeklySlot {
-  date: string;
-  dayName: string;
-  slots: {
-    [slotId: string]: {
-      isAvailable: boolean;
-      isBooked: boolean;
-      bookingDetails?: {
-        clientName: string;
-        serviceType: string;
-        vehicleInfo: string;
-      };
-    };
-  };
-}
-
+import { IFrontendSlot, TimeSlot, WeeklySlot } from "@/types/slot";
+import { TIME_SLOTS } from "@/constants/timeSlots";
 const providerApi = createProviderApi(axiosPrivate);
 
-// Define the specific time slots
-const TIME_SLOTS: TimeSlot[] = [
-  { id: "slot1", startTime: "10:00", endTime: "11:00", displayTime: "10:00 - 11:00" },
-  { id: "slot2", startTime: "11:00", endTime: "12:00", displayTime: "11:00 - 12:00" },
-  { id: "slot3", startTime: "12:00", endTime: "13:00", displayTime: "12:00 - 01:00" },
-  { id: "slot4", startTime: "13:00", endTime: "14:00", displayTime: "01:00 - 02:00" },
-  { id: "slot5", startTime: "14:00", endTime: "15:00", displayTime: "02:00 - 03:00" },
-  { id: "slot6", startTime: "15:00", endTime: "16:00", displayTime: "03:00 - 04:00" },
-  { id: "slot7", startTime: "16:00", endTime: "17:00", displayTime: "04:00 - 05:00" },
-];
-
-// Generate upcoming week dates
-const generateUpcomingWeek = (): WeeklySlot[] => {
+const mapBackendSlotsToWeekly = (
+  backendSlots: IFrontendSlot[]
+): WeeklySlot[] => {
+  console.log("backend slots", backendSlots);
   const week: WeeklySlot[] = [];
   const today = new Date();
-  
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
-    
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const dateString = date.toISOString().split('T')[0];
-    
+
+    const dateString = date.toISOString().split("T")[0];
+    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
     const slots: { [slotId: string]: any } = {};
-    TIME_SLOTS.forEach(slot => {
+    TIME_SLOTS.forEach((slot) => {
       slots[slot.id] = {
-        isAvailable: false,
-        isBooked: Math.random() < 0.2, // 20% chance of being booked (mock data)
-        bookingDetails: Math.random() < 0.2 ? {
-          clientName: "John Doe",
-          serviceType: "Oil Change",
-          vehicleInfo: "Toyota Camry 2020"
-        } : undefined
+        status: "inactive",
+        bookingDetails: undefined,
       };
     });
-    
+    const backendDay = backendSlots.find(
+      (s) => new Date(s.date).toISOString().split("T")[0] === dateString
+    );
+
+    if (backendDay) {
+      backendDay.timeSlots.forEach((ts) => {
+        const slotDef = TIME_SLOTS.find(
+          (t) => t.startTime === ts.startTime && t.endTime === ts.endTime
+        );
+        if (slotDef) {
+          slots[slotDef.id] = {
+            status: ts.status,
+            bookingDetails: ts.bookedBy,
+          };
+        }
+      });
+    }
+
     week.push({
       date: dateString,
       dayName,
-      slots
+      slots,
     });
   }
-  
+
   return week;
 };
 
 export default function VehicleServiceSlotManagement() {
+  const [originalSlots, setOriginalSlots] = useState<IFrontendSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [providerData, setProviderData] = useState<IServiceProvider | null>(null);
+  const [providerData, setProviderData] = useState<IServiceProvider | null>(
+    null
+  );
+  const [updatedSlots, setUpdatedSlots] = useState<WeeklySlot[]>([]);
   const [weeklySlots, setWeeklySlots] = useState<WeeklySlot[]>([]);
   const [rsaEnabled, setRsaEnabled] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [stats, setStats] = useState({
     totalAvailable: 0,
     totalBooked: 0,
-    totalSlots: TIME_SLOTS.length * 7
+    totalSlots: TIME_SLOTS.length * 7,
   });
-
+  useEffect(() => {
+    console.log("the weekly slots", weeklySlots);
+  }, [weeklySlots]);
+  useEffect(() => {
+    console.log("the updated slot", updatedSlots);
+  }, [updatedSlots]);
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await providerApi.getProfileData();
+        const slotResponse = await providerApi.getSlots();
+        console.log("slot response", slotResponse);
         setProviderData(response.provider);
-        
-        // Initialize weekly slots
-        const initialWeeklySlots = generateUpcomingWeek();
-        setWeeklySlots(initialWeeklySlots);
-        
-        // Calculate initial stats
-        calculateStats(initialWeeklySlots);
-        
+        setOriginalSlots(slotResponse.slots ?? []);
+        const mergedWeeklySlots = mapBackendSlotsToWeekly(
+          slotResponse.slots ?? []
+        );
+        setWeeklySlots(mergedWeeklySlots);
+        calculateStats(mergedWeeklySlots);
+        setLoading(false);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -138,32 +136,58 @@ export default function VehicleServiceSlotManagement() {
   const calculateStats = (slots: WeeklySlot[]) => {
     let available = 0;
     let booked = 0;
-    
-    slots.forEach(day => {
-      Object.values(day.slots).forEach(slot => {
-        if (slot.isBooked) booked++;
-        else if (slot.isAvailable) available++;
+
+    slots.forEach((day) => {
+      Object.values(day.slots).forEach((slot) => {
+        if (slot.status === "booked") booked++;
+        else if (slot.status === "active") available++;
       });
     });
-    
+
     setStats({
       totalAvailable: available,
       totalBooked: booked,
-      totalSlots: TIME_SLOTS.length * 7
+      totalSlots: TIME_SLOTS.length * 7,
     });
   };
-
-  const toggleSlotAvailability = (dateIndex: number, slotId: string) => {
+  const toggleSlotAvailability = (
+    dateIndex: number,
+    slotId: string,
+    date: string,
+    dayName: string
+  ) => {
     const updatedSlots = [...weeklySlots];
     const slot = updatedSlots[dateIndex].slots[slotId];
-    
-    // Don't allow toggling if slot is booked
-    if (slot.isBooked) {
+    if (!slot) return;
+    if (slot.status === "booked") {
       toast.error("Cannot modify booked slots");
       return;
     }
-    
-    slot.isAvailable = !slot.isAvailable;
+    const newStatus = slot.status === "active" ? "inactive" : "active";
+    slot.status = newStatus;
+    setUpdatedSlots((prev) => {
+      const dateExists = prev.some((weeklySlot) => weeklySlot.date === date);
+      if (dateExists) {
+        return prev.map((weeklySlot) =>
+          weeklySlot.date === date
+            ? {
+                ...weeklySlot,
+                slots: { ...updatedSlots[dateIndex].slots },
+              }
+            : weeklySlot
+        );
+      } else {
+        return [
+          ...prev,
+          {
+            date,
+            dayName,
+            slots: { ...updatedSlots[dateIndex].slots },
+          },
+        ];
+      }
+    });
+
     setWeeklySlots(updatedSlots);
     setHasChanges(true);
     calculateStats(updatedSlots);
@@ -177,13 +201,8 @@ export default function VehicleServiceSlotManagement() {
   const saveChanges = async () => {
     try {
       setSaving(true);
-      // Mock API call to save changes
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Here you would make actual API calls to save the slot availability and RSA status
-      // await providerApi.updateSlotAvailability(weeklySlots);
-      // await providerApi.updateRSAStatus(rsaEnabled);
-      
+      const response = await providerApi.updateSlots(updatedSlots);
+
       setHasChanges(false);
       setSaving(false);
       toast.success("Slot availability updated successfully!");
@@ -194,7 +213,7 @@ export default function VehicleServiceSlotManagement() {
   };
 
   const resetChanges = () => {
-    const initialWeeklySlots = generateUpcomingWeek();
+    const initialWeeklySlots = mapBackendSlotsToWeekly(originalSlots);
     setWeeklySlots(initialWeeklySlots);
     setRsaEnabled(false);
     setHasChanges(false);
@@ -203,14 +222,16 @@ export default function VehicleServiceSlotManagement() {
   };
 
   const getSlotStatusColor = (slot: any) => {
-    if (slot.isBooked) return "bg-red-100 border-red-300 text-red-800";
-    if (slot.isAvailable) return "bg-green-100 border-green-300 text-green-800";
+    if (slot.status === "booked")
+      return "bg-red-100 border-red-300 text-red-800";
+    if (slot.status === "active")
+      return "bg-green-100 border-green-300 text-green-800";
     return "bg-gray-100 border-gray-300 text-gray-600";
   };
 
   const getSlotIcon = (slot: any) => {
-    if (slot.isBooked) return XCircle;
-    if (slot.isAvailable) return CheckCircle;
+    if (slot.status === "booked") return XCircle;
+    if (slot.status === "active") return CheckCircle;
     return Clock;
   };
 
@@ -219,7 +240,9 @@ export default function VehicleServiceSlotManagement() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-lg text-slate-600">Loading slot management...</p>
+          <p className="mt-4 text-lg text-slate-600">
+            Loading slot management...
+          </p>
         </div>
       </div>
     );
@@ -266,13 +289,22 @@ export default function VehicleServiceSlotManagement() {
               </div>
               <div className="mt-4 md:mt-0 flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="default" className="bg-green-100 text-green-800">
+                  <Badge
+                    variant="default"
+                    className="bg-green-100 text-green-800"
+                  >
                     Available: {stats.totalAvailable}
                   </Badge>
-                  <Badge variant="destructive" className="bg-red-100 text-red-800">
+                  <Badge
+                    variant="destructive"
+                    className="bg-red-100 text-red-800"
+                  >
                     Booked: {stats.totalBooked}
                   </Badge>
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                  <Badge
+                    variant="secondary"
+                    className="bg-gray-100 text-gray-800"
+                  >
                     Total: {stats.totalSlots}
                   </Badge>
                 </div>
@@ -285,25 +317,40 @@ export default function VehicleServiceSlotManagement() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <Card className={`border-2 ${rsaEnabled ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
+              <Card
+                className={`border-2 ${
+                  rsaEnabled
+                    ? "border-orange-300 bg-orange-50"
+                    : "border-gray-200"
+                }`}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${rsaEnabled ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`}>
+                      <div
+                        className={`p-2 rounded-full ${
+                          rsaEnabled
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
                         <AlertTriangle className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-900">Emergency Roadside Assistance (RSA)</h3>
+                        <h3 className="font-semibold text-slate-900">
+                          Emergency Roadside Assistance (RSA)
+                        </h3>
                         <p className="text-sm text-slate-600">
-                          {rsaEnabled 
-                            ? "You are currently available for emergency services" 
-                            : "Enable to accept emergency roadside assistance calls"
-                          }
+                          {rsaEnabled
+                            ? "You are currently available for emergency services"
+                            : "Enable to accept emergency roadside assistance calls"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {rsaEnabled && <Zap className="h-5 w-5 text-orange-500" />}
+                      {rsaEnabled && (
+                        <Zap className="h-5 w-5 text-orange-500" />
+                      )}
                       <Switch
                         checked={rsaEnabled}
                         onCheckedChange={toggleRSA}
@@ -333,14 +380,18 @@ export default function VehicleServiceSlotManagement() {
                     <div className="min-w-[800px]">
                       {/* Header Row */}
                       <div className="grid grid-cols-8 gap-2 mb-4">
-                        <div className="font-semibold text-slate-700 p-2">Time Slots</div>
+                        <div className="font-semibold text-slate-700 p-2">
+                          Time Slots
+                        </div>
                         {weeklySlots.map((day, index) => (
                           <div key={index} className="text-center">
-                            <div className="font-semibold text-slate-900">{day.dayName}</div>
+                            <div className="font-semibold text-slate-900">
+                              {day.dayName}
+                            </div>
                             <div className="text-sm text-slate-600">
-                              {new Date(day.date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
+                              {new Date(day.date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
                               })}
                             </div>
                           </div>
@@ -349,7 +400,10 @@ export default function VehicleServiceSlotManagement() {
 
                       {/* Time Slot Rows */}
                       {TIME_SLOTS.map((timeSlot) => (
-                        <div key={timeSlot.id} className="grid grid-cols-8 gap-2 mb-2">
+                        <div
+                          key={timeSlot.id}
+                          className="grid grid-cols-8 gap-2 mb-2"
+                        >
                           <div className="flex items-center p-2 font-medium text-slate-700 bg-slate-50 rounded">
                             <Clock className="h-4 w-4 mr-2" />
                             {timeSlot.displayTime}
@@ -357,38 +411,46 @@ export default function VehicleServiceSlotManagement() {
                           {weeklySlots.map((day, dayIndex) => {
                             const slot = day.slots[timeSlot.id];
                             const IconComponent = getSlotIcon(slot);
-                            
+
                             return (
                               <motion.div
                                 key={`${dayIndex}-${timeSlot.id}`}
-                                whileHover={{ scale: slot.isBooked ? 1 : 1.02 }}
-                                whileTap={{ scale: slot.isBooked ? 1 : 0.98 }}
+                                whileHover={{
+                                  scale: slot.status === "booked" ? 1 : 1.02,
+                                }}
+                                whileTap={{
+                                  scale: slot.status === "booked" ? 1 : 0.98,
+                                }}
                               >
                                 <Button
                                   variant="outline"
-                                  className={`w-full h-16 p-2 border-2 transition-all ${getSlotStatusColor(slot)} ${
-                                    slot.isBooked 
-                                      ? 'cursor-not-allowed opacity-75' 
-                                      : 'cursor-pointer hover:shadow-md'
+                                  className={`w-full h-16 p-2 border-2 transition-all ${getSlotStatusColor(
+                                    slot
+                                  )} ${
+                                    slot.status === "booked"
+                                      ? "cursor-not-allowed opacity-75"
+                                      : "cursor-pointer hover:shadow-md"
                                   }`}
-                                  onClick={() => !slot.isBooked && toggleSlotAvailability(dayIndex, timeSlot.id)}
-                                  disabled={slot.isBooked}
+                                  onClick={() =>
+                                    !(slot.status === "booked") &&
+                                    toggleSlotAvailability(
+                                      dayIndex,
+                                      timeSlot.id,
+                                      day.date,
+                                      day.dayName
+                                    )
+                                  }
+                                  disabled={slot.status === "booked"}
                                 >
                                   <div className="flex flex-col items-center gap-1">
                                     <IconComponent className="h-4 w-4" />
                                     <span className="text-xs font-medium">
-                                      {slot.isBooked 
-                                        ? 'Booked' 
-                                        : slot.isAvailable 
-                                          ? 'Available' 
-                                          : 'Unavailable'
-                                      }
+                                      {slot.status === "booked"
+                                        ? "Booked"
+                                        : slot.status === "active"
+                                        ? "Available"
+                                        : "Unavailable"}
                                     </span>
-                                    {slot.isBooked && slot.bookingDetails && (
-                                      <span className="text-xs opacity-75 truncate w-full">
-                                        {slot.bookingDetails.serviceType}
-                                      </span>
-                                    )}
                                   </div>
                                 </Button>
                               </motion.div>
@@ -414,15 +476,21 @@ export default function VehicleServiceSlotManagement() {
                   <div className="flex flex-wrap gap-4">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
-                      <span className="text-sm text-slate-700">Available for booking</span>
+                      <span className="text-sm text-slate-700">
+                        Available for booking
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded"></div>
-                      <span className="text-sm text-slate-700">Already booked</span>
+                      <span className="text-sm text-slate-700">
+                        Already booked
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-gray-100 border-2 border-gray-300 rounded"></div>
-                      <span className="text-sm text-slate-700">Unavailable</span>
+                      <span className="text-sm text-slate-700">
+                        Unavailable
+                      </span>
                     </div>
                   </div>
                 </CardContent>

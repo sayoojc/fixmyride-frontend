@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 import { VerificationFormData } from "@/types/provider";
 import { IServiceProvider } from "@/types/provider";
+import { WeeklySlot } from "@/types/slot";
 
 const createProviderApi = (axiosPrivate: AxiosInstance) => ({
   getProfileData: async () => {
@@ -113,7 +114,29 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
     } catch (error) {
       throw error
     }
+  },
+  /////////slot apis////
+ getSlots: async() => {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`
+    )
+    return response.data;
+  } catch (error) {
+    throw error
   }
+ },
+ updateSlots: async(weeklySlots:WeeklySlot[]) => {
+  try {
+    const response = await axiosPrivate.patch(
+     `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`,
+     {weeklySlots}
+    )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+ }
 
 });
 
