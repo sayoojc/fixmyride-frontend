@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
-
-
-  import { Button } from "@/components/ui/button";
-
-  import { Input } from "@/components/ui/input";
-  import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from "@/components/ui/dialog";
-  import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
- 
+import React, { useState } from "react";
+import { brandSchema } from "@/types/brandModelManagement.interface";
+import { z } from "zod"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { UseFormReturn } from "react-hook-form";
 
 interface AddBrandDialogProps {
   isAddBrandDialogOpen: boolean;
   setIsAddBrandDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  addBrandForm: any; // Replace with your form hook type
-  addBrand: (data: any) => void; // Replace with your actual addBrand function
+  addBrandForm: UseFormReturn<z.infer<typeof brandSchema>>;
+  addBrand: (data: z.infer<typeof brandSchema>) => void;
 }
 
 const AddBrandDialog: React.FC<AddBrandDialogProps> = ({
@@ -28,7 +34,10 @@ const AddBrandDialog: React.FC<AddBrandDialogProps> = ({
   addBrandForm,
   addBrand,
 }) => {
-  const [brandImagePreview, setBrandImagePreview] = useState<string | null>(null);
+  const [brandImagePreview, setBrandImagePreview] = useState<string | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
 
   const handleDialogToggle = (isOpen: boolean) => {
     if (!isOpen) {
@@ -38,18 +47,39 @@ const AddBrandDialog: React.FC<AddBrandDialogProps> = ({
     setIsAddBrandDialogOpen(isOpen);
   };
 
-  return (
-    <Dialog
-      open={isAddBrandDialogOpen}
-      onOpenChange={handleDialogToggle}
-    >
+  
+
+    if(loading) {
+        return  (
+                  <div className="spinner center">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <div key={i} className="spinner-blade"></div>
+                    ))}
+                  </div>
+                )
+    } else  {
+return (
+    <Dialog open={isAddBrandDialogOpen} onOpenChange={handleDialogToggle}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Add New Brand</DialogTitle>
-          <DialogDescription>Enter the details of the new brand to add it to the system.</DialogDescription>
+          <DialogDescription>
+            Enter the details of the new brand to add it to the system.
+          </DialogDescription>
         </DialogHeader>
         <Form {...addBrandForm}>
-          <form onSubmit={addBrandForm.handleSubmit(addBrand)} className="grid gap-4 py-4">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              try {
+                await addBrandForm.handleSubmit(addBrand)(e);
+                setBrandImagePreview(null);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
             {/* Brand Name Field */}
             <FormField
               control={addBrandForm.control}
@@ -76,7 +106,7 @@ const AddBrandDialog: React.FC<AddBrandDialogProps> = ({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      addBrandForm.setValue('image', file);
+                      addBrandForm.setValue("image", file);
                       setBrandImagePreview(URL.createObjectURL(file));
                     }
                   }}
@@ -96,16 +126,23 @@ const AddBrandDialog: React.FC<AddBrandDialogProps> = ({
 
             {/* Dialog Footer */}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddBrandDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddBrandDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit">Add Brand</Button>
+              <Button type="submit" disabled={loading}>
+                Add Brand
+              </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   );
+    }
+  
 };
 
 export default AddBrandDialog;

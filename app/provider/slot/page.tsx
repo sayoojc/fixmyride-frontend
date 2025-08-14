@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { axiosPrivate } from "@/api/axios";
+import { AxiosError } from "axios";
 import createProviderApi from "@/services/providerApi";
 import type { IServiceProvider } from "@/types/provider";
 import { ProviderSidebar } from "@/components/provider/ProviderSidebar";
@@ -36,14 +37,13 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { IFrontendSlot, TimeSlot, WeeklySlot } from "@/types/slot";
+import { IFrontendSlot, WeeklySlot } from "@/types/slot";
 import { TIME_SLOTS } from "@/constants/timeSlots";
 const providerApi = createProviderApi(axiosPrivate);
 
 const mapBackendSlotsToWeekly = (
   backendSlots: IFrontendSlot[]
 ): WeeklySlot[] => {
-  console.log("backend slots", backendSlots);
   const week: WeeklySlot[] = [];
   const today = new Date();
   for (let i = 0; i < 7; i++) {
@@ -104,18 +104,11 @@ export default function VehicleServiceSlotManagement() {
     totalSlots: TIME_SLOTS.length * 7,
   });
   useEffect(() => {
-    console.log("the weekly slots", weeklySlots);
-  }, [weeklySlots]);
-  useEffect(() => {
-    console.log("the updated slot", updatedSlots);
-  }, [updatedSlots]);
-  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await providerApi.getProfileData();
         const slotResponse = await providerApi.getSlots();
-        console.log("slot response", slotResponse);
         setProviderData(response.provider);
         setOriginalSlots(slotResponse.slots ?? []);
         const mergedWeeklySlots = mapBackendSlotsToWeekly(
@@ -126,7 +119,10 @@ export default function VehicleServiceSlotManagement() {
         setLoading(false);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(
+          err.response?.data.message || "Failed to fetch notification data"
+        );
         setLoading(false);
       }
     };
@@ -202,13 +198,13 @@ export default function VehicleServiceSlotManagement() {
     try {
       setSaving(true);
       const response = await providerApi.updateSlots(updatedSlots);
-
       setHasChanges(false);
       setSaving(false);
       toast.success("Slot availability updated successfully!");
     } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(err.response?.data.message || "updating slots failed");
       setSaving(false);
-      toast.error("Failed to save changes");
     }
   };
 

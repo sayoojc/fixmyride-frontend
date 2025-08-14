@@ -12,32 +12,23 @@ import { useRouter } from 'next/navigation'
 import { toast } from "react-toastify"
 import createAuthApi from "@/services/authApi"
 import { axiosPrivate } from "@/api/axios"
+import { AxiosError } from "axios"
 const authApi = createAuthApi(axiosPrivate);
-
-interface OtpVerificationPageProps {
-  onVerify: (otp: string) => Promise<void>
-  onResend: () => Promise<void>
-  email?: string
-  phone?: string
-}
 
 export default function OtpVerificationPage() {
     const searchParams = useSearchParams()
     const email = searchParams.get("email");
     const phone = searchParams.get("phone");
-    console.log('email ',email);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""))
   const [activeInput, setActiveInput] = useState<number>(0)
   const [isVerifying, setIsVerifying] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<boolean>(false)
-  const [timeLeft, setTimeLeft] = useState<number>(120) // 2 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState<number>(120)
   const [isResending, setIsResending] = useState<boolean>(false)
-  
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter();
 
-  // Timer effect
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -48,84 +39,62 @@ export default function OtpVerificationPage() {
         return prevTime - 1
       })
     }, 1000)
-
     return () => clearInterval(timer)
   }, [])
 
-  // Focus the first input on page load
   useEffect(() => {
     setTimeout(() => {
       inputRefs.current[0]?.focus()
     }, 100)
   }, [])
 
-  // Format time as MM:SS
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
-
-  // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value
-
-    // Only allow numbers
     if (!/^\d*$/.test(value)) return
-
-    // Take only the last character if multiple are entered
     const digit = value.slice(-1)
-
-    // Update OTP array
     const newOtp = [...otp]
     newOtp[index] = digit
     setOtp(newOtp)
-
-    // If a digit was entered and we're not at the last input, move to next
     if (digit && index < 5) {
       setActiveInput(index + 1)
       inputRefs.current[index + 1]?.focus()
     }
   }
 
-  // Handle key down events (for backspace navigation)
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === "Backspace") {
       if (otp[index] === "") {
-        // If current input is empty and we're not at the first input, go back
         if (index > 0) {
           setActiveInput(index - 1)
           inputRefs.current[index - 1]?.focus()
-
-          // Clear the previous input
           const newOtp = [...otp]
           newOtp[index - 1] = ""
           setOtp(newOtp)
         }
       } else {
-        // Clear current input
         const newOtp = [...otp]
         newOtp[index] = ""
         setOtp(newOtp)
       }
     }
   }
-
-  // Handle paste event
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault()
     const pastedData = e.clipboardData.getData("text/plain").trim()
-
-    // Check if pasted content is a 6-digit number
     if (/^\d{6}$/.test(pastedData)) {
       const digits = pastedData.split("")
       setOtp(digits)
-      setActiveInput(5) // Focus the last input after paste
+      setActiveInput(5)
       inputRefs.current[5]?.focus()
     }
   }
 
-  // Handle verification
   const handleVerify = async () => {
     const otpString = otp.join("")
     if (otpString.length !== 6) {
@@ -136,35 +105,29 @@ export default function OtpVerificationPage() {
     setError(null)
     try {
       if(!email){
-        console.log('no email')
         throw new Error('Email is missing');
       }
       if(!phone){
-        console.log('no phone');
         throw new Error("phone is missing");
       }
       const result = await authApi.providerRegisterApi(otpString,email,phone)
       toast.success('Signup successful');
       router.push('/provider');
     } catch (err) {
-      setError("An error occurred during verification. Please try again.")
+       const error  = err as AxiosError<{message:string}>
+       toast.error(error.response?.data.message);
     } finally {
       setIsVerifying(false)
     }
   }
-
-  // Handle resend
   const handleResend = async () => {
     if (timeLeft > 0) return
-
     setIsResending(true)
     setError(null)
-
-    try {
-      // await onResend()
-      setTimeLeft(120) // Reset timer
-      setOtp(Array(6).fill("")) // Clear OTP fields
-      setActiveInput(0) // Focus first input
+    try { 
+      setTimeLeft(120)
+      setOtp(Array(6).fill(""))
+      setActiveInput(0)
       setTimeout(() => {
         inputRefs.current[0]?.focus()
       }, 100)
@@ -175,7 +138,6 @@ export default function OtpVerificationPage() {
     }
   }
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

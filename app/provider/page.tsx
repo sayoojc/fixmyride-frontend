@@ -27,7 +27,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import LoginModal from "../../components/provider/LoginModal"
 
-
 export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import type { IServiceProvider } from "@/types/provider"
 import { motion } from "framer-motion"
 import { axiosPrivate } from "@/api/axios"
+import { AxiosError } from "axios"
 import createProviderApi from "@/services/providerApi"
 import Navbar from "@/components/provider/Navbar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -22,6 +23,7 @@ import {
 import { Calendar, Bell } from "lucide-react"
 import { getSocket } from "../../../lib/socket"
 import { NotificationListener } from "../../../components/provider/NotificationListner"
+import { toast } from "react-toastify"
 
 const providerApi = createProviderApi(axiosPrivate)
 
@@ -35,21 +37,16 @@ export default function DashboardPage() {
       try {
         setLoading(true)
         const response = await providerApi.getProfileData()
-        console.log("the provider data from the provider page", providerData)
         setProviderData(response.provider)
         setLoading(false)
       } catch (error) {
-        console.error("Error fetching profile:", error)
+        const err = error as AxiosError<{message:string}>
+        toast.error(err.response?.data.message)
         setLoading(false)
       }
     }
-
     fetchData()
   }, [])
-
-  useEffect(() => {
-    console.log("provider data", providerData)
-  }, [providerData])
 
   useEffect(() => {
     const socket = getSocket()
@@ -70,10 +67,6 @@ export default function DashboardPage() {
       socket.off("service:available")
     }
   }, [])
-
-  useEffect(() => {
-    console.log("the notifications", notifications)
-  }, [notifications])
 
   if (loading) {
     return (

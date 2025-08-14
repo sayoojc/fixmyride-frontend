@@ -1,22 +1,34 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
-import createAdminApi from "@/services/adminApi"
-import { axiosPrivate } from "@/api/axios"
-const adminApi = createAdminApi(axiosPrivate)
-import type { IVerification } from "@/types/provider"
-import { CheckCircle, XCircle, FileText, Building, CreditCard, ArrowLeft } from "lucide-react"
-import { toast } from "react-toastify"
-
-// Import shadcn components
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import createAdminApi from "@/services/adminApi";
+import { axiosPrivate } from "@/api/axios";
+const adminApi = createAdminApi(axiosPrivate);
+import type { IVerification } from "@/types/provider";
+import {
+  CheckCircle,
+  XCircle,
+  FileText,
+  Building,
+  CreditCard,
+  ArrowLeft,
+} from "lucide-react";
+import { toast } from "react-toastify";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AxiosError } from "axios";
 import {
   Dialog,
   DialogContent,
@@ -24,76 +36,81 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
-
-// Define TypeScript interfaces
-import type { IServiceProvider } from "@/types/provider"
+} from "@/components/ui/dialog";
+import type { IServiceProvider } from "@/types/provider";
 
 interface ProviderVerificationProps {
-  onBack: () => void
+  onBack: () => void;
 }
 
 const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
-  const [provider, setProvider] = useState<IServiceProvider | null>(null)
-  const [verificationData, setVerificationData] = useState<IVerification | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [currentTab, setCurrentTab] = useState<string>("idProof")
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false)
-  const [verificationAction, setVerificationAction] = useState<"Verified" | "Rejected" | null>(null)
-  const [adminNotes, setAdminNotes] = useState<string>("")
-  const params = useParams()
-  const router = useRouter()
+  const [provider, setProvider] = useState<IServiceProvider | null>(null);
+  const [verificationData, setVerificationData] =
+    useState<IVerification | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentTab, setCurrentTab] = useState<string>("idProof");
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
+  const [verificationAction, setVerificationAction] = useState<
+    "Verified" | "Rejected" | null
+  >(null);
+  const [adminNotes, setAdminNotes] = useState<string>("");
+  const params = useParams();
+  const router = useRouter();
   const rawProviderId = params.id;
-  const providerId = Array.isArray(rawProviderId) ? rawProviderId[0] : rawProviderId;
+  const providerId = Array.isArray(rawProviderId)
+    ? rawProviderId[0]
+    : rawProviderId;
   useEffect(() => {
     const fetchProvider = async () => {
-      if (!providerId) return
+      if (!providerId) return;
       try {
-        setLoading(true)
+        setLoading(true);
         const verificationData = await adminApi.getVerificationData(providerId);
-        console.log('the verification data from the verify provider',verificationData)
-        setVerificationData(verificationData.data.verificationData)
-        const response = await adminApi.getProviderById(providerId)
-        console.log('the provider',response);
+        setVerificationData(verificationData.data.verificationData);
+        const response = await adminApi.getProviderById(providerId);
         setProvider(response.data.provider);
         setLoading(false);
       } catch (error) {
-        console.error("Failed to fetch provider details:", error)
-        setLoading(false)
-        toast.error("Failed to fetch provider details")
+        setLoading(false);
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(err.response?.data?.message || "Adding brand failed!");
       }
-    }
+    };
+    fetchProvider();
+  }, [providerId]);
 
-    fetchProvider()
-  }, [providerId])
-
-  // Open confirmation modal
   const openConfirmModal = (action: "Verified" | "Rejected") => {
-    setVerificationAction(action)
-    setIsConfirmModalOpen(true)
-  }
+    setVerificationAction(action);
+    setIsConfirmModalOpen(true);
+  };
   const closeConfirmModal = () => {
-    setIsConfirmModalOpen(false)
-    setVerificationAction(null)
-  }
+    setIsConfirmModalOpen(false);
+    setVerificationAction(null);
+  };
   const handleVerification = async () => {
-    if (!provider || !verificationAction || !providerId) return
+    if (!provider || !verificationAction || !providerId) return;
 
     try {
-      const response = adminApi.verifyProviderApi(providerId, verificationAction, adminNotes)
-      toast.success(`provider ${verificationAction} successfully`)
-      router.push("/admin/dashboard/provider-management")
-      closeConfirmModal()
+      const response = adminApi.verifyProviderApi(
+        providerId,
+        verificationAction,
+        adminNotes
+      );
+      toast.success(`provider ${verificationAction} successfully`);
+      router.push("/admin/dashboard/provider-management");
+      closeConfirmModal();
     } catch (error) {
-      console.error("Failed to verify provider:", error)
-      toast.error("Failed to update verification status")
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data?.message || "Provider verification failed!"
+      );
     }
-  }
+  };
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
     exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
-  }
+  };
 
   const modalVariants = {
     hidden: { scale: 0.8, opacity: 0 },
@@ -107,7 +124,7 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
       opacity: 0,
       transition: { duration: 0.2 },
     },
-  }
+  };
 
   if (loading) {
     return (
@@ -125,22 +142,26 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!provider) {
     return (
       <div className="h-screen p-4">
         <div className="max-w-7xl mx-auto text-center py-8">
-          <h3 className="text-2xl font-semibold text-slate-800 mb-2">Provider Not Found</h3>
-          <p className="text-slate-500 mb-4">The provider you're looking for does not exist or has been removed.</p>
+          <h3 className="text-2xl font-semibold text-slate-800 mb-2">
+            Provider Not Found
+          </h3>
+          <p className="text-slate-500 mb-4">
+            The provider you're looking for does not exist or has been removed.
+          </p>
           <Button onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Go Back
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -159,8 +180,12 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Provider Verification</h2>
-              <p className="text-xs text-slate-500">Review and verify provider documentation</p>
+              <h2 className="text-lg font-bold text-slate-800">
+                Provider Verification
+              </h2>
+              <p className="text-xs text-slate-500">
+                Review and verify provider documentation
+              </p>
             </div>
           </div>
           <Badge
@@ -168,8 +193,8 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
               provider?.verificationStatus === "approved"
                 ? "default"
                 : provider?.verificationStatus === "rejected"
-                  ? "destructive"
-                  : "secondary"
+                ? "destructive"
+                : "secondary"
             }
             className="text-xs py-1"
           >
@@ -186,7 +211,11 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
             <div className="bg-white border rounded-lg p-3 shadow-sm h-full overflow-auto">
               <div className="flex items-center mb-2">
                 <Avatar className="h-12 w-12 mr-3">
-                  <AvatarImage src={`/api/placeholder/96/96?text=${provider?.name.charAt(0)}`} />
+                  <AvatarImage
+                    src={`/api/placeholder/96/96?text=${provider?.name.charAt(
+                      0
+                    )}`}
+                  />
                   <AvatarFallback>{provider?.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -198,16 +227,23 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
               <div className="space-y-1 mt-2 text-sm">
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">Business:</span>
-                  <span className="font-medium text-slate-800 truncate ml-1">{provider?.name}</span>
+                  <span className="font-medium text-slate-800 truncate ml-1">
+                    {provider?.name}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">Started:</span>
-                  <span className="font-medium text-slate-800">{verificationData?.startedYear}</span>
+                  <span className="font-medium text-slate-800">
+                    {verificationData?.startedYear}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">Status:</span>
-                  <Badge variant={provider.isListed ? "default" : "destructive"} className="text-xs">
+                  <Badge
+                    variant={provider.isListed ? "default" : "destructive"}
+                    className="text-xs"
+                  >
                     {provider.isListed ? "Active" : "Blocked"}
                   </Badge>
                 </div>
@@ -218,8 +254,8 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                       provider?.verificationStatus === "approved"
                         ? "default"
                         : provider?.verificationStatus === "rejected"
-                          ? "destructive"
-                          : "secondary"
+                        ? "destructive"
+                        : "secondary"
                     }
                     className="text-xs"
                   >
@@ -252,7 +288,11 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 overflow-hidden">
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
+            <Tabs
+              value={currentTab}
+              onValueChange={setCurrentTab}
+              className="h-full flex flex-col"
+            >
               <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="idProof" className="py-1 text-xs">
                   <div className="flex items-center gap-1">
@@ -289,12 +329,17 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <FileText className="h-4 w-4 mr-1 text-blue-600" />
                         ID Proof Document
                       </CardTitle>
-                      <CardDescription className="text-xs">Government issued identification</CardDescription>
+                      <CardDescription className="text-xs">
+                        Government issued identification
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="p-2 h-[calc(100%-60px)]">
                       <div className="bg-slate-100 rounded-lg overflow-hidden h-full flex items-center justify-center">
                         <img
-                          src={verificationData?.idProofImage || "/api/placeholder/400/320"}
+                          src={
+                            verificationData?.idProofImage ||
+                            "/api/placeholder/400/320"
+                          }
                           alt="ID Proof"
                           className="w-[400px] h-[300px] object-contain"
                           style={{ maxWidth: "100%" }}
@@ -312,12 +357,17 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <Building className="h-4 w-4 mr-1 text-blue-600" />
                         Shop License Document
                       </CardTitle>
-                      <CardDescription className="text-xs">Business license or permit</CardDescription>
+                      <CardDescription className="text-xs">
+                        Business license or permit
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="p-2 h-[calc(100%-60px)]">
                       <div className="bg-slate-100 rounded-lg overflow-hidden h-full flex items-center justify-center">
                         <img
-                          src={verificationData?.licenseImage || "/api/placeholder/400/320"}
+                          src={
+                            verificationData?.licenseImage ||
+                            "/api/placeholder/400/320"
+                          }
                           alt="Shop License"
                           className="w-[400px] h-[300px] object-contain"
                           style={{ maxWidth: "100%" }}
@@ -335,25 +385,43 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <CreditCard className="h-4 w-4 mr-1 text-blue-600" />
                         Bank Account Details
                       </CardTitle>
-                      <CardDescription className="text-xs">Payment information</CardDescription>
+                      <CardDescription className="text-xs">
+                        Payment information
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 overflow-auto">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-slate-50 p-3 rounded-lg">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Account Holder</p>
-                          <p className="text-sm font-semibold">{verificationData?.accountHolderName}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">
+                            Account Holder
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {verificationData?.accountHolderName}
+                          </p>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Bank name</p>
-                          <p className="text-sm font-semibold">{verificationData?.bankName}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">
+                            Bank name
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {verificationData?.bankName}
+                          </p>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg">
-                          <p className="text-xs font-medium text-slate-500 mb-1">Account Number</p>
-                          <p className="text-sm font-semibold">{verificationData?.accountNumber}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">
+                            Account Number
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {verificationData?.accountNumber}
+                          </p>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-lg">
-                          <p className="text-xs font-medium text-slate-500 mb-1">IFSC Code</p>
-                          <p className="text-sm font-semibold">{verificationData?.ifscCode}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">
+                            IFSC Code
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {verificationData?.ifscCode}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -368,17 +436,26 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                         <FileText className="h-4 w-4 mr-1 text-blue-600" />
                         Business Description
                       </CardTitle>
-                      <CardDescription className="text-xs">About the provider's business</CardDescription>
+                      <CardDescription className="text-xs">
+                        About the provider's business
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 overflow-auto h-[calc(100%-60px)]">
                       <div className="bg-slate-50 p-3 rounded-lg mb-3">
-                        <p className="text-sm whitespace-pre-line">{verificationData?.description}</p>
+                        <p className="text-sm whitespace-pre-line">
+                          {verificationData?.description}
+                        </p>
                       </div>
 
                       <div className="bg-slate-50 p-3 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-600">Started in:{verificationData?.startedYear}</span>
-                          <Badge variant="outline" className="text-xs font-medium">
+                          <span className="text-xs text-slate-600">
+                            Started in:{verificationData?.startedYear}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-medium"
+                          >
                             {/* {provider.startedYear} ({new Date().getFullYear() - Number(provider.startedYear)} years) */}
                           </Badge>
                         </div>
@@ -397,7 +474,12 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
         {isConfirmModalOpen && (
           <Dialog open={isConfirmModalOpen} onOpenChange={closeConfirmModal}>
             <DialogContent className="max-w-xs">
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit">
+              <motion.div
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-base">
                     {verificationAction === "Verified" ? (
@@ -421,12 +503,17 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
 
                 <div className="mt-2 mb-4">
                   <div className="bg-slate-50 p-2 rounded-lg text-xs">
-                    <p className="font-medium text-slate-800">{provider?.ownerName}</p>
+                    <p className="font-medium text-slate-800">
+                      {provider?.ownerName}
+                    </p>
                     <p className="text-slate-500">{provider?.name}</p>
                   </div>
 
                   <div className="mt-3">
-                    <label htmlFor="admin-notes" className="text-xs font-medium text-slate-700 block mb-1">
+                    <label
+                      htmlFor="admin-notes"
+                      className="text-xs font-medium text-slate-700 block mb-1"
+                    >
                       Admin Notes
                     </label>
                     <textarea
@@ -440,14 +527,27 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
                 </div>
 
                 <DialogFooter className="flex-row justify-end gap-2">
-                  <Button variant="outline" onClick={closeConfirmModal} size="sm" className="text-xs h-7">
+                  <Button
+                    variant="outline"
+                    onClick={closeConfirmModal}
+                    size="sm"
+                    className="text-xs h-7"
+                  >
                     Cancel
                   </Button>
                   <Button
-                    variant={verificationAction === "Verified" ? "default" : "destructive"}
+                    variant={
+                      verificationAction === "Verified"
+                        ? "default"
+                        : "destructive"
+                    }
                     onClick={handleVerification}
                     size="sm"
-                    className={`text-xs h-7 ${verificationAction === "Verified" ? "bg-green-600 hover:bg-green-700" : ""}`}
+                    className={`text-xs h-7 ${
+                      verificationAction === "Verified"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : ""
+                    }`}
                   >
                     {verificationAction === "Verified" ? "Verify" : "Reject"}
                   </Button>
@@ -458,7 +558,7 @@ const ProviderVerification = ({ onBack }: ProviderVerificationProps) => {
         )}
       </AnimatePresence>
     </motion.div>
-  )
-}
+  );
+};
 
-export default ProviderVerification
+export default ProviderVerification;

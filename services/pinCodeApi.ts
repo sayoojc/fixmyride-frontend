@@ -11,7 +11,7 @@ export const fetchLocationFromPincode = async (pincode: string) => {
       };
     }
   } catch (error) {
-    console.error("Failed to fetch pincode data", error);
+  throw error
   }
   return null;
 };

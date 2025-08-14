@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
+import { AxiosError } from "axios";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -103,7 +104,6 @@ export const CustomerProfile = () => {
       }
     } catch (error) {
       toast.error("Deleting vehicle failed");
-      console.error("Failed to delete vehicle:", error);
     } finally {
       setIsDeleting(false);
       setIsConfirmOpen(false);
@@ -128,17 +128,14 @@ export const CustomerProfile = () => {
   const handleSetDefaultAddress = async (addressId: string) => {
     try {
       const response = await userApi.setDefaultAddress(addressId);
-
       if (response.status === 200) {
         toast.success("Default address updated successfully!");
-
         setUser((prevUser) => {
           if (!prevUser) return prevUser;
           const updatedAddresses = prevUser.addresses.map((address) => ({
             ...address,
             isDefault: address.id === addressId,
           }));
-
           return {
             ...prevUser,
             addresses: updatedAddresses,
@@ -156,19 +153,14 @@ export const CustomerProfile = () => {
 
   const handleDeleteAddress = async (addressId: string) => {
     try {
-      console.log("the delete address handler function");
       const response = await userApi.deleteAddress(addressId);
-
       if (response?.status === 200) {
         toast.success("Address deleted successfully!");
-
         setUser((prevUser) => {
           if (!prevUser) return prevUser;
-
           const updatedAddresses = prevUser.addresses.filter(
             (addr) => addr.id !== addressId
           );
-
           const isDeletedDefault = prevUser.defaultAddress === addressId;
 
           return {
@@ -183,7 +175,6 @@ export const CustomerProfile = () => {
         toast.error("Failed to delete address.");
       }
     } catch (error) {
-      console.error("Error deleting address:", error);
       toast.error("Something went wrong while deleting address.");
     }
   };
@@ -211,12 +202,8 @@ export const CustomerProfile = () => {
         toast.error("Failed to update profile.");
       }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        console.error("Error updating profile:", error);
-        toast.error("Something went wrong while updating profile.");
-      }
+       const err = error as AxiosError<{message:string}>;
+       toast.error(err.response?.data.message || "Something went wrong")
     }
   };
 
@@ -270,7 +257,8 @@ export const CustomerProfile = () => {
     vehicleId: string,
     data: EditVehicleFormData
   ) => {
-    const response = await userApi.editVehicleApi(vehicleId, data);
+    try {
+         const response = await userApi.editVehicleApi(vehicleId, data);
     if (response.success) {
       toast.success("Vehicle updated successfully");
       setUser((prev) => {
@@ -289,8 +277,13 @@ export const CustomerProfile = () => {
         };
       });
     }
+    } catch (error) {
+      const err = error as AxiosError<{message:string}>;
+      toast.error(err.response?.data.message || "something went wrong")
+    }
+ 
   };
-  // // Helper function to format address
+
   const formatAddress = (address: Address) => {
     return [
       address.addressLine1,
@@ -303,7 +296,7 @@ export const CustomerProfile = () => {
       .join(", ");
   };
 
-  // Find default address
+ 
   const defaultAddressObj =
     user?.addresses?.find((addr) => addr.isDefault) || user?.addresses?.[0];
   const defaultAddressText = defaultAddressObj

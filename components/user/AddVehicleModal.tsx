@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
@@ -12,13 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, Loader2, AlertCircle } from "lucide-react";
-import { FuelIcon as GasPump, Droplet, Zap, Flame } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft, Loader2, AlertCircle, Search } from 'lucide-react';
+import { FuelIcon as GasPump, Droplet, Zap, Flame } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { toast } from "react-toastify";
 import type { User as UserType, Address } from "../../types/user";
-import { IVehicle } from "../../types/user";
+import { Vehicle } from "../../types/user";
 
 const userApi = createUserApi(axiosPrivate);
 
@@ -50,8 +51,7 @@ type AddVehicleModalProps = {
   onOpenChange?: (open: boolean) => void;
   setUser?: (user: UserType) => void;
   user?: UserType;
-  setVehicles?: React.Dispatch<React.SetStateAction<IVehicle[]>>;
-
+  setVehicles?: React.Dispatch<React.SetStateAction<Vehicle[]>>;
 };
 
 // Animation variants
@@ -129,6 +129,27 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  
+  // <CHANGE> Added search states for brands and models
+  const [brandSearch, setBrandSearch] = useState<string>("");
+  const [modelSearch, setModelSearch] = useState<string>("");
+
+  // <CHANGE> Added filtered brands and models using useMemo for performance
+  const filteredBrands = useMemo(() => {
+    if (!brandSearch.trim()) return brands;
+    return brands.filter(brand =>
+      brand.brandName.toLowerCase().includes(brandSearch.toLowerCase())
+    );
+  }, [brands, brandSearch]);
+
+  const filteredModels = useMemo(() => {
+    if (!selectedBrand) return [];
+    const models = selectedBrand.models;
+    if (!modelSearch.trim()) return models;
+    return models.filter(model =>
+      model.name.toLowerCase().includes(modelSearch.toLowerCase())
+    );
+  }, [selectedBrand, modelSearch]);
 
   useEffect(() => {
     if (open) {
@@ -139,6 +160,8 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
       setSelectedBrand(null);
       setSelectedModel(null);
       setSelectedFuel(null);
+      setBrandSearch("");
+      setModelSearch("");
     }
   }, [open]);
 
@@ -182,9 +205,9 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
       setSubmitSuccess(true);
       const newVehicle = response.vehicle;
       
-     if (setVehicles) {
-  setVehicles(prev => [...prev, newVehicle]);
-}
+      if (setVehicles) {
+        setVehicles(prev => [...prev, newVehicle]);
+      }
       if (user && setUser) {
         setUser({
           ...user,
@@ -202,7 +225,7 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
       }, 1500);
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Error adding the vehicle: ${errMsg}nkhkjhkhjhl`);
+      toast.error(`Error adding the vehicle: ${errMsg}`);
       setSubmitError("Failed to add vehicle. Please try again.");
     } finally {
       setSubmitting(false);
@@ -263,47 +286,62 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
                 <DialogTitle>Select Brand</DialogTitle>
               </DialogHeader>
 
-              {brands.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No brands available
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {brands.map((brand) => (
-                    <motion.div
-                      key={brand._id}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Card
-                        className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
-                        onClick={() => {
-                          setSelectedBrand(brand);
-                          setStep("model");
-                        }}
+              {/* <CHANGE> Added search input for brands */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search brands..."
+                  value={brandSearch}
+                  onChange={(e) => setBrandSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* <CHANGE> Added fixed height scrollable container */}
+              <div className="h-80 overflow-y-auto">
+                {filteredBrands.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    {brandSearch ? "No brands found matching your search" : "No brands available"}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-2">
+                    {filteredBrands.map((brand) => (
+                      <motion.div
+                        key={brand._id}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <CardContent className="flex flex-col items-center justify-center p-4">
-                          <div className="w-16 h-16 flex items-center justify-center">
-                            <img
-                              src={brand.imageUrl || "/placeholder.svg"}
-                              alt={brand.brandName}
-                              className="max-w-full max-h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.src =
-                                  "/images/placeholder-brand.png";
-                              }}
-                            />
-                          </div>
-                          <p className="mt-2 text-sm font-medium">
-                            {brand.brandName}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                        <Card
+                          className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
+                          onClick={() => {
+                            setSelectedBrand(brand);
+                            setModelSearch(""); // Reset model search when selecting new brand
+                            setStep("model");
+                          }}
+                        >
+                          <CardContent className="flex flex-col items-center justify-center p-4">
+                            <div className="w-16 h-16 flex items-center justify-center">
+                              <img
+                                src={brand.imageUrl || "/placeholder.svg"}
+                                alt={brand.brandName}
+                                className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    "/images/placeholder-brand.png";
+                                }}
+                              />
+                            </div>
+                            <p className="mt-2 text-sm font-medium text-center">
+                              {brand.brandName}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </AnimatePresence>
         );
@@ -331,48 +369,62 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
                 <DialogTitle>Select Model</DialogTitle>
               </DialogHeader>
 
-              {selectedBrand?.models.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No models available for this brand
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {selectedBrand?.models.map((model) => (
-                    <motion.div
-                      key={model._id}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Card
-                        className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
-                        onClick={() => {
-                          console.log("selected model", model);
-                          setSelectedModel(model);
-                          setStep("fuel");
-                        }}
+              {/* <CHANGE> Added search input for models */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search models..."
+                  value={modelSearch}
+                  onChange={(e) => setModelSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* <CHANGE> Added fixed height scrollable container */}
+              <div className="h-80 overflow-y-auto">
+                {filteredModels.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    {modelSearch ? "No models found matching your search" : "No models available for this brand"}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-2">
+                    {filteredModels.map((model) => (
+                      <motion.div
+                        key={model._id}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <CardContent className="flex flex-col items-center justify-center p-4">
-                          <div className="w-16 h-16 flex items-center justify-center">
-                            <img
-                              src={model.imageUrl || "/placeholder.svg"}
-                              alt={model.name}
-                              className="max-w-full max-h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.src =
-                                  "/images/placeholder-model.png";
-                              }}
-                            />
-                          </div>
-                          <p className="mt-2 text-sm font-medium">
-                            {model.name}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                        <Card
+                          className="cursor-pointer border hover:border-primary/50 hover:shadow-md transition-all"
+                          onClick={() => {
+                            console.log("selected model", model);
+                            setSelectedModel(model);
+                            setStep("fuel");
+                          }}
+                        >
+                          <CardContent className="flex flex-col items-center justify-center p-4">
+                            <div className="w-16 h-16 flex items-center justify-center">
+                              <img
+                                src={model.imageUrl || "/placeholder.svg"}
+                                alt={model.name}
+                                className="max-w-full max-h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    "/images/placeholder-model.png";
+                                }}
+                              />
+                            </div>
+                            <p className="mt-2 text-sm font-medium text-center">
+                              {model.name}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </AnimatePresence>
         );
@@ -400,36 +452,39 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
                 <DialogTitle>Select Fuel Type</DialogTitle>
               </DialogHeader>
 
-              <div className="grid grid-cols-2 gap-4">
-                {selectedModel?.fuelTypes.map((fuel) => {
-                  const { Icon, color, label } = getFuelIcon(fuel);
-                  return (
-                    <motion.div
-                      key={fuel}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Card
-                        className={cn(
-                          "cursor-pointer border-2 hover:shadow-md transition-all overflow-hidden",
-                          color
-                        )}
-                        onClick={() => {
-                          setSelectedFuel(fuel);
-                          setStep("final");
-                        }}
+              {/* <CHANGE> Added fixed height container for consistency */}
+              <div className="h-80 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4 pr-2">
+                  {selectedModel?.fuelTypes.map((fuel) => {
+                    const { Icon, color, label } = getFuelIcon(fuel);
+                    return (
+                      <motion.div
+                        key={fuel}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <CardContent className="flex items-center p-4 gap-3">
-                          <div className="rounded-full p-2 bg-white/80 backdrop-blur">
-                            <Icon className="h-6 w-6" />
-                          </div>
-                          <span className="font-medium">{label}</span>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
+                        <Card
+                          className={cn(
+                            "cursor-pointer border-2 hover:shadow-md transition-all overflow-hidden",
+                            color
+                          )}
+                          onClick={() => {
+                            setSelectedFuel(fuel);
+                            setStep("final");
+                          }}
+                        >
+                          <CardContent className="flex items-center p-4 gap-3">
+                            <div className="rounded-full p-2 bg-white/80 backdrop-blur">
+                              <Icon className="h-6 w-6" />
+                            </div>
+                            <span className="font-medium">{label}</span>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -576,16 +631,12 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
         );
     }
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Vehicle</DialogTitle>{" "}
-          {/* Or whatever your modal is about */}
-        </DialogHeader>
-
-        {renderStepContent()}
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="flex-1 overflow-hidden">
+          {renderStepContent()}
+        </div>
       </DialogContent>
     </Dialog>
   );

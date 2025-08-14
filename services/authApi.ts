@@ -14,14 +14,18 @@ interface SignupFormData {
 const createAuthApi = (axiosPrivate: AxiosInstance) => ({
   //// User Auth ////
   loginApi: async (email: string, password: string) => {
-    const response = await axiosPrivate.post(
+    try {
+        const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/login`,
       {
         email,
         password,
       }
     );
-    return response.data;
+    return response.data;  
+    } catch (error) {
+      throw error
+    }
   },
   registerTempApi: async (
     name: string,
@@ -29,7 +33,8 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
     phone: string,
     password: string
   ) => {
-    const response = await axiosPrivate.post(
+    try {
+        const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/register-temp`,
       {
         name,
@@ -38,10 +43,14 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
         password,
       }
     );
-    return response.data;
+    return response;
+    } catch (error) {
+      throw error
+    } 
   },
   registerApi: async (otpValue: string, email: string, phone: string) => {
-    const response = await axiosPrivate.post(
+    try {
+        const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/signup`,
       {
         otpValue,
@@ -49,25 +58,36 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
         phone,
       }
     );
-    return response.data;
+    return response;
+    } catch (error) {
+      throw error
+    }
   },
   forgotPasswordApi: async (email: string) => {
-    const response = await axiosPrivate.post(
+    try {
+        const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/forgot`,
       {
         email,
       }
     );
     return response.data;
+    } catch (error) {
+      throw error
+    }  
   },
   resetPasswordApi: async (token: string,password: string) => {
-    const response = await axiosPrivate.post(
+    try {
+         const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/reset`,
       {
       token,
       password
       }
-    );
+    ); 
+    } catch (error) {
+      throw error
+    }
   },
   logoutApi: async () => {
     try {
@@ -76,13 +96,13 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Logout API failed:", error);
       throw error;
     }
   },
   ///Admin Auth ////
   adminLoginApi: async (email: string, password: string) => {
-    const response = await axiosPrivate.post(
+    try {
+          const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/login`,
       {
         email,
@@ -90,6 +110,9 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
       }
     );
     return response.data;
+    } catch (error) {
+      throw error
+    }
   },
   adminLogoutApi: async () => {
     try {
@@ -98,7 +121,6 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Logout API failed:", error);
       throw error;
     }
   },
@@ -125,7 +147,6 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Logout API failed:", error);
       throw error;
     }
   },
@@ -133,18 +154,18 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
   //provider register
   providerRegisterTempApi: async (data: SignupFormData) => {
     try {
-      console.log("provider register temp api");
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/register-temp`,
         data
       );
       return response.data;
     } catch (error) {
-      console.error("Provider registration failed");
+      throw error
     }
   },
   providerRegisterApi: async (otp: string, email: string, phone: string) => {
-    const response = await axiosPrivate.post(
+    try {
+       const response = await axiosPrivate.post(
       `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/register`,
       {
         otp,
@@ -153,6 +174,10 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
       }
     );
     return response.data;
+    } catch (error) {
+      throw error
+    }
+   
   },
 });
 

@@ -1,26 +1,25 @@
-"use client"
-import type React from "react"
-import { useState, type ChangeEvent, type FormEvent } from "react"
-import type { AxiosError } from "axios"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import Image from "next/image"
+"use client";
+import type React from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import type { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
-import createAuthApi from "@/services/authApi"
-import { axiosPrivate } from "@/api/axios"
-import LoginModal from "@/components/LoginModal"
-import SignupModal from "@/components/SignupModal"
-import OTPModal from "@/components/OtpModal"
-import EmailInputModal from "@/components/EnterEmailModal"
+import createAuthApi from "@/services/authApi";
+import { axiosPrivate } from "@/api/axios";
+import LoginModal from "@/components/LoginModal";
+import SignupModal from "@/components/SignupModal";
+import OTPModal from "@/components/OtpModal";
+import EmailInputModal from "@/components/EnterEmailModal";
+//redux
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/features/authSlice";
+import type { AppDispatch } from "@/redux/store";
 
-// imports for redux
-import { useDispatch } from "react-redux"
-import { login } from "@/redux/features/authSlice"
-import type { AppDispatch } from "@/redux/store"
-
-import { toast } from "react-toastify"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   CarIcon,
   CheckCircleIcon,
@@ -32,40 +31,19 @@ import {
   PenToolIcon as ToolIcon,
   TruckIcon,
   WrenchIcon,
-} from "lucide-react"
-
-const authApi = createAuthApi(axiosPrivate)
-
-interface LoginData {
-  email: string
-  password: string
-  rememberMe: boolean
-}
-
-interface SignupData {
-  fullName: string
-  email: string
-  password: string
-  confirmPassword: string
-  phone: string
-  agreeTerms: boolean
-}
-
-interface ServiceCardProps {
-  icon: React.ReactNode
-  title: string
-  description: string
-}
-
-interface TestimonialProps {
-  name: string
-  role: string
-  content: string
-  rating: number
-  image: string
-}
-
-const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description }) => (
+} from "lucide-react";
+import {
+  LoginData,
+  SignupData,
+  ServiceCardProps,
+  TestimonialProps,
+} from "@/types/userAuth";
+const authApi = createAuthApi(axiosPrivate);
+const ServiceCard: React.FC<ServiceCardProps> = ({
+  icon,
+  title,
+  description,
+}) => (
   <motion.div
     whileHover={{ y: -10, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)" }}
     initial={{ opacity: 0, y: 20 }}
@@ -74,13 +52,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description }) =
     viewport={{ once: true }}
     className="bg-white rounded-xl p-6 shadow-md"
   >
-    <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4">{icon}</div>
+    <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4">
+      {icon}
+    </div>
     <h3 className="text-xl font-bold mb-2">{title}</h3>
     <p className="text-gray-600">{description}</p>
   </motion.div>
-)
-
-const Testimonial: React.FC<TestimonialProps> = ({ name, role, content, rating, image }) => (
+);
+const Testimonial: React.FC<TestimonialProps> = ({
+  name,
+  role,
+  content,
+  rating,
+  image,
+}) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
     whileInView={{ opacity: 1, scale: 1 }}
@@ -107,33 +92,30 @@ const Testimonial: React.FC<TestimonialProps> = ({ name, role, content, rating, 
       {[...Array(5)].map((_, i) => (
         <StarIcon
           key={i}
-          className={`w-4 h-4 ${i < rating ? "text-yellow-400" : "text-gray-300"}`}
+          className={`w-4 h-4 ${
+            i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
           fill={i < rating ? "currentColor" : "none"}
         />
       ))}
     </div>
     <p className="text-gray-600 italic">{content}</p>
   </motion.div>
-)
+);
 
 const CarServiceLandingPage: React.FC = () => {
-  const router = useRouter()
-  const dispatch = useDispatch<AppDispatch>()
-
-  // Auth modal states
-  const [email, setEmail] = useState("")
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false)
-  const [showSignupModal, setShowSignupModal] = useState<boolean>(false)
-  const [showOTPModal, setShowOTPModal] = useState<boolean>(false)
-  const [showEmailInputModal, setShowEmailInputModal] = useState<boolean>(false)
-  
-
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showSignupModal, setShowSignupModal] = useState<boolean>(false);
+  const [showOTPModal, setShowOTPModal] = useState<boolean>(false);
+  const [showEmailInputModal, setShowEmailInputModal] =
+    useState<boolean>(false);
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
     rememberMe: false,
-  })
-
+  });
   const [signupData, setSignupData] = useState<SignupData>({
     fullName: "",
     email: "",
@@ -141,117 +123,123 @@ const CarServiceLandingPage: React.FC = () => {
     confirmPassword: "",
     agreeTerms: false,
     phone: "",
-  })
-
+  });
   const handleLoginInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    const inputValue = type === "checkbox" ? checked : value
+    const { name, value, type, checked } = e.target;
+    const inputValue = type === "checkbox" ? checked : value;
     setLoginData((prevState) => ({
       ...prevState,
       [name]: inputValue,
-    }))
-  }
-
+    }));
+  };
   const handleSignupInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    const inputValue = type === "checkbox" ? checked : value
+    const { name, value, type, checked } = e.target;
+    const inputValue = type === "checkbox" ? checked : value;
     setSignupData((prevState) => ({
       ...prevState,
       [name]: inputValue,
-    }))
-  }
-
- 
-
-
-
+    }));
+  };
   const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const response = await authApi.loginApi(loginData.email, loginData.password)
+      const response = await authApi.loginApi(
+        loginData.email,
+        loginData.password
+      );
       dispatch(
         login({
           id: response.user._id,
           name: response.user.name,
           role: response.user.role,
           email: response.user.email,
-        }),
-      )
-      toast.success("Login successful")
-      setShowLoginModal(false)
-      router.push("/user")
+        })
+      );
+      toast.success("Login successful");
+      setShowLoginModal(false);
+      router.push("/user");
     } catch (error) {
-      const err = error as AxiosError<{ message?: string }>
-      const message = err.response?.data?.message || "Login failed. Please try again."
-      toast.error(message)
+      const err = error as AxiosError<{ message?: string }>;
+      const message =
+        err.response?.data?.message || "Login failed. Please try again.";
+      toast.error(message);
     }
-  }
+  };
 
   const handleforgotPassword = async (email: string) => {
     try {
       // await authApi.forgotPasswordApi(email);
-      setShowLoginModal(false)
-      setShowEmailInputModal(true)
+      setShowLoginModal(false);
+      setShowEmailInputModal(true);
     } catch (error) {
-      const err = error as AxiosError<{ message?: string }>
-      toast.error(err.response?.data?.message || "Login failed!")
+      const err = error as AxiosError<{ message?: string }>;
+      toast.error(err.response?.data?.message || "Login failed!");
     }
-  }
+  };
 
   const handleSignupSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
+    e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
-      toast.error("Passwords do not match")
-      return
+      toast.error("Passwords do not match");
+      return;
     }
-
     try {
-      await authApi.registerTempApi(signupData.fullName, signupData.email, signupData.phone, signupData.password)
-      toast.success("Fill the OTP to continue")
-      
-      router.push(`/otp?phone=${encodeURIComponent(signupData.phone)}&email=${encodeURIComponent(signupData.email)}`);
-      
-      
+      await authApi.registerTempApi(
+        signupData.fullName,
+        signupData.email,
+        signupData.phone,
+        signupData.password
+      );
+      toast.success("Fill the OTP to continue");
+      router.push(
+        `/otp?phone=${encodeURIComponent(
+          signupData.phone
+        )}&email=${encodeURIComponent(signupData.email)}`
+      );
     } catch (error) {
-      const err = error as AxiosError<{ message?: string }>
-      console.error("Signup failed:", err.response?.data?.message || "Something went wrong")
-      toast.error(err.response?.data?.message || "Signup failed!")
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(err.response?.data?.message || "Signup failed!");
     }
-  }
+  };
 
   const services = [
     {
       icon: <WrenchIcon className="w-6 h-6" />,
       title: "Regular Maintenance",
-      description: "Keep your vehicle in top condition with our comprehensive maintenance services.",
+      description:
+        "Keep your vehicle in top condition with our comprehensive maintenance services.",
     },
     {
       icon: <SettingsIcon className="w-6 h-6" />,
       title: "Engine Diagnostics",
-      description: "Advanced diagnostic tools to identify and fix engine problems quickly.",
+      description:
+        "Advanced diagnostic tools to identify and fix engine problems quickly.",
     },
     {
       icon: <ToolIcon className="w-6 h-6" />,
       title: "Brake Service",
-      description: "Expert brake inspection, repair and replacement for your safety.",
+      description:
+        "Expert brake inspection, repair and replacement for your safety.",
     },
     {
       icon: <TruckIcon className="w-6 h-6" />,
       title: "Towing Service",
-      description: "24/7 emergency towing service to help you when you need it most.",
+      description:
+        "24/7 emergency towing service to help you when you need it most.",
     },
     {
       icon: <CarIcon className="w-6 h-6" />,
       title: "Body Repair",
-      description: "Professional body repair and painting to make your car look like new.",
+      description:
+        "Professional body repair and painting to make your car look like new.",
     },
     {
       icon: <HeartIcon className="w-6 h-6" />,
       title: "Premium Care",
-      description: "VIP treatment for luxury vehicles with specialized care and attention.",
+      description:
+        "VIP treatment for luxury vehicles with specialized care and attention.",
     },
-  ]
+  ];
 
   const testimonials = [
     {
@@ -278,7 +266,7 @@ const CarServiceLandingPage: React.FC = () => {
       rating: 5,
       image: "/placeholder.svg?height=48&width=48",
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -308,7 +296,10 @@ const CarServiceLandingPage: React.FC = () => {
               >
                 Login
               </Button>
-              <Button className="bg-white text-blue-900 hover:bg-blue-100" onClick={() => setShowSignupModal(true)}>
+              <Button
+                className="bg-white text-blue-900 hover:bg-blue-100"
+                onClick={() => setShowSignupModal(true)}
+              >
                 Sign Up
               </Button>
             </motion.div>
@@ -326,17 +317,20 @@ const CarServiceLandingPage: React.FC = () => {
               transition={{ duration: 0.7 }}
               className="md:w-1/2 mb-10 md:mb-0"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">Expert Car Service You Can Trust</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Expert Car Service You Can Trust
+              </h1>
               <p className="text-xl mb-8">
-                Professional maintenance and repair services to keep your vehicle running smoothly.
+                Professional maintenance and repair services to keep your
+                vehicle running smoothly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
-                   size="lg"
+                  size="lg"
                   className="bg-white text-blue-900 hover:bg-blue-100"
                   onClick={() => {
-                    const servicesSection = document.getElementById("services")
-                    servicesSection?.scrollIntoView({ behavior: "smooth" })
+                    const servicesSection = document.getElementById("services");
+                    servicesSection?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
                   Our Services
@@ -350,7 +344,12 @@ const CarServiceLandingPage: React.FC = () => {
               className="md:w-1/2"
             >
               <div className="relative h-64 md:h-96 rounded-lg overflow-hidden shadow-xl">
-                <Image src="/placeholder.svg?height=600&width=800" alt="Car Service" fill className="object-cover" />
+                <Image
+                  src="/placeholder.svg?height=600&width=800"
+                  alt="Car Service"
+                  fill
+                  className="object-cover"
+                />
               </div>
             </motion.div>
           </div>
@@ -369,7 +368,8 @@ const CarServiceLandingPage: React.FC = () => {
           >
             <h2 className="text-3xl font-bold mb-4">Why Choose Us</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              We provide top-quality service with certified technicians and state-of-the-art equipment.
+              We provide top-quality service with certified technicians and
+              state-of-the-art equipment.
             </p>
           </motion.div>
 
@@ -386,7 +386,8 @@ const CarServiceLandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Certified Experts</h3>
               <p className="text-gray-600">
-                Our technicians are certified and experienced in handling all types of vehicles.
+                Our technicians are certified and experienced in handling all
+                types of vehicles.
               </p>
             </motion.div>
 
@@ -402,7 +403,8 @@ const CarServiceLandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Quick Service</h3>
               <p className="text-gray-600">
-                We value your time and strive to provide efficient service without compromising quality.
+                We value your time and strive to provide efficient service
+                without compromising quality.
               </p>
             </motion.div>
 
@@ -418,7 +420,8 @@ const CarServiceLandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Multiple Locations</h3>
               <p className="text-gray-600">
-                Conveniently located service centers to serve you better, wherever you are.
+                Conveniently located service centers to serve you better,
+                wherever you are.
               </p>
             </motion.div>
           </div>
@@ -437,13 +440,19 @@ const CarServiceLandingPage: React.FC = () => {
           >
             <h2 className="text-3xl font-bold mb-4">Our Services</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Comprehensive car care services to keep your vehicle in perfect condition.
+              Comprehensive car care services to keep your vehicle in perfect
+              condition.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <ServiceCard key={index} icon={service.icon} title={service.title} description={service.description} />
+              <ServiceCard
+                key={index}
+                icon={service.icon}
+                title={service.title}
+                description={service.description}
+              />
             ))}
           </div>
         </div>
@@ -461,7 +470,8 @@ const CarServiceLandingPage: React.FC = () => {
           >
             <h2 className="text-3xl font-bold mb-4">What Our Customers Say</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Don't just take our word for it. Here's what our satisfied customers have to say.
+              Don't just take our word for it. Here's what our satisfied
+              customers have to say.
             </p>
           </motion.div>
 
@@ -481,7 +491,6 @@ const CarServiceLandingPage: React.FC = () => {
       </section>
 
       {/* Booking Section */}
-    
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
@@ -493,7 +502,8 @@ const CarServiceLandingPage: React.FC = () => {
                 <span className="text-xl font-bold">FixMyRide</span>
               </div>
               <p className="text-gray-400 mb-4">
-                Professional car service you can trust. Keeping your vehicle in perfect condition.
+                Professional car service you can trust. Keeping your vehicle in
+                perfect condition.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white">
@@ -535,7 +545,14 @@ const CarServiceLandingPage: React.FC = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <rect
+                      x="2"
+                      y="2"
+                      width="20"
+                      height="20"
+                      rx="5"
+                      ry="5"
+                    ></rect>
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                   </svg>
@@ -551,7 +568,10 @@ const CarServiceLandingPage: React.FC = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="text-gray-400 hover:text-white">
+                  <a
+                    href="#services"
+                    className="text-gray-400 hover:text-white"
+                  >
                     Services
                   </a>
                 </li>
@@ -604,15 +624,25 @@ const CarServiceLandingPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-lg font-bold mb-4">Newsletter</h3>
-              <p className="text-gray-400 mb-4">Subscribe to our newsletter for the latest updates and offers.</p>
+              <p className="text-gray-400 mb-4">
+                Subscribe to our newsletter for the latest updates and offers.
+              </p>
               <form className="flex">
-                <Input type="email" placeholder="Your email" className="bg-gray-800 border-gray-700 text-white" />
-                <Button className="ml-2 bg-blue-600 hover:bg-blue-700">Subscribe</Button>
+                <Input
+                  type="email"
+                  placeholder="Your email"
+                  className="bg-gray-800 border-gray-700 text-white"
+                />
+                <Button className="ml-2 bg-blue-600 hover:bg-blue-700">
+                  Subscribe
+                </Button>
               </form>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} FixMyRide. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} FixMyRide. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
@@ -639,12 +669,16 @@ const CarServiceLandingPage: React.FC = () => {
       />
 
       {/* Email input modal for the forgot password */}
-      {showEmailInputModal && <EmailInputModal setShowEmailInputModal={setShowEmailInputModal} />}
+      {showEmailInputModal && (
+        <EmailInputModal setShowEmailInputModal={setShowEmailInputModal} />
+      )}
 
       {/* OTP Modal */}
-      {showOTPModal && <OTPModal email={signupData.email} phone={signupData.phone} />}
+      {showOTPModal && (
+        <OTPModal email={signupData.email} phone={signupData.phone} />
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default CarServiceLandingPage
+export default CarServiceLandingPage;

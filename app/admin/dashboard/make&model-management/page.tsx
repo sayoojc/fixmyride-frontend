@@ -22,23 +22,11 @@ import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
 import { Brand } from "@/types/editBrandInterface";
 import { ModelType } from "@/types/editBrandInterface";
-
-export const brandSchema = z.object({
-  name: z.string().min(1, "Brand name is required"),
-  image: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, "Image file is required")
-    .optional(),
-});
-
-const modelSchema = z.object({
-  name: z.string().min(1, "Model name is required"),
-  brandId: z.string().min(1, "Brand is required"),
-  image: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, "Image file is required"),
-  fuelTypes: z.array(z.string()).min(1, "At least one fuel type is required"),
-});
+import { AxiosError } from "axios";
+import {
+  brandSchema,
+  modelSchema,
+} from "@/types/brandModelManagement.interface";
 
 const BrandModelManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -57,9 +45,6 @@ const BrandModelManagement: React.FC = () => {
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] =
     useState<boolean>(false);
   const [editingModel, setEditingModel] = useState<ModelType | null>(null);
-  useEffect(() => {
-    console.log("the editing model", editingModel);
-  }, [editingModel]);
   const addBrandForm = useForm<z.infer<typeof brandSchema>>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -97,7 +82,8 @@ const BrandModelManagement: React.FC = () => {
         setCurrentPage(currentPage);
         setTotalPages(brands.BrandObject.totalPage);
       } catch (error) {
-        toast.error("fetching brands failed");
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(err.response?.data.message);
       } finally {
         setLoading(false);
       }
@@ -149,13 +135,13 @@ const BrandModelManagement: React.FC = () => {
       setIsAddBrandDialogOpen(false);
       addBrandForm.reset();
     } catch (error) {
-      toast.error("Adding Brand Failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(err.response?.data?.message || "Adding brand failed!");
     }
   };
 
   const updateBrand = async (updatedBrandData: z.infer<typeof brandSchema>) => {
     if (!editingBrand) return;
-
     try {
       let imageUrl = editingBrand.imageUrl;
 
@@ -181,7 +167,8 @@ const BrandModelManagement: React.FC = () => {
       setEditingBrand(null);
       editBrandForm.reset();
     } catch (error) {
-      toast.error("Updating Brand Failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(err.response?.data?.message || "Adding brand failed!");
     }
   };
 
@@ -213,7 +200,10 @@ const BrandModelManagement: React.FC = () => {
         console.warn("Failed to update brand status.");
       }
     } catch (error) {
-      console.error(`Error toggling brand status:`, error);
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data?.message || "updating brand status failed!"
+      );
     }
   };
 
@@ -249,8 +239,10 @@ const BrandModelManagement: React.FC = () => {
         })
       );
     } catch (error) {
-      toast.error("Failed to update Model");
-      console.error(`Error toggling model status:`, error);
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data?.message || "updating model status failed!"
+      );
     }
   };
 
@@ -259,7 +251,6 @@ const BrandModelManagement: React.FC = () => {
       const imageUrl = await imageUploadApi.uploadBrandImageApi(
         modelData.image
       );
-      console.log("The image url from the add model", imageUrl);
       const response = await adminApi.AddModelApi(
         modelData.name,
         imageUrl,
@@ -281,8 +272,8 @@ const BrandModelManagement: React.FC = () => {
       setIsAddModelDialogOpen(false);
       addModelForm.reset();
     } catch (error) {
-      toast.error("Adding Model Failed");
-      console.log("the adding model failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(err.response?.data?.message || "Adding model failed!");
     }
   };
 

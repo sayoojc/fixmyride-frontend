@@ -1,16 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import type React from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   AlertCircle,
   CheckCircle,
@@ -22,17 +29,21 @@ import {
   ArrowRight,
   ArrowLeft,
   AlertTriangle,
-} from "lucide-react"
-import Navbar from "@/components/provider/Navbar"
-import { verificationSchema, type VerificationFormData } from "@/schema/providerSchema"
-import createProviderApi from "@/services/providerApi"
-import { axiosPrivate } from "@/api/axios"
-import { axiosPublic } from "@/api/axiosPublic"
-import createimageUploadApi from "@/services/imageUploadApi"
-import { toast } from "react-toastify"
+} from "lucide-react";
+import Navbar from "@/components/provider/Navbar";
+import {
+  verificationSchema,
+  type VerificationFormData,
+} from "@/schema/providerSchema";
+import createProviderApi from "@/services/providerApi";
+import { axiosPrivate } from "@/api/axios";
+import { axiosPublic } from "@/api/axiosPublic";
+import { AxiosError } from "axios";
+import createimageUploadApi from "@/services/imageUploadApi";
+import { toast } from "react-toastify";
 
-const providerApi = createProviderApi(axiosPrivate)
-const imageUploadApi = createimageUploadApi(axiosPublic)
+const providerApi = createProviderApi(axiosPrivate);
+const imageUploadApi = createimageUploadApi(axiosPublic);
 
 // Animation variants
 const containerVariants = {
@@ -44,7 +55,7 @@ const containerVariants = {
       delayChildren: 0.2,
     },
   },
-}
+};
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
@@ -53,20 +64,20 @@ const itemVariants = {
     opacity: 1,
     transition: { type: "spring", stiffness: 100 },
   },
-}
+};
 
 const buttonVariants = {
   hover: { scale: 1.05, transition: { duration: 0.2 } },
   tap: { scale: 0.95, transition: { duration: 0.2 } },
-}
+};
 
 export default function VerificationPage() {
-  const router = useRouter()
-  const [currentStep, setCurrentStep] = useState<number>(1)
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [licensePreview, setLicensePreview] = useState<string | null>(null)
-  const [idProofPreview, setIdProofPreview] = useState<string | null>(null)
-  const [stepErrors, setStepErrors] = useState<Record<string, string>>({})
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [licensePreview, setLicensePreview] = useState<string | null>(null);
+  const [idProofPreview, setIdProofPreview] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
   const {
     register,
@@ -87,95 +98,98 @@ export default function VerificationPage() {
       accountNumber: "",
       startedYear: "",
       description: "",
-      bankName:""
+      bankName: "",
     },
-  })
+  });
 
-  // Watch all form values
-  const formValues = watch()
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "license" | "idProof") => {
+  const formValues = watch();
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "license" | "idProof"
+  ) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-
-      // Set the file in the form
-      setValue(type === "license" ? "licenseImage" : "idProofImage", file, { shouldValidate: true })
-
-      // Create preview
-      const reader = new FileReader()
+      const file = e.target.files[0];
+      setValue(type === "license" ? "licenseImage" : "idProofImage", file, {
+        shouldValidate: true,
+      });
+      const reader = new FileReader();
       reader.onload = (event) => {
         if (type === "license") {
-          setLicensePreview(event.target?.result as string)
+          setLicensePreview(event.target?.result as string);
         } else {
-          setIdProofPreview(event.target?.result as string)
+          setIdProofPreview(event.target?.result as string);
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const onSubmit = async (data: VerificationFormData) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      // Upload images
-      const licenseUrl = await imageUploadApi.uploadVerificationImageApi(data.licenseImage)
-      const idProofUrl = await imageUploadApi.uploadVerificationImageApi(data.idProofImage)
+      const licenseUrl = await imageUploadApi.uploadVerificationImageApi(
+        data.licenseImage
+      );
+      const idProofUrl = await imageUploadApi.uploadVerificationImageApi(
+        data.idProofImage
+      );
       const response = await providerApi.providerVerification({
-        ...data,licenseImage:licenseUrl,idProofImage:idProofUrl
-      })
-      // Show success and redirect
-      toast.success("Verification submitted successfully! Your application is under review.")
+        ...data,
+        licenseImage: licenseUrl,
+        idProofImage: idProofUrl,
+      });
+      toast.success(
+        "Verification submitted successfully! Your application is under review."
+      );
       router.push("/provider/profile");
     } catch (error) {
-      console.error("Error submitting verification:", error)
-      toast.error("There was an error submitting your verification. Please try again.")
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data.message || "Error submiting the verification data"
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-
-  // Validate fields for the current step
+  };
   const validateCurrentStep = async () => {
-    let fieldsToValidate: string[] = []
+    let fieldsToValidate: string[] = [];
     if (currentStep === 1) {
-      fieldsToValidate = ["licenseImage", "idProofImage"]
+      fieldsToValidate = ["licenseImage", "idProofImage"];
     } else if (currentStep === 2) {
-      fieldsToValidate = ["accountHolderName", "ifscCode", "accountNumber"]
+      fieldsToValidate = ["accountHolderName", "ifscCode", "accountNumber"];
     } else if (currentStep === 3) {
-      fieldsToValidate = ["startedYear", "description"]
+      fieldsToValidate = ["startedYear", "description"];
     }
-    const result = await trigger(fieldsToValidate as any)
+    const result = await trigger(fieldsToValidate as any);
     if (!result) {
-      const currentErrors: Record<string, string> = {}
+      const currentErrors: Record<string, string> = {};
       fieldsToValidate.forEach((field) => {
         if (errors[field as keyof VerificationFormData]) {
-          currentErrors[field] = errors[field as keyof VerificationFormData]?.message as string
+          currentErrors[field] = errors[field as keyof VerificationFormData]
+            ?.message as string;
         }
-      })
-      setStepErrors(currentErrors)
-      return false
+      });
+      setStepErrors(currentErrors);
+      return false;
     }
-
-    setStepErrors({})
-    return true
-  }
+    setStepErrors({});
+    return true;
+  };
 
   const nextStep = async () => {
-    const isValid = await validateCurrentStep()
-
+    const isValid = await validateCurrentStep();
     if (isValid && currentStep < 3) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-      // Clear errors when going back
-      setStepErrors({})
+      setCurrentStep(currentStep - 1);
+      setStepErrors({});
     }
-  }
+  };
 
   const renderStepIndicator = () => {
     return (
@@ -187,28 +201,40 @@ export default function VerificationPage() {
                 step === currentStep
                   ? "bg-blue-600 text-white"
                   : step < currentStep
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-500"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-500"
               }`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => step < currentStep && setCurrentStep(step)}
               style={{ cursor: step < currentStep ? "pointer" : "default" }}
             >
-              {step < currentStep ? <CheckCircle className="w-5 h-5" /> : <span>{step}</span>}
+              {step < currentStep ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <span>{step}</span>
+              )}
             </motion.div>
 
-            {step < 3 && <div className={`w-16 h-1 ${step < currentStep ? "bg-green-500" : "bg-gray-200"}`}></div>}
+            {step < 3 && (
+              <div
+                className={`w-16 h-1 ${
+                  step < currentStep ? "bg-green-500" : "bg-gray-200"
+                }`}
+              ></div>
+            )}
           </div>
         ))}
       </div>
-    )
-  }
+    );
+  };
 
   const renderErrorMessage = (fieldName: string) => {
-    const errorMessage = (errors[fieldName as keyof VerificationFormData]?.message as string) || stepErrors[fieldName]
+    const errorMessage =
+      (errors[fieldName as keyof VerificationFormData]?.message as string) ||
+      stepErrors[fieldName];
 
-    if (!errorMessage) return null
+    if (!errorMessage) return null;
 
     return (
       <motion.p
@@ -219,19 +245,26 @@ export default function VerificationPage() {
         <AlertTriangle className="h-4 w-4 mr-1" />
         {errorMessage}
       </motion.p>
-    )
-  }
+    );
+  };
 
   const renderStep1 = () => {
     return (
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
         <motion.div variants={itemVariants} className="space-y-2">
           <Label htmlFor="licenseImage" className="text-base font-medium">
             Business License
           </Label>
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              errors.licenseImage ? "border-red-400 bg-red-50" : "border-gray-300 hover:border-blue-500"
+              errors.licenseImage
+                ? "border-red-400 bg-red-50"
+                : "border-gray-300 hover:border-blue-500"
             }`}
           >
             <input
@@ -252,7 +285,9 @@ export default function VerificationPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById("licenseImage")?.click()}
+                  onClick={() =>
+                    document.getElementById("licenseImage")?.click()
+                  }
                 >
                   Change Image
                 </Button>
@@ -260,8 +295,12 @@ export default function VerificationPage() {
             ) : (
               <label htmlFor="licenseImage" className="cursor-pointer block">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Click to upload or drag and drop</p>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-gray-500">
+                  PNG, JPG, GIF up to 10MB
+                </p>
               </label>
             )}
           </div>
@@ -274,7 +313,9 @@ export default function VerificationPage() {
           </Label>
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              errors.idProofImage ? "border-red-400 bg-red-50" : "border-gray-300 hover:border-blue-500"
+              errors.idProofImage
+                ? "border-red-400 bg-red-50"
+                : "border-gray-300 hover:border-blue-500"
             }`}
           >
             <input
@@ -295,7 +336,9 @@ export default function VerificationPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById("idProofImage")?.click()}
+                  onClick={() =>
+                    document.getElementById("idProofImage")?.click()
+                  }
                 >
                   Change Image
                 </Button>
@@ -303,20 +346,29 @@ export default function VerificationPage() {
             ) : (
               <label htmlFor="idProofImage" className="cursor-pointer block">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Click to upload or drag and drop</p>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-gray-500">
+                  PNG, JPG, GIF up to 10MB
+                </p>
               </label>
             )}
           </div>
           {renderErrorMessage("idProofImage")}
         </motion.div>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderStep2 = () => {
     return (
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
         <motion.div variants={itemVariants} className="space-y-2">
           <Label htmlFor="accountHolderName" className="text-base font-medium">
             Account Holder Name
@@ -325,7 +377,9 @@ export default function VerificationPage() {
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
             <Input
               id="accountHolderName"
-              className={`pl-10 ${errors.accountHolderName ? "border-red-400" : ""}`}
+              className={`pl-10 ${
+                errors.accountHolderName ? "border-red-400" : ""
+              }`}
               placeholder="Enter account holder's full name"
               {...register("accountHolderName")}
             />
@@ -372,7 +426,9 @@ export default function VerificationPage() {
             <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
             <Input
               id="accountNumber"
-              className={`pl-10 ${errors.accountNumber ? "border-red-400" : ""}`}
+              className={`pl-10 ${
+                errors.accountNumber ? "border-red-400" : ""
+              }`}
               placeholder="Enter bank account number"
               {...register("accountNumber")}
             />
@@ -380,12 +436,17 @@ export default function VerificationPage() {
           {renderErrorMessage("accountNumber")}
         </motion.div>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderStep3 = () => {
     return (
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
         <motion.div variants={itemVariants} className="space-y-2">
           <Label htmlFor="startedYear" className="text-base font-medium">
             Business Started Year
@@ -411,7 +472,9 @@ export default function VerificationPage() {
             <FileText className="absolute left-3 top-3 text-gray-500 h-5 w-5" />
             <Textarea
               id="description"
-              className={`pl-10 min-h-[120px] ${errors.description ? "border-red-400" : ""}`}
+              className={`pl-10 min-h-[120px] ${
+                errors.description ? "border-red-400" : ""
+              }`}
               placeholder="Describe your business, services offered, and experience"
               {...register("description")}
             />
@@ -419,18 +482,22 @@ export default function VerificationPage() {
           {renderErrorMessage("description")}
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <motion.div
+          variants={itemVariants}
+          className="bg-blue-50 p-4 rounded-lg border border-blue-200"
+        >
           <div className="flex items-start">
             <AlertCircle className="text-blue-500 h-5 w-5 mt-0.5 mr-2" />
             <p className="text-sm text-blue-700">
-              Your verification details will be reviewed by our team. This process typically takes 1-3 business days.
-              You'll be notified once your account is verified.
+              Your verification details will be reviewed by our team. This
+              process typically takes 1-3 business days. You'll be notified once
+              your account is verified.
             </p>
           </div>
         </motion.div>
       </motion.div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -443,8 +510,12 @@ export default function VerificationPage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900">Account Verification</h1>
-          <p className="text-gray-600 mt-2">Complete the verification process to unlock all features</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Account Verification
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Complete the verification process to unlock all features
+          </p>
         </motion.div>
 
         {renderStepIndicator()}
@@ -457,7 +528,8 @@ export default function VerificationPage() {
               {currentStep === 3 && "Business Information"}
             </CardTitle>
             <CardDescription>
-              {currentStep === 1 && "Upload required documents for verification"}
+              {currentStep === 1 &&
+                "Upload required documents for verification"}
               {currentStep === 2 && "Provide your banking information"}
               {currentStep === 3 && "Tell us more about your business"}
             </CardDescription>
@@ -470,7 +542,11 @@ export default function VerificationPage() {
             </form>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+            <motion.div
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
               <Button
                 type="button"
                 variant="outline"
@@ -483,9 +559,17 @@ export default function VerificationPage() {
               </Button>
             </motion.div>
 
-            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+            <motion.div
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
               {currentStep < 3 ? (
-                <Button type="button" onClick={nextStep} className="bg-blue-600 hover:bg-blue-700">
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   Next
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -538,11 +622,15 @@ export default function VerificationPage() {
           transition={{ delay: 0.5, duration: 0.5 }}
           className="mt-8 p-4 bg-white rounded-lg shadow border border-gray-100"
         >
-          <h3 className="font-medium text-gray-900 mb-2">Why verification is important:</h3>
+          <h3 className="font-medium text-gray-900 mb-2">
+            Why verification is important:
+          </h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-              <span>Builds trust with customers seeking reliable service providers</span>
+              <span>
+                Builds trust with customers seeking reliable service providers
+              </span>
             </li>
             <li className="flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0" />
@@ -550,7 +638,9 @@ export default function VerificationPage() {
             </li>
             <li className="flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-              <span>Access to premium features and promotional opportunities</span>
+              <span>
+                Access to premium features and promotional opportunities
+              </span>
             </li>
             <li className="flex items-start">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0" />
@@ -564,5 +654,5 @@ export default function VerificationPage() {
         <p>© 2025 Car Service Provider. All Rights Reserved.</p>
       </footer>
     </div>
-  )
+  );
 }

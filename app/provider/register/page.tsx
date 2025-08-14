@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import { axiosPrivate } from "@/api/axios";
 import createAuthApi from "@/services/authApi";
 import GoogleSignupButton from "@/components/GoogleSignUpButton";
-import { MapPin, Home, Briefcase, Map } from "lucide-react";
+import { AxiosError } from "axios";
 import dynamic from "next/dynamic";
 import { useJsApiLoader } from "@react-google-maps/api";
 const authApi = createAuthApi(axiosPrivate);
@@ -45,7 +45,6 @@ import {
   Lock,
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signupSchema } from "@/validations/providerSignupValidation";
@@ -53,8 +52,6 @@ import { signupSchema } from "@/validations/providerSignupValidation";
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function ServiceProviderSignupPage() {
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
@@ -189,10 +186,7 @@ export default function ServiceProviderSignupPage() {
   const onSubmit = async (data: SignupFormData): Promise<void> => {
     setIsSubmitting(true);
     setError(null);
-    setEmail(data.email);
-    setPhone(data.phone);
     try {
-      // Remove confirmPassword before sending to API
       const { confirmPassword, ...submissionData } = data;
       const response: unknown = await authApi.providerRegisterTempApi(
         submissionData
@@ -203,16 +197,16 @@ export default function ServiceProviderSignupPage() {
         `/provider/register/otp?email=${data.email}&phone=${data.phone}`
       );
       form.reset();
-    } catch (err: unknown) {
+    } catch (err) {
       setError("An error occurred while registering. Please try again.");
-      toast.error("error submitting form ");
-      console.error("Error submitting form:", err);
+      const error  = err as AxiosError<{message:string}>
+      toast.error(error.response?.data.message || "Registration failed");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle Google signup
+
   const handleGoogleSignup = (): void => {
     const receiveMessage = (
       event: MessageEvent<{ [key: string]: string }>
@@ -248,11 +242,6 @@ export default function ServiceProviderSignupPage() {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
     exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
-  };
-
-  const formVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
   };
 
   const staggerContainer = {

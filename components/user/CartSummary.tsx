@@ -17,16 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { X, ChevronRight, Info, Wallet } from "lucide-react";
+import { X } from "lucide-react";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 const userApi = createUserApi(axiosPrivate);
 
 interface CartSummaryProps {
   cart: IFrontendCart;
-  setCart: (state: IFrontendCart) => void;
+  setCart: (state: IFrontendCart | undefined) => void;
 }
 
 export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
@@ -39,9 +37,6 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
   } | null>(null);
   const [useWallet, setUseWallet] = useState(false);
   const walletBalance = 500;
-  useEffect(() => {
-    console.log("the fornt end cart", cart);
-  }, [cart]);
   const calculateSubtotal = () => {
     if (!cart.services || !Array.isArray(cart.services)) return 0;
 
@@ -103,12 +98,10 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
       }
     }
   };
-
   const cancelRemove = () => {
     setShowRemoveDialog(false);
     setItemToRemove(null);
   };
-
   const toggleWallet = () => {
     setUseWallet(!useWallet);
   };
@@ -146,6 +139,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
           <Button
             variant="ghost"
             className="text-red-500 font-medium hover:text-red-600"
+            onClick={() => setCart(undefined)}
           >
             CHANGE
           </Button>

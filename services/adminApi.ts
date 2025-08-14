@@ -14,7 +14,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Adding brand failed");
+      throw error
     }
   },
   getBrandsApi: async (search: string, page: number, statusFilter: string) => {
@@ -24,7 +24,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Fetching Brand Data Failed", error);
+     throw error
     }
   },
   updateBrandStatusApi: async (brandId: string, newStatus: string) => {
@@ -36,7 +36,9 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
         }
       );
       return response;
-    } catch (error) {}
+    } catch (error) {
+      throw error
+    }
   },
   updateBrandApi: async (id: string, name: string, imageUrl: string) => {
     try {
@@ -48,7 +50,9 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
         }
       );
       return response;
-    } catch (error) {}
+    } catch (error) {
+      throw error
+    }
   },
 
   /// Model management ///
@@ -70,7 +74,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Adding model failed");
+    throw error
     }
   },
 
@@ -88,7 +92,9 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
         }
       );
       return response;
-    } catch (error) {}
+    } catch (error) {
+      throw error
+    }
   },
 
   updateModelApi: async (
@@ -109,7 +115,9 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
         }
       );
       return response;
-    } catch (error) {}
+    } catch (error) {
+      throw error
+    }
   },
 
   /////User management ////
@@ -125,7 +133,6 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("fetching data failed", error);
       throw error;
     }
   },
@@ -136,7 +143,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("Toggling the status failed");
+      throw error
     }
   },
   ///Provider management///

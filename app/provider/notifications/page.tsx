@@ -5,6 +5,7 @@ import { axiosPrivate } from "@/api/axios";
 import createProviderApi from "@/services/providerApi";
 import type { IServiceProvider } from "@/types/provider";
 import { ProviderSidebar } from "@/components/provider/ProviderSidebar";
+import { AxiosError } from "axios";
 import {
   SidebarProvider,
   SidebarInset,
@@ -155,11 +156,6 @@ export default function NotificationsPage() {
   //   }
   // }, []);
   useEffect(() => {
-    console.log("the debounced search term", debouncedSearchTerm);
-    console.log("the current page", currentPage);
-    console.log("the fileter type", filterType);
-  }, [debouncedSearchTerm, currentPage, filterType]);
-  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -167,7 +163,10 @@ export default function NotificationsPage() {
         setProviderData(response.provider);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(
+          err.response?.data.message || "Error fetching profile data"
+        );
         setLoading(false);
       }
     };
@@ -190,6 +189,10 @@ export default function NotificationsPage() {
         setUnreadCount(response.unreadCount);
         setNotificationLoading(false);
       } catch (error) {
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(
+          err.response?.data.message || "Error fetching notification"
+        );
         setNotificationLoading(false);
       }
     };
@@ -214,7 +217,6 @@ export default function NotificationsPage() {
     try {
       setNotificationLoading(true);
       const response = await providerApi.markNotificationAsRead(id);
-      console.log("the response of the mark as response", response);
       setNotifications((prev) =>
         prev.map((notification) =>
           notification._id === id
@@ -233,7 +235,10 @@ export default function NotificationsPage() {
       toast.success("Notification marked as read");
     } catch (error) {
       setNotificationLoading(false);
-      toast.error("notification update failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data.message || "Error marking notification as read"
+      );
     }
   };
 
@@ -241,7 +246,6 @@ export default function NotificationsPage() {
     try {
       setNotificationLoading(true);
       const response = await providerApi.markNotificationAsUnread(id);
-      console.log("the response after mark notification as unread", response);
       setNotifications((prev) =>
         prev.map((notification) =>
           notification._id === id
@@ -254,7 +258,10 @@ export default function NotificationsPage() {
       toast.success("Notification marked as unread");
     } catch (error) {
       setNotificationLoading(false);
-      toast.error("notification update failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data.message || "Error marking notification as read"
+      );
     }
   };
 
@@ -267,12 +274,15 @@ export default function NotificationsPage() {
         setUnreadCount(0);
         setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       } else {
-      toast.error("Marking notification as read failed");
+        toast.error("Marking notification as read failed");
       }
       setNotificationLoading(false);
     } catch (error) {
       setNotificationLoading(false);
-      toast.error("Marking notification as read failed");
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data.message || "Error marking notifcations as read"
+      );
     }
   };
 
@@ -302,7 +312,10 @@ export default function NotificationsPage() {
             toast.success("Notification deleted successfully");
           }
         } catch (error) {
-          toast.error("Deleting notification failed");
+          const err = error as AxiosError<{ message: string }>;
+          toast.error(
+            err.response?.data.message || "Deleting notification failed"
+          );
         } finally {
           setNotificationLoading(false);
           setConfirmDeleteOpen(false);

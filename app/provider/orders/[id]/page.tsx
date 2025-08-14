@@ -17,6 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useParams, useRouter } from "next/navigation";
 import { axiosPrivate } from "@/api/axios";
+import { AxiosError } from "axios";
+import { toast } from "react-toastify";
 import createProviderApi from "@/services/providerApi";
 import type { Order } from "@/types/order";
 import GoogleMapDirections from "@/components/GoogleMapDirections";
@@ -71,35 +73,41 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [clientLocation,setClientLocation] = useState<{lat:number,lng:number}>();
-  const [providerLocation,setProviderLocation] = useState<{lat:number,lng:number}>();
-useEffect(() => {
-  const socket = getSocket();
-  const watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      const newLocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      };
-      setProviderLocation(newLocation);
-      socket.emit("provider:location:update", {
-        id,
-        location: newLocation,
-        clientId:order?.user._id
-      });
-    },
-    (error) => {
-      console.error("Error getting location:", error);
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    }
-  );
+  const [clientLocation, setClientLocation] = useState<{
+    lat: number;
+    lng: number;
+  }>();
+  const [providerLocation, setProviderLocation] = useState<{
+    lat: number;
+    lng: number;
+  }>();
+  useEffect(() => {
+    const socket = getSocket();
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setProviderLocation(newLocation);
+        socket.emit("provider:location:update", {
+          id,
+          location: newLocation,
+          clientId: order?.user._id,
+        });
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
 
-  return () => navigator.geolocation.clearWatch(watchId);
-}, []);
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -112,17 +120,19 @@ useEffect(() => {
         setLoading(true);
         const response = await providerApi.getOrderDetails(id);
         const order = response.order;
-        console.log("the response of the getorder function", response);
         setOrder(order);
-        setClientLocation({lat:order.address.location.coordinates[0],lng:order.address.location.coordinates[1]})
-      } catch (err) {
-        console.error("Failed to fetch order:", err);
+        setClientLocation({
+          lat: order.address.location.coordinates[0],
+          lng: order.address.location.coordinates[1],
+        });
+      } catch (error) {
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(err.response?.data.message);
         setError("Failed to load order details");
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [id]);
 
@@ -360,13 +370,12 @@ useEffect(() => {
                   <span>{formatAddress(order.address)}</span>
                 </div>
               </div>
-            {providerLocation && clientLocation && (
-  <GoogleMapDirections
-    providerLocation={providerLocation}
-    clientLocation={clientLocation}
-  />
-)}
-            
+              {providerLocation && clientLocation && (
+                <GoogleMapDirections
+                  providerLocation={providerLocation}
+                  clientLocation={clientLocation}
+                />
+              )}
             </CardContent>
           </Card>
 

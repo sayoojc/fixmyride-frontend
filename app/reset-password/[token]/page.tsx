@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useRouter, useParams } from "next/navigation"
 import { useState } from "react"
-import axios from "axios"
+import { AxiosError } from "axios"
 import { toast } from "react-toastify"
 import { Loader2 } from "lucide-react"
 import createAuthApi from "@/services/authApi"
@@ -31,18 +30,18 @@ const token = params.token as string;
       setIsLoading(false)
       return
     }
-
     try {
       const response = await authApi.resetPasswordApi(
         token,
         password,
       )
-
       setMessage("Password reset successful! Redirecting to login...")
       toast.success("Password reset successful! Redirecting to login...")
       setTimeout(() => router.push("/"), 3000)
-    } catch (err: any) {
-      setMessage(err.response?.data?.message || "Something went wrong")
+    } catch (err) {
+      
+      const error = err as AxiosError<{message:string}>
+      setMessage(error.response?.data?.message || "Something went wrong")
     } finally {
       setIsLoading(false)
     }

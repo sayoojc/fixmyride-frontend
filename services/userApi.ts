@@ -26,8 +26,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("Fetching Brand Data Failed");
-      throw new Error("Failed to add address");
+      throw error;
     }
   },
   setDefaultAddress: async (addressId: string) => {
@@ -37,8 +36,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("Setting default address failed");
-      throw new Error("Setting default address failed");
+      throw error;
     }
   },
   updateAddressApi: async (addressForm: Address, _id: string) => {
@@ -51,8 +49,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("Editing the address failed");
-      throw new Error("Editing the address failed");
+      throw error;
     }
   },
   deleteAddress: async (addressId: string) => {
@@ -62,8 +59,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      console.error("Deleting address failed");
-      throw new Error("Deleting address failed");
+      throw error;
     }
   },
   /////////Brand API///////
@@ -74,8 +70,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Error while fetching the brand model data");
-      throw new Error("Error while fetching the brand model data");
+      throw error;
     }
   },
   ////////Cart APIs//////////
@@ -144,8 +139,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Fetching the user profile data is failed");
-      throw new Error("Failed fetching the profile");
+      throw error;
     }
   },
 
@@ -160,8 +154,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Updating profile failed");
-      throw new Error("Updating profile failed");
+      throw error;
     }
   },
   changePasswordApi: async (currentPassword: string, newPassword: string) => {
@@ -175,12 +168,17 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      console.error("Changing the password failed");
-      throw new Error("Changing the password failed");
+      throw error;
     }
   },
   //////Vehicle APIs///////
-  addVehicleApi: async (vehicleData: Partial<IVehicle>) => {
+  addVehicleApi: async (vehicleData: {
+    brandId: string;
+    brandName: string;
+    modelId: string;
+    modelName: string;
+    fuelType: string;
+  }) => {
     try {
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles`,
@@ -188,14 +186,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          error.response?.data?.message ||
-            "Axios error while adding the vehicle"
-        );
-      }
-
-      throw new Error("Unknown error while adding the vehicle");
+      throw error;
     }
   },
   getVehiclesApi: async () => {
@@ -208,24 +199,27 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-  deleteVehicleApi: async (vehicleId:string) => {
+  deleteVehicleApi: async (vehicleId: string) => {
     try {
       const response = await axiosPrivate.delete(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles/${vehicleId}`
-      )
+      );
       return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
-  editVehicleApi: async (vehicleId:string,data:EditVehicleFormData) => {
+  editVehicleApi: async (vehicleId: string, data: EditVehicleFormData) => {
     try {
-    const response = await axiosPrivate.patch(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles/${vehicleId}`, {...data});
-    return response.data;
-  } catch (error) {
-    console.error("Error editing vehicle:", error);
-    throw error; 
-  }
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/vehicles/${vehicleId}`,
+        { ...data }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error editing vehicle:", error);
+      throw error;
+    }
   },
   //// service package api///
   getServicePackages: async (
@@ -240,14 +234,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          error.response?.data?.message ||
-            "Axios error while getting the service packages"
-        );
-      }
-
-      throw new Error("Unknown error while getting the service packages");
+      throw error;
     }
   },
   //////payment APIs/////////
@@ -305,14 +292,16 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   //// Order Apis////
-  async getOrderdetails(id:string) {
+  async getOrderdetails(id: string) {
     try {
-      const response = await axiosPrivate.get(`${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/${id}`);
-      return  response.data;
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/${id}`
+      );
+      return response.data;
     } catch (error) {
       throw error;
     }
-  }
+  },
 });
 
 export default createUserApi;

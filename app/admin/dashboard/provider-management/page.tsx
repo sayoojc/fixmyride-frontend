@@ -1,19 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Search, Filter, Loader2 } from "lucide-react";
+import { Search, Filter, Loader2 } from "lucide-react";
 import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-
-
 import { toast } from "react-toastify";
 import {
   UniversalTable,
   TableBadge,
   TableAvatar,
   type TableColumn,
-  type TableAction
+  type TableAction,
 } from "../../../../components/Table";
 import {
   Card,
@@ -58,7 +57,7 @@ const ProviderManagement = () => {
     provider: IServiceProvider;
     action: "list" | "unlist";
   } | null>(null);
-  const router = useRouter()
+  const router = useRouter();
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -75,14 +74,11 @@ const ProviderManagement = () => {
           currentPage,
           statusFilter
         );
-        console.log(
-          "the providers",
-          response.data.providerResponse.sanitizedProviders
-        );
         setProviders(response.data.providerResponse.sanitizedProviders);
         setTotalPages(response.data.providerResponse.totalPage);
       } catch (error) {
-        toast.error("Failed to fetch providers");
+        const err = error as AxiosError<{ message: string }>;
+        toast.error(err.response?.data?.message || "Fetch providers failed!");
       } finally {
         setLoading(false);
       }
@@ -100,35 +96,36 @@ const ProviderManagement = () => {
     },
   };
 
-const actions:TableAction<IServiceProvider>[] = [
-  {
-    label: "Verify",
-    onClick: (provider:IServiceProvider) => {
-      if(!provider.verificationStatus){
-      Swal.fire("Service provider not applied for verification.");
-      return;
-      }
-      router.push(`/admin/dashboard/provider-management/verify-provider/${provider._id}`);
-      
+  const actions: TableAction<IServiceProvider>[] = [
+    {
+      label: "Verify",
+      onClick: (provider: IServiceProvider) => {
+        if (!provider.verificationStatus) {
+          Swal.fire("Service provider not applied for verification.");
+          return;
+        }
+        router.push(
+          `/admin/dashboard/provider-management/verify-provider/${provider._id}`
+        );
+      },
+      variant: "default",
+      shouldShow: (provider: IServiceProvider) =>
+        provider.verificationStatus === "pending",
     },
-    variant: "default",
-    shouldShow: (provider:IServiceProvider) => provider.verificationStatus === "pending",
-  },
-  {
-    label: (item:IServiceProvider) => (item.isListed ? "Unlist" : "List"),
-    onClick: (provider:IServiceProvider) => {
-      setConfirmAction({
-        provider,
-        action: provider.isListed ? "unlist" : "list",
-      });
+    {
+      label: (item: IServiceProvider) => (item.isListed ? "Unlist" : "List"),
+      onClick: (provider: IServiceProvider) => {
+        setConfirmAction({
+          provider,
+          action: provider.isListed ? "unlist" : "list",
+        });
+      },
+      variant: (item: IServiceProvider) =>
+        item.isListed ? ("destructive" as const) : ("outline" as const), // ✅ fix with `as const`
+      disabled: (provider: IServiceProvider) => actionLoading === provider._id,
+      shouldShow: () => true,
     },
-    variant: (item:IServiceProvider) => (item.isListed ? "destructive" as const : "outline" as const), // ✅ fix with `as const`
-    disabled: (provider:IServiceProvider) => actionLoading === provider._id,
-    shouldShow: () => true,
-  },
-];
-
-
+  ];
 
   const columns: TableColumn<IServiceProvider>[] = [
     {
@@ -147,34 +144,33 @@ const actions:TableAction<IServiceProvider>[] = [
       key: "name",
       header: "Business Name",
     },
-{
-  key: "verificationStatus",
-  header: "Verification",
-  render: (_, provider) => {
-    const status = provider.verificationStatus;
+    {
+      key: "verificationStatus",
+      header: "Verification",
+      render: (_, provider) => {
+        const status = provider.verificationStatus;
 
-    const label =
-      status === "approved"
-        ? "Verified"
-        : status === "pending"
-        ? "Pending"
-        : status === "rejected"
-        ? "Rejected"
-        : "Not Applied";
+        const label =
+          status === "approved"
+            ? "Verified"
+            : status === "pending"
+            ? "Pending"
+            : status === "rejected"
+            ? "Rejected"
+            : "Not Applied";
 
-    const variant =
-      status === "approved"
-        ? "default"
-        : status === "rejected"
-        ? "destructive"
-        : status === "pending"
-        ? "secondary"
-        : "outline";
+        const variant =
+          status === "approved"
+            ? "default"
+            : status === "rejected"
+            ? "destructive"
+            : status === "pending"
+            ? "secondary"
+            : "outline";
 
-    return <TableBadge variant={variant}>{label}</TableBadge>;
-  },
-}
-
+        return <TableBadge variant={variant}>{label}</TableBadge>;
+      },
+    },
   ];
   const handleProviderStatusChange = async (
     provider: IServiceProvider,
@@ -191,7 +187,10 @@ const actions:TableAction<IServiceProvider>[] = [
       );
       toast.success(`Provider ${action}ed successfully`);
     } catch (error) {
-      toast.error(`Failed to ${action} provider`);
+      const err = error as AxiosError<{ message: string }>;
+      toast.error(
+        err.response?.data?.message || "Provider status update failed!"
+      );
     } finally {
       setActionLoading(null);
       setConfirmAction(null);
