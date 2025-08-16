@@ -124,8 +124,8 @@ export const Header = () => {
                     </a>
                   </li>
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="/user/orders"
                       className="flex items-center px-4 py-2 text-white hover:bg-red-900"
                     >
                       <svg
@@ -143,7 +143,7 @@ export const Header = () => {
                         ></path>
                       </svg>
                       Order History
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <a

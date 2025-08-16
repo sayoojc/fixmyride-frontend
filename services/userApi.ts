@@ -302,6 +302,20 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+async fetchOrderHistory({ page, limit }: { page: number; limit: number }) {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/history`,
+      {
+        params: { page, limit },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 });
 
 export default createUserApi;
