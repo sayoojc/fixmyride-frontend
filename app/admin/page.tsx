@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { AxiosError } from "axios";
-import { X, Lock, Mail } from 'lucide-react';
 import AdminHeader from '@/components/admin/Header';
 import MainContent from '@/components/admin/MainContent';
 import Footer from '../../components/admin/Footer';
@@ -26,8 +25,7 @@ export default function AdminHomePage() {
       router.push("/admin/dashboard");
     } catch (error) {
       const err = error as AxiosError<{ message?: string }>;
-      console.error("Login failed:", err.response?.data?.message || "Something went wrong");
-      toast.error('Login failed');
+      toast.error('Login failed: ' + (err.response?.data?.message || "Something went wrong"));
     }
   };
 
