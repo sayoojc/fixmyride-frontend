@@ -17,7 +17,6 @@ import {
   MoreVertical,
   Eye,
   Calendar,
-  DollarSign,
   User,
   Car,
   MapPin,
@@ -27,6 +26,7 @@ import {
 } from "lucide-react"
 import type { Order } from "@/types/order"
 import { toast } from "react-toastify"
+import { FaRupeeSign } from "react-icons/fa"
 
 const adminApi = createAdminApi(axiosPrivate)
 
@@ -75,12 +75,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount)
-}
+
 
 export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(false)
@@ -99,23 +94,6 @@ export default function AdminOrdersPage() {
     startDate: "",
     endDate: "",
   })
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         setLoading(true)
-//         const response = await adminApi.getProfileData()
-//         setAdminData(response.admin)
-//         setLoading(false)
-//       } catch (error) {
-//         const err = error as AxiosError<{ message: string }>
-//         toast.error(err.response?.data.message || "Error fetching profile data")
-//         setLoading(false)
-//       }
-//     }
-//     fetchData()
-//   }, [])
-
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -129,9 +107,10 @@ export default function AdminOrdersPage() {
           startDate: dateRange.startDate,
           endDate: dateRange.endDate,
         })
+        console.log("Fetched orders:", response);
         setOrders(response.orders)
         setTotalPages(response.totalPages)
-        setTotalOrders(response.totalOrders)
+        setTotalOrders(response.totalCount)
         setOrdersLoading(false)
         setLoading(false);
       } catch (error) {
@@ -173,7 +152,7 @@ export default function AdminOrdersPage() {
 
   const viewOrderDetails = (orderId: string) => {
     // Navigate to order details page
-    window.location.href = `/admin/orders/${orderId}`
+    window.location.href = `/admin/dashboard/booking-history/${orderId}`
   }
 
   if (loading) {
@@ -376,14 +355,14 @@ export default function AdminOrdersPage() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4 text-gray-400" />
+                                    <FaRupeeSign className="h-4 w-4 text-gray-400" />
                                     <span className="font-medium text-emerald-600">
-                                      {formatCurrency(order.finalAmount)}
+                                      {order.totalAmount}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-gray-400" />
-                                    {/* <span>{formatDate(order.createdAt)}</span> */}
+                                    <span>{formatDate(order.createdAt)}</span>
                                   </div>
                                   {order.serviceDate && (
                                     <div className="flex items-center gap-2">
@@ -406,7 +385,7 @@ export default function AdminOrdersPage() {
                                   <div className="flex flex-wrap gap-1">
                                     {order.services.slice(0, 2).map((service) => (
                                       <Badge key={service._id} variant="outline" className="text-xs border-gray-300">
-                                        {service.title}
+                                        {service.fuelType}
                                       </Badge>
                                     ))}
                                     {order.services.length > 2 && (

@@ -299,6 +299,28 @@ getAllOrders: async ({
     throw error;
   }
 },
+getOrderById: async (orderId: string) => {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/orders/${orderId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching order by ID:", error);
+    throw error;
+  }
+},
+getNotifications: async (search: string, page: number, limit: number,statusFilter:string) => {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications?search=${search}&page=${page}&limit=${limit}&statusFilter=${statusFilter}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    throw error;
+  }
+}
 
 });
 

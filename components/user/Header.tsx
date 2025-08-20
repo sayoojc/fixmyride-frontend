@@ -1,17 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import createAuthApi from "@/services/authApi";
+import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
+const adminApi = createAdminApi(axiosPrivate);
 const authApi = createAuthApi(axiosPrivate);
 
 export const Header = () => {
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [location,setLocation] = useState("");
+
+  useEffect(() =>{
+  
+  }, []);
   const handleLogout = async () => {
     try {
       await authApi.logoutApi();

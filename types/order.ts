@@ -45,6 +45,8 @@ export type Order = {
       coordinates: [number, number];
     };
   };
+    createdAt: string;
+  updatedAt: string;
 };
 
 
