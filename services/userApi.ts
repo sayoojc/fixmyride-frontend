@@ -62,6 +62,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+
   /////////Brand API///////
   getBrandsApi: async () => {
     try {
@@ -308,6 +309,19 @@ async fetchOrderHistory({ page, limit }: { page: number; limit: number }) {
       `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/history`,
       {
         params: { page, limit },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+},
+async getProvidersBySearch(query: string, location: string) {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/providers`,
+      {
+        params: { query, location },
       }
     );
     return response.data;

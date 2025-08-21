@@ -1,67 +1,71 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import createAuthApi from "@/services/authApi";
-import createAdminApi from "@/services/adminApi";
-import { axiosPrivate } from "@/api/axios";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
-
-const adminApi = createAdminApi(axiosPrivate);
-const authApi = createAuthApi(axiosPrivate);
-
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { LocationDropdown } from "./location-dropdown"
+import { ServiceSearch } from "./ServiceSearch"
+import { axiosPrivate } from "@/api/axios"
+import createAuthApi from "@/services/authApi"
+import createUserApi from "@/services/userApi"
+const userApi = createUserApi(axiosPrivate)
+const authApi = createAuthApi(axiosPrivate)
+import { IServiceProvider } from "@/types/provider"
 export const Header = () => {
-  const router = useRouter();
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [location,setLocation] = useState("");
+  const router = useRouter()
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState("Thiruvananthapuram");
+  const [searchResults, setSearchResults] = useState<IServiceProvider[]>([])
 
-  useEffect(() =>{
-  
-  }, []);
+  useEffect(() => {
+    const savedLocation = localStorage.getItem("selectedLocation")
+    if (savedLocation) {
+      setSelectedLocation(savedLocation)
+    } else {
+      // Auto-detect location on first visit
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // This would normally call your location detection logic
+            // For now, keeping default location
+          },
+          (error) => {
+            console.log("Location detection failed, using default")
+          },
+        )
+      }
+    }
+  }, [])
+
+  const handleLocationChange = (location: string) => {
+    setSelectedLocation(location)
+    localStorage.setItem("selectedLocation", location)
+  }
+  const handleSearch = async(query: string, location: string) => {
+    console.log("Search query:", query, "Location:", location)
+     const  response = await userApi.getProvidersBySearch(query, location);
+     console.log("Search results:", response.providers)
+      setSearchResults(response.providers)
+  }
   const handleLogout = async () => {
     try {
       await authApi.logoutApi();
-      router.push("/");
-      toast.success("loggedout successfully");
+      router.push("/")
+      alert("Logged out successfully")
     } catch (error) {
-      console.error("logout failed", error);
+      console.error("logout failed", error)
     }
-  };
+  }
+
   return (
     <header className="bg-black text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <div className="text-2xl font-bold">FixMyRide</div>
-          <div className="relative">
-            <span className="ml-2">Trivandrum</span>
-            <span className="ml-1">▼</span>
-          </div>
+          <LocationDropdown selectedLocation={selectedLocation} onLocationChange={handleLocationChange} />
         </div>
 
-        <div className="relative w-1/3">
-          <input
-            type="text"
-            placeholder="Example: Periodic Services"
-            className="w-full py-2 px-4 rounded-lg text-gray-700"
-          />
-          <button className="absolute right-2 top-2 text-gray-500">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              ></path>
-            </svg>
-          </button>
-        </div>
+        <ServiceSearch selectedLocation={selectedLocation} onSearch={handleSearch} searchResults={searchResults}/>
 
         <div className="flex items-center space-x-6">
           <a href="#" className="hover:text-gray-300">
@@ -73,11 +77,7 @@ export const Header = () => {
             </a>
           </div>
           <div className="relative">
-            <a
-              href="#"
-              className="bg-red-600 text-white px-4 py-2 rounded"
-              onMouseEnter={() => setShowDropdown(true)}
-            >
+            <a href="#" className="bg-red-600 text-white px-4 py-2 rounded" onMouseEnter={() => setShowDropdown(true)}>
               Customer
             </a>
             {showDropdown && (
@@ -109,10 +109,7 @@ export const Header = () => {
                   </li>
 
                   <li>
-                    <a
-                      href="#"
-                      className="flex items-center px-4 py-2 text-white hover:bg-red-900"
-                    >
+                    <a href="#" className="flex items-center px-4 py-2 text-white hover:bg-red-900">
                       <svg
                         className="w-5 h-5 mr-2 text-red-500"
                         fill="none"
@@ -131,10 +128,7 @@ export const Header = () => {
                     </a>
                   </li>
                   <li>
-                    <Link
-                      href="/user/orders"
-                      className="flex items-center px-4 py-2 text-white hover:bg-red-900"
-                    >
+                    <Link href="/user/orders" className="flex items-center px-4 py-2 text-white hover:bg-red-900">
                       <svg
                         className="w-5 h-5 mr-2 text-red-500"
                         fill="none"
@@ -153,10 +147,7 @@ export const Header = () => {
                     </Link>
                   </li>
                   <li>
-                    <a
-                      href="#"
-                      className="flex items-center px-4 py-2 text-white hover:bg-red-900"
-                    >
+                    <a href="#" className="flex items-center px-4 py-2 text-white hover:bg-red-900">
                       <svg
                         className="w-5 h-5 mr-2 text-red-500"
                         fill="none"
@@ -176,10 +167,9 @@ export const Header = () => {
                   </li>
                   <li>
                     <a
-                      href="#"
                       onClick={(e) => {
-                        e.preventDefault();
-                        handleLogout();
+                        e.preventDefault()
+                        handleLogout()
                       }}
                       className="flex items-center px-4 py-2 text-white hover:bg-red-900"
                     >
@@ -207,5 +197,5 @@ export const Header = () => {
         </div>
       </div>
     </header>
-  );
-};
+  )
+}
