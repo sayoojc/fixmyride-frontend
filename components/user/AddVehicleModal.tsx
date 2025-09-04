@@ -633,6 +633,7 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTitle>Add Vehicle</DialogTitle>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <div className="flex-1 overflow-hidden">
           {renderStepContent()}

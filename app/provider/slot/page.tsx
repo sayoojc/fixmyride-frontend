@@ -1,234 +1,229 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { axiosPrivate } from "@/api/axios";
-import { AxiosError } from "axios";
-import createProviderApi from "@/services/providerApi";
-import type { IServiceProvider } from "@/types/provider";
-import { ProviderSidebar } from "@/components/provider/ProviderSidebar";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import {
   Calendar,
-  Clock,
   Wrench,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
   Save,
   RotateCcw,
   Zap,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Edit3,
 } from "lucide-react";
-import { toast } from "react-toastify";
-import { IFrontendSlot, WeeklySlot } from "@/types/slot";
-import { TIME_SLOTS } from "@/constants/timeSlots";
+import { Label } from "@/components/ui/label";
+import { SERVICE_TYPES } from "../../../constants/serviceTypes";
+import { DaySchedule } from "@/types/serviceTypes";
+import { HourStatus } from "@/types/serviceTypes";
+import {toast} from "react-toastify" 
+import createProviderApi from "@/services/providerApi";
+import { axiosPrivate } from "@/api/axios";
+import { set } from "date-fns";
 const providerApi = createProviderApi(axiosPrivate);
+interface ServiceAvailability {
+  [serviceId: string]: boolean;
+}
 
-const mapBackendSlotsToWeekly = (
-  backendSlots: IFrontendSlot[]
-): WeeklySlot[] => {
-  const week: WeeklySlot[] = [];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-
-    const dateString = date.toISOString().split("T")[0];
-    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-    const slots: { [slotId: string]: any } = {};
-    TIME_SLOTS.forEach((slot) => {
-      slots[slot.id] = {
-        status: "inactive",
-        bookingDetails: undefined,
-      };
-    });
-    const backendDay = backendSlots.find(
-      (s) => new Date(s.date).toISOString().split("T")[0] === dateString
-    );
-
-    if (backendDay) {
-      backendDay.timeSlots.forEach((ts) => {
-        const slotDef = TIME_SLOTS.find(
-          (t) => t.startTime === ts.startTime && t.endTime === ts.endTime
-        );
-        if (slotDef) {
-          slots[slotDef.id] = {
-            status: ts.status,
-            bookingDetails: ts.bookedBy,
-          };
-        }
-      });
-    }
-
-    week.push({
-      date: dateString,
-      dayName,
-      slots,
-    });
-  }
-
-  return week;
-};
-
-export default function VehicleServiceSlotManagement() {
-  const [originalSlots, setOriginalSlots] = useState<IFrontendSlot[]>([]);
+export default function SlotManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [providerData, setProviderData] = useState<IServiceProvider | null>(
-    null
-  );
-  const [updatedSlots, setUpdatedSlots] = useState<WeeklySlot[]>([]);
-  const [weeklySlots, setWeeklySlots] = useState<WeeklySlot[]>([]);
-  const [rsaEnabled, setRsaEnabled] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    return new Date();
+  });
+  const [weekSchedules, setWeekSchedules] = useState<DaySchedule[]>([]);
+  const [changedSchedules, setChangedSchedules] = useState<DaySchedule[]>([]);
+  const [serviceAvailability, setServiceAvailability] =
+    useState<ServiceAvailability>({});
   const [stats, setStats] = useState({
     totalAvailable: 0,
-    totalBooked: 0,
-    totalSlots: TIME_SLOTS.length * 7,
+    totalHours: 168,
   });
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await providerApi.getProfileData();
-        const slotResponse = await providerApi.getSlots();
-        setProviderData(response.provider);
-        setOriginalSlots(slotResponse.slots ?? []);
-        const mergedWeeklySlots = mapBackendSlotsToWeekly(
-          slotResponse.slots ?? []
-        );
-        setWeeklySlots(mergedWeeklySlots);
-        calculateStats(mergedWeeklySlots);
-        setLoading(false);
-        setLoading(false);
-      } catch (error) {
-        const err = error as AxiosError<{ message: string }>;
-        toast.error(
-          err.response?.data.message || "Failed to fetch notification data"
-        );
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const calculateStats = (slots: WeeklySlot[]) => {
-    let available = 0;
-    let booked = 0;
-
-    slots.forEach((day) => {
-      Object.values(day.slots).forEach((slot) => {
-        if (slot.status === "booked") booked++;
-        else if (slot.status === "active") available++;
-      });
-    });
-
-    setStats({
-      totalAvailable: available,
-      totalBooked: booked,
-      totalSlots: TIME_SLOTS.length * 7,
-    });
-  };
-  const toggleSlotAvailability = (
-    dateIndex: number,
-    slotId: string,
-    date: string,
-    dayName: string
-  ) => {
-    const updatedSlots = [...weeklySlots];
-    const slot = updatedSlots[dateIndex].slots[slotId];
-    if (!slot) return;
-    if (slot.status === "booked") {
-      toast.error("Cannot modify booked slots");
-      return;
-    }
-    const newStatus = slot.status === "active" ? "inactive" : "active";
-    slot.status = newStatus;
-    setUpdatedSlots((prev) => {
-      const dateExists = prev.some((weeklySlot) => weeklySlot.date === date);
-      if (dateExists) {
-        return prev.map((weeklySlot) =>
-          weeklySlot.date === date
-            ? {
-                ...weeklySlot,
-                slots: { ...updatedSlots[dateIndex].slots },
-              }
-            : weeklySlot
-        );
-      } else {
-        return [
-          ...prev,
-          {
-            date,
+  const initializeWeekSchedules = useCallback(
+    (weekStart: Date, existingSchedules: DaySchedule[]) => {
+      const schedules: DaySchedule[] = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateString = date.toISOString().split("T")[0];
+        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+        const existing = existingSchedules.find((s) => s.date === dateString);
+        if (existing) {
+          const hours: { [hour: number]: HourStatus } = {};
+          for (let hour = 0; hour < 24; hour++) {
+            hours[hour] = existing.hours?.[hour] ?? "unavailable";
+          }
+          schedules.push({
+            date: dateString,
             dayName,
-            slots: { ...updatedSlots[dateIndex].slots },
-          },
-        ];
+            employees: existing.employees ?? 1,
+            hours,
+          });
+        } else {
+          const hours: { [hour: number]: HourStatus } = {};
+          for (let hour = 0; hour < 24; hour++) {
+            hours[hour] = "unavailable";
+          }
+          schedules.push({
+            date: dateString,
+            dayName,
+            employees: 1,
+            hours,
+          });
+        }
       }
-    });
 
-    setWeeklySlots(updatedSlots);
-    setHasChanges(true);
-    calculateStats(updatedSlots);
-  };
-
-  const toggleRSA = () => {
-    setRsaEnabled(!rsaEnabled);
-    setHasChanges(true);
-  };
-
-  const saveChanges = async () => {
+      setWeekSchedules(schedules);
+    },
+    []
+  );
+ useEffect(() => {
+  console.log("Changed schedules:", changedSchedules);
+ },[changedSchedules ]);
+  const handleUpdateSchedule = async () => {
     try {
       setSaving(true);
-      const response = await providerApi.updateSlots(updatedSlots);
+      const response = await providerApi.updateSlots(changedSchedules);
+      console.log('the handle update schedule response ', response);
+     setWeekSchedules((prev) => {
+        return prev.map((day) => {
+          const updated = changedSchedules.find((d) => d.date === day.date);
+          return updated ? updated : day;
+        });
+     });
+      toast.success("Schedule updated successfully");
+      setChangedSchedules([]);
       setHasChanges(false);
-      setSaving(false);
-      toast.success("Slot availability updated successfully!");
+      console.log("Schedule updated successfully!");
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
-      toast.error(err.response?.data.message || "updating slots failed");
+      console.error("Failed to update schedule", error);
+    } finally {
       setSaving(false);
     }
   };
 
-  const resetChanges = () => {
-    const initialWeeklySlots = mapBackendSlotsToWeekly(originalSlots);
-    setWeeklySlots(initialWeeklySlots);
-    setRsaEnabled(false);
-    setHasChanges(false);
-    calculateStats(initialWeeklySlots);
-    toast.info("Changes reset");
+useEffect(() => {
+  const fetchWeekSchedules = async () => {
+    setLoading(true);
+    try {
+      const response = await providerApi.getSlots();
+      const normalizedSlots = response.slots.map((slot: any) => ({
+        ...slot,
+        date: new Date(slot.date).toISOString().split("T")[0],
+      }));
+      console.log("Fetched slots:", normalizedSlots);
+      initializeWeekSchedules(currentWeekStart, normalizedSlots);
+    } catch (error) {
+      console.error("Failed to fetch week schedules:", error);
+    }
+    setLoading(false);
   };
+  fetchWeekSchedules();
+}, []);
 
-  const getSlotStatusColor = (slot: any) => {
-    if (slot.status === "booked")
-      return "bg-red-100 border-red-300 text-red-800";
-    if (slot.status === "active")
-      return "bg-green-100 border-green-300 text-green-800";
-    return "bg-gray-100 border-gray-300 text-gray-600";
-  };
+  useEffect(() => {
+    const initializeData = () => {
+      setLoading(true);
+      const initialServiceAvailability: ServiceAvailability = {};
+      SERVICE_TYPES.forEach((service) => {
+        initialServiceAvailability[service.id] = false;
+      });
+      setServiceAvailability(initialServiceAvailability);
+      setLoading(false);
+    };
 
-  const getSlotIcon = (slot: any) => {
-    if (slot.status === "booked") return XCircle;
-    if (slot.status === "active") return CheckCircle;
-    return Clock;
+    initializeData();
+  }, [currentWeekStart, initializeWeekSchedules]);
+
+  const calculateStats = useCallback((schedules: DaySchedule[]) => {
+    let available = 0;
+
+    schedules.forEach((schedule) => {
+      Object.values(schedule.hours).forEach((status) => {
+        if (status === "available") available++;
+      });
+    });
+    setStats({
+      totalAvailable: available,
+      totalHours: 168,
+    });
+  }, []);
+
+  useEffect(() => {
+    calculateStats(weekSchedules);
+  }, [weekSchedules, calculateStats]);
+
+const toggleHourStatus = (dayIndex: number, hour: number) => {
+  setWeekSchedules((prev) => {
+    const updated = [...prev];
+    const day = { ...updated[dayIndex] };
+    const hours = { ...day.hours };
+
+    const currentStatus = hours[hour];
+    const newStatus: HourStatus =
+      currentStatus === "unavailable" ? "available" : "unavailable";
+
+    hours[hour] = newStatus;
+    day.hours = hours;
+    updated[dayIndex] = day;
+
+    setChangedSchedules((prevChanged) => {
+      const exists = prevChanged.find((d) => d.date === day.date);
+      if (exists) {
+        return prevChanged.map((d) => (d.date === day.date ? day : d));
+      } else {
+        return [...prevChanged, day];
+      }
+    });
+
+    return updated;
+  });
+
+  setHasChanges(true);
+};
+
+
+  useEffect(() => {
+    console.log("Week schedules updated:", weekSchedules);
+  }, [weekSchedules]);
+
+ const updateEmployeeCount = (dayIndex: number, count: number) => {
+  setWeekSchedules((prev) => {
+    const updated = [...prev];
+    const day = { ...updated[dayIndex] };
+    day.employees = Math.max(1, count);
+    updated[dayIndex] = day;
+    setChangedSchedules((prevChanged) => {
+      const exists = prevChanged.find((d) => d.date === day.date);
+      if (exists) {
+        return prevChanged.map((d) => (d.date === day.date ? day : d));
+      } else {
+        return [...prevChanged, day];
+      }
+    });
+
+    return updated;
+  });
+
+  setHasChanges(true);
+};
+
+
+  const navigateWeek = (direction: "prev" | "next") => {
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(
+      currentWeekStart.getDate() + (direction === "next" ? 7 : -7)
+    );
+    setCurrentWeekStart(newWeekStart);
+    initializeWeekSchedules(newWeekStart, weekSchedules);
   };
 
   if (loading) {
@@ -245,293 +240,354 @@ export default function VehicleServiceSlotManagement() {
   }
 
   return (
-    <SidebarProvider>
-      <ProviderSidebar providerData={providerData} />
-      <SidebarInset>
-        <div className="min-h-screen bg-slate-50">
-          {/* Header with breadcrumb */}
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/provider">Provider</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Slot Management</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </header>
+    <div className="min-h-screen bg-slate-50">
+      <main className="flex flex-1 flex-col gap-4 p-4 max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+              <Calendar className="h-8 w-8" />
+             Slot Management
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Manage your availability and service offerings with hourly
+              precision
+            </p>
+          </div>
 
-          <main className="flex flex-1 flex-col gap-4 p-4">
-            {/* Page Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col md:flex-row md:items-center md:justify-between"
-            >
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                  <Wrench className="h-8 w-8" />
-                  Vehicle Service Slots
-                </h1>
-                <p className="text-slate-500 mt-1">
-                  Manage your weekly availability for vehicle services
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0 flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    variant="default"
-                    className="bg-green-100 text-green-800"
-                  >
-                    Available: {stats.totalAvailable}
-                  </Badge>
-                  <Badge
-                    variant="destructive"
-                    className="bg-red-100 text-red-800"
-                  >
-                    Booked: {stats.totalBooked}
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="bg-gray-100 text-gray-800"
-                  >
-                    Total: {stats.totalSlots}
-                  </Badge>
-                </div>
-              </div>
-            </motion.div>
+          {/* <div className="flex items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={realTimeEnabled}
+                onCheckedChange={setRealTimeEnabled}
+              />
+              <Label className="text-sm flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                Real-time
+              </Label>
+            </div>
+          </div> */}
+        </div>
 
-            {/* Emergency RSA Toggle */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Card
-                className={`border-2 ${
-                  rsaEnabled
-                    ? "border-orange-300 bg-orange-50"
-                    : "border-gray-200"
-                }`}
+        {/* Service Types Selection */}
+        {/* <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              Available Services
+              <Badge variant="outline" className="ml-2">
+                {Object.values(serviceAvailability).filter(Boolean).length}{" "}
+                active
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+              {SERVICE_TYPES.map((service) => (
+                <Button
+                  key={service.id}
+                  variant={
+                    serviceAvailability[service.id] ? "default" : "outline"
+                  }
+                  className={`w-full h-20 flex flex-col items-center gap-1 ${
+                    serviceAvailability[service.id] ? service.color : ""
+                  }`}
+                  onClick={() =>
+                    setServiceAvailability((prev) => ({
+                      ...prev,
+                      [service.id]: !prev[service.id],
+                    }))
+                  }
+                >
+                  <span className="text-lg">{service.icon}</span>
+                  <span className="text-xs font-medium text-center">
+                    {service.name}
+                  </span>
+                  <span className="text-xs opacity-75">
+                    {service.duration}min
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>    */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium">Available Hours</span>
+              </div>
+              <p className="text-2xl font-bold text-green-600 mt-1">
+                {stats.totalAvailable}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                <span className="text-sm font-medium">Unavailable Hours</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-600 mt-1">
+                {stats.totalHours - stats.totalAvailable}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Weekly Schedule
+            </CardTitle>
+            {/* <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateWeek("prev")}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-full ${
-                          rsaEnabled
-                            ? "bg-orange-100 text-orange-600"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        <AlertTriangle className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
-                          Emergency Roadside Assistance (RSA)
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          {rsaEnabled
-                            ? "You are currently available for emergency services"
-                            : "Enable to accept emergency roadside assistance calls"}
-                        </p>
-                      </div>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium px-3">
+                {currentWeekStart.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                -{" "}
+                {new Date(
+                  currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000
+                ).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateWeek("next")}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div> */}
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {weekSchedules.map((schedule, dayIndex) => (
+                <div
+                  key={schedule.date}
+                  className="border rounded-lg p-4 bg-white"
+                >
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                    <div>
+                      <h3 className="font-bold text-lg">{schedule.dayName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(schedule.date).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {rsaEnabled && (
-                        <Zap className="h-5 w-5 text-orange-500" />
-                      )}
-                      <Switch
-                        checked={rsaEnabled}
-                        onCheckedChange={toggleRSA}
-                        className="data-[state=checked]:bg-orange-500"
-                      />
+
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm font-medium">Employees:</span>
+                        {editingDay === dayIndex ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={schedule.employees}
+                              onChange={(e) =>
+                                updateEmployeeCount(
+                                  dayIndex,
+                                  Number.parseInt(e.target.value) || 1
+                                )
+                              }
+                              className="w-16 h-8 text-sm text-center"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-sm bg-transparent"
+                              onClick={() => setEditingDay(null)}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold">
+                              {schedule.employees}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => setEditingDay(dayIndex)}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span className="font-medium">
+                            {
+                              Object.values(schedule.hours).filter(
+                                (h) => h === "available"
+                              ).length
+                            }
+                            h Available
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                          <span className="font-medium">
+                            {
+                              Object.values(schedule.hours).filter(
+                                (h) => h === "unavailable"
+                              ).length
+                            }
+                            h Unavailable
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
 
-            {/* Weekly Slot Grid */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Weekly Schedule
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[800px]">
-                      {/* Header Row */}
-                      <div className="grid grid-cols-8 gap-2 mb-4">
-                        <div className="font-semibold text-slate-700 p-2">
-                          Time Slots
-                        </div>
-                        {weeklySlots.map((day, index) => (
-                          <div key={index} className="text-center">
-                            <div className="font-semibold text-slate-900">
-                              {day.dayName}
-                            </div>
-                            <div className="text-sm text-slate-600">
-                              {new Date(day.date).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </div>
+                  <div className="flex flex-col">
+                    {/* Time labels */}
+                    <div className="flex mb-2">
+                      <div className="w-12"></div>
+                      <div className="flex-1 flex">
+                        {Array.from({ length: 24 }, (_, hour) => (
+                          <div
+                            key={hour}
+                            className="flex-1 text-center text-xs text-gray-600 font-mono"
+                          >
+                            {hour.toString().padStart(2, "0")}
                           </div>
                         ))}
                       </div>
+                    </div>
 
-                      {/* Time Slot Rows */}
-                      {TIME_SLOTS.map((timeSlot) => (
-                        <div
-                          key={timeSlot.id}
-                          className="grid grid-cols-8 gap-2 mb-2"
-                        >
-                          <div className="flex items-center p-2 font-medium text-slate-700 bg-slate-50 rounded">
-                            <Clock className="h-4 w-4 mr-2" />
-                            {timeSlot.displayTime}
-                          </div>
-                          {weeklySlots.map((day, dayIndex) => {
-                            const slot = day.slots[timeSlot.id];
-                            const IconComponent = getSlotIcon(slot);
+                    {/* Horizontal timeline bar */}
+                    <div className="flex items-center">
+                      <div className="w-12 text-xs text-gray-600 font-medium">
+                        Hours:
+                      </div>
+                      <div className="flex-1 flex h-12 border-2 border-gray-300 rounded-lg overflow-hidden">
+                        {Array.from({ length: 24 }, (_, hour) => {
+                          const status = schedule.hours[hour];
 
-                            return (
-                              <motion.div
-                                key={`${dayIndex}-${timeSlot.id}`}
-                                whileHover={{
-                                  scale: slot.status === "booked" ? 1 : 1.02,
-                                }}
-                                whileTap={{
-                                  scale: slot.status === "booked" ? 1 : 0.98,
-                                }}
-                              >
-                                <Button
-                                  variant="outline"
-                                  className={`w-full h-16 p-2 border-2 transition-all ${getSlotStatusColor(
-                                    slot
-                                  )} ${
-                                    slot.status === "booked"
-                                      ? "cursor-not-allowed opacity-75"
-                                      : "cursor-pointer hover:shadow-md"
-                                  }`}
-                                  onClick={() =>
-                                    !(slot.status === "booked") &&
-                                    toggleSlotAvailability(
-                                      dayIndex,
-                                      timeSlot.id,
-                                      day.date,
-                                      day.dayName
-                                    )
-                                  }
-                                  disabled={slot.status === "booked"}
-                                >
-                                  <div className="flex flex-col items-center gap-1">
-                                    <IconComponent className="h-4 w-4" />
-                                    <span className="text-xs font-medium">
-                                      {slot.status === "booked"
-                                        ? "Booked"
-                                        : slot.status === "active"
-                                        ? "Available"
-                                        : "Unavailable"}
-                                    </span>
-                                  </div>
-                                </Button>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      ))}
+                          return (
+                            <div
+                              key={hour}
+                              className={`
+                                flex-1 cursor-pointer transition-all relative group border-r border-gray-300 last:border-r-0
+                                ${
+                                  status === "available"
+                                    ? "bg-green-400 hover:bg-green-500"
+                                    : ""
+                                }
+                                ${
+                                  status === "unavailable"
+                                    ? "bg-gray-400 hover:bg-gray-500"
+                                    : ""
+                                }
+                                flex items-center justify-center
+                              `}
+                              onClick={() => toggleHourStatus(dayIndex, hour)}
+                              title={`${hour
+                                .toString()
+                                .padStart(2, "0")}:00 - ${status}`}
+                            >
+                              <div className="text-white text-xs font-bold">
+                                {status === "available" && "✓"}
+                                {status === "unavailable" && "✕"}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Legend */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-slate-900 mb-3">Legend</h3>
+            <div className="flex flex-wrap gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-400 rounded"></div>
+                <span className="text-sm text-slate-700">
+                  Available for booking
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                <span className="text-sm text-slate-700">Unavailable</span>
+              </div>
+              <div className="text-sm text-slate-500">
+                Click any hour block to toggle between available and unavailable
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        {hasChanges && (
+          <div className="flex justify-end gap-3 sticky bottom-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                initializeWeekSchedules(currentWeekStart, weekSchedules);
+                const initialServiceAvailability: ServiceAvailability = {};
+                SERVICE_TYPES.forEach((service) => {
+                  initialServiceAvailability[service.id] = false;
+                });
+                setServiceAvailability(initialServiceAvailability);
+                setHasChanges(false);
+                console.log("Changes reset");
+              }}
+              disabled={saving}
+              className="bg-white"
             >
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-slate-900 mb-3">Legend</h3>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
-                      <span className="text-sm text-slate-700">
-                        Available for booking
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded"></div>
-                      <span className="text-sm text-slate-700">
-                        Already booked
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gray-100 border-2 border-gray-300 rounded"></div>
-                      <span className="text-sm text-slate-700">
-                        Unavailable
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Action Buttons */}
-            {hasChanges && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex justify-end gap-3 sticky bottom-4"
-              >
-                <Button
-                  variant="outline"
-                  onClick={resetChanges}
-                  disabled={saving}
-                  className="bg-white"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset Changes
-                </Button>
-                <Button
-                  onClick={saveChanges}
-                  disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {saving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </motion.div>
-            )}
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset Changes
+            </Button>
+            <Button
+              onClick={handleUpdateSchedule}
+              disabled={saving}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

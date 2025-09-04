@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios";
 import { VerificationFormData } from "@/types/provider";
 import { IServiceProvider } from "@/types/provider";
-import { WeeklySlot } from "@/types/slot";
+import { DaySchedule } from "@/types/serviceTypes";
 
 const createProviderApi = (axiosPrivate: AxiosInstance) => ({
   getProfileData: async () => {
@@ -48,24 +48,63 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+  getOrders: async ({
+    search,
+    page,
+    limit,
+    status,
+    dateFilter,
+    startDate,
+    endDate,
+  }: {
+    search: string;
+    page: number;
+    limit: number;
+    status: string;
+    dateFilter: string;
+    startDate: string;
+    endDate: string;
+  }) => {
+    try {
+      console.log('the get orders service function',search,page,limit,status,dateFilter,startDate,endDate)
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/order/history`,
+        {
+          params: {
+            search,
+            page,
+            limit,
+            status,
+            dateFilter,
+            startDate,
+            endDate,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
   getNotifications: async (
     debouncedSearchTerm: string,
     currentPage: number,
     filterType: string,
-    itemsPerPage:number,
-    unreadOnlyFilter:boolean
+    itemsPerPage: number,
+    unreadOnlyFilter: boolean
   ) => {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications`,
         {
-          params:{
-            search:debouncedSearchTerm,
-            page:currentPage,
-            filter:filterType,
+          params: {
+            search: debouncedSearchTerm,
+            page: currentPage,
+            filter: filterType,
             itemsPerPage,
-            unreadOnly:unreadOnlyFilter
-          }
+            unreadOnly: unreadOnlyFilter,
+          },
         }
       );
       return response.data;
@@ -73,71 +112,85 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-  markNotificationAsRead: async(notificationId:string) => {
+  markNotificationAsRead: async (notificationId: string) => {
     try {
-      console.log('the mark notificatin as read service function ');
+      console.log("the mark notificatin as read service function ");
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications/${notificationId}/read`
       );
       return response.data;
     } catch (error) {
-      throw error 
+      throw error;
     }
   },
-  markNotificationAsUnread: async(notificationId:string) => {
+  markNotificationAsUnread: async (notificationId: string) => {
     try {
-      
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications/${notificationId}/unread`
       );
       return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
-  deleteNotification: async(notificationId:string) => {
+  deleteNotification: async (notificationId: string) => {
     try {
       const response = await axiosPrivate.delete(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications/${notificationId}`
-      )
+      );
       return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
-  markAllAsRead: async() => {
+  markAllAsRead: async () => {
     try {
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications`
-      )
+      );
       return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
   /////////slot apis////
- getSlots: async() => {
-  try {
-    const response = await axiosPrivate.get(
-      `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`
-    )
-    return response.data;
-  } catch (error) {
-    throw error
-  }
- },
- updateSlots: async(weeklySlots:WeeklySlot[]) => {
-  try {
-    const response = await axiosPrivate.patch(
-     `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`,
-     {weeklySlots}
-    )
-    return response.data
-  } catch (error) {
-    throw error
-  }
- }
-
+  getSlots: async () => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  updateSlots: async (weeklySlots: DaySchedule[]) => {
+    try {
+      console.log("the slots to be updated ", weeklySlots);
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`,
+        { weeklySlots }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  commitOrder: async (orderId: string,name:string,email:string,phone:string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/order/${orderId}`,
+           {
+        name,
+        email,
+        phone,
+      }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 });
 
 export default createProviderApi;

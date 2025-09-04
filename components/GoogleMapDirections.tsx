@@ -1,17 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   GoogleMap,
-  useJsApiLoader,
+  useLoadScript,
   DirectionsRenderer,
   TrafficLayer,
   Marker,
 } from "@react-google-maps/api";
+
 const containerStyle = {
   width: "100%",
   height: "400px",
 };
+
+const GOOGLE_LIBRARIES: (
+  "places" | "geometry" | "drawing" | "localContext" | "visualization"
+)[] = ["places"];
 
 interface LatLng {
   lat: number;
@@ -27,12 +32,14 @@ const GoogleMapDirections: React.FC<GoogleMapDirectionsProps> = ({
   providerLocation,
   clientLocation,
 }) => {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    libraries: ["places"],
-  });
+ const { isLoaded } = useLoadScript({
+  googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+  libraries: ["places", "geometry", "drawing", "visualization"],
+});
 
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+
+  const [directions, setDirections] =
+    useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
     if (isLoaded) {
@@ -46,16 +53,6 @@ const GoogleMapDirections: React.FC<GoogleMapDirectionsProps> = ({
         (result, status) => {
           if (status === google.maps.DirectionsStatus.OK && result) {
             setDirections(result);
-
-            // // Voice directions
-            // const steps = result.routes[0].legs[0].steps;
-            // const directionsText = steps
-            //   .map((step) => step.instructions.replace(/<[^>]*>/g, ""))
-            //   .join(". ");
-
-            // const utterance = new SpeechSynthesisUtterance(directionsText);
-            // utterance.lang = "en-US";
-            // window.speechSynthesis.speak(utterance);
           } else {
             console.error("Directions request failed:", status);
           }
@@ -65,34 +62,28 @@ const GoogleMapDirections: React.FC<GoogleMapDirectionsProps> = ({
   }, [isLoaded, providerLocation, clientLocation]);
 
   return isLoaded ? (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={providerLocation}
-      zoom={13}
-    >
-      {/* Traffic Layer */}
+    <GoogleMap mapContainerStyle={containerStyle} center={providerLocation} zoom={13}>
       <TrafficLayer />
 
-      {/* Custom Markers */}
-<Marker
-  position={providerLocation}
-  icon={{
-    url: "/crane.png",
-    scaledSize: new window.google.maps.Size(40, 40),
-    anchor: new window.google.maps.Point(20, 40), // Adjust anchor point as needed
-  }}
-/>
+      {/* Provider marker */}
+      <Marker
+        position={providerLocation}
+        icon={{
+          url: "/crane.png",
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 40),
+        }}
+      />
 
-<Marker
-  position={clientLocation}
-  icon={{
-    url: "/car.png",
-    scaledSize: new window.google.maps.Size(40, 40),
-    anchor: new window.google.maps.Point(20, 40), // Adjust anchor point as needed
-  }}
-/>
-
-
+      {/* Client marker */}
+      <Marker
+        position={clientLocation}
+        icon={{
+          url: "/car.png",
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 40),
+        }}
+      />
 
       {/* Route */}
       {directions && <DirectionsRenderer directions={directions} />}

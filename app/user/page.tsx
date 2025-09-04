@@ -10,72 +10,44 @@ import { axiosPrivate } from "@/api/axios";
 import { Vehicle } from "@/types/user";
 import { IFrontendCart } from "@/types/cart";
 import { toast } from "react-toastify";
+import type { IServicePackage } from "@/types/service-packages";
+import { serviceCategories } from "@/constants/serviceCategories";
 
 const userApi = createUserApi(axiosPrivate);
-const serviceCategories = [
-  {
-    key: "general",
-    name: "Periodic Services",
-    icon: "/icons/periodic.png",
-    isActive: true,
-  },
-  {
-    key: "ac",
-    name: "AC Service & Repair",
-    icon: "/icons/ac.png",
-    isActive: false,
-  },
-  {
-    key: "battery",
-    name: "Batteries",
-    icon: "/icons/battery.png",
-    isActive: false,
-  },
-  {
-    key: "tyres",
-    name: "Tyres & Wheel Care",
-    icon: "/icons/tyre.png",
-    isActive: false,
-  },
-  {
-    key: "dent",
-    name: "Denting & Painting",
-    icon: "/icons/denting.png",
-    isActive: false,
-  },
-  {
-    key: "detailing",
-    name: "Detailing Services",
-    icon: "/icons/detailing.png",
-    isActive: false,
-  },
-  {
-    key: "emergency",
-    name: "Emergency Services",
-    icon: "/icons/sos.png",
-    isActive: false,
-  },
-];
-
 const CarServiceBooking = () => {
   const [selectedServiceCategory, setSelectedServiceCategory] =
     useState<string>('general');
   const [cart, setCart] = useState<IFrontendCart>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [openAddVehicleModal, setOpenAddVehicleModal] = useState(false);
+    const [servicePackages, setServicePackages] = useState<IServicePackage[]>([]);
+    const [loading, setLoading] = useState(false); 
+    useEffect(() => {
+    const fetchServicePackages = async () => {
+      setLoading(true);
+      if(!cart?.vehicleId.modelId._id){
+        setLoading(false);
+        return;
+      }
+      const response = await userApi.getServicePackages(
+        cart?.vehicleId.modelId._id,
+        selectedServiceCategory,
+        cart?.vehicleId.fuel,
+      );
+      setServicePackages(response.servicePackages);
+      setLoading(false);
+    };
+    fetchServicePackages();
+  }, [selectedServiceCategory,cart?._id]);
 useEffect(() => {
   const fetchVehicles = async () => {
     try {
       const response = await userApi.getVehiclesApi();
-      console.log('the response',response);
-
       setVehicles(response.vehicles);
     } catch (error) {
-      console.error("Failed to fetch vehicles:", error);
       toast.error("Unable to load vehicles. Please try again.");
     }
   };
-
   fetchVehicles();
 }, []);
   return (
@@ -94,11 +66,9 @@ useEffect(() => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {cart?.vehicleId.modelId._id ?(
             <ServicePackages
-              cart={cart}
               setCart={setCart}
-              serviceCategory={selectedServiceCategory}
-              modelId={cart.vehicleId.modelId._id}
-              fuelType={cart.vehicleId.fuel}
+              loading={loading}
+              servicePackages={servicePackages}
             />
           ):(
              <div className="lg:col-span-2 space-y-6">

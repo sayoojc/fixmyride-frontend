@@ -34,3 +34,17 @@ coordinates:[number,number]
   startedYear?: number
   description?: string
 }
+export interface IProviderProfile {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  description: string;
+  isListed: boolean;
+  verificationStatus: "pending" | "approved" | "rejected";
+  location: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+}

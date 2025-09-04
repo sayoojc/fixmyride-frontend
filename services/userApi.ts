@@ -62,6 +62,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+
   /////////Brand API///////
   getBrandsApi: async () => {
     try {
@@ -292,6 +293,48 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   //// Order Apis////
+  async placeCashOrder(
+    cartId: string,
+    paymentMethod: string,
+    selectedAddressId: {
+      addressLine1: string;
+      addressLine2: string;
+      addressType: string;
+      city: string;
+      id?: string;
+      isDefault: boolean;
+      latitude: number;
+      longitude: number;
+      state: string;
+      userId: string;
+      zipCode: string;
+    },
+    selectedDate: AvailableDate,
+    selectedSlot: TimeSlot
+  ) {
+    try {
+      console.log("Placing cash order with:", {
+        cartId, 
+        paymentMethod,
+        selectedAddressId,  
+        selectedDate,
+        selectedSlot
+      });
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders`,
+        {
+          cartId,
+          paymentMethod,
+          selectedAddressId,
+          selectedDate,
+          selectedSlot,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
   async getOrderdetails(id: string) {
     try {
       const response = await axiosPrivate.get(
@@ -302,6 +345,33 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+async fetchOrderHistory({ page, limit }: { page: number; limit: number }) {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/history`,
+      {
+        params: { page, limit },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+},
+async getProvidersBySearch(query: string, location: string) {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/providers`,
+      {
+        params: { query, location },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 });
 
 export default createUserApi;

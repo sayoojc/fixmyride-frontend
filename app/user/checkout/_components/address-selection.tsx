@@ -69,6 +69,7 @@ export function AddressSelection({
               },
               (results, status) => {
                 if (status === "OK" && results && results[0]) {
+                  console.log("Geocoding result:", results[0]);
                   updateAddressFromGeocode(results[0]);
                 }
               }
@@ -90,7 +91,6 @@ export function AddressSelection({
       let state = "";
       let zipCode = "";
       const addressLine1 = result.formatted_address.split(',')[0];
-     console.log('the addresss components',result.address_components)
       for (const component of result.address_components) {
         if (
           component.types.includes("street_number") ||
@@ -108,13 +108,14 @@ export function AddressSelection({
           zipCode = component.long_name;
         }
       }
+      console.log("currentLocation",currentLocation);
       if (currentLocation?.lat && currentLocation.lng) {
         handleAddressSelect({
           userId:'',
           addressType:'',
           isDefault:false,
-          latitude: lat!,
-          longitude:lng!, 
+          latitude: currentLocation.lat,
+          longitude:currentLocation.lng, 
           addressLine1,
           addressLine2: street,
           city,

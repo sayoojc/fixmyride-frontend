@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import {toast} from 'react-toastify'
+import { axiosPrivate } from "@/api/axios";
+import createAuthApi from "@/services/authApi";
+const authApi = createAuthApi(axiosPrivate);
 import DashboardSidebar from "@/components/admin/DashboardSidebar";
 
 const geistSans = Geist({

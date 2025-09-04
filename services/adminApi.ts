@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import { ServicePackageFormData } from "@/types/service-packages";
+import { get } from "http";
 
 const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ///Brand management///
@@ -14,7 +15,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
   getBrandsApi: async (search: string, page: number, statusFilter: string) => {
@@ -24,7 +25,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-     throw error
+      throw error;
     }
   },
   updateBrandStatusApi: async (brandId: string, newStatus: string) => {
@@ -37,7 +38,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
   updateBrandApi: async (id: string, name: string, imageUrl: string) => {
@@ -51,7 +52,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
 
@@ -74,7 +75,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response.data;
     } catch (error) {
-    throw error
+      throw error;
     }
   },
 
@@ -93,7 +94,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
 
@@ -111,12 +112,12 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
           name,
           imageUrl,
           fuelTypes,
-          brandId
+          brandId,
         }
       );
       return response;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
 
@@ -143,7 +144,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       );
       return response;
     } catch (error) {
-      throw error
+      throw error;
     }
   },
   ///Provider management///
@@ -258,6 +259,109 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+  ////order management////
+getAllOrders: async ({
+  search,
+  page,
+  limit,
+  status,
+  dateFilter,
+  startDate,
+  endDate,
+}: {
+  search: string;
+  page: number;
+  limit: number;
+  status: string;
+  dateFilter: string;
+  startDate?: string;
+  endDate?: string;
+}) => {
+  try {
+    const params = new URLSearchParams({
+      search,
+      page: page.toString(),
+      limit: limit.toString(),
+      statusFilter: status,
+      dateFilter,
+    });
+
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/orders?${params.toString()}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    throw error;
+  }
+},
+getOrderById: async (orderId: string) => {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/orders/${orderId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching order by ID:", error);
+    throw error;
+  }
+},
+getNotifications: async (search: string, page: number, limit: number,statusFilter:string) => {
+  try {
+    const response = await axiosPrivate.get(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications?search=${search}&page=${page}&limit=${limit}&statusFilter=${statusFilter}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    throw error;
+  }
+},
+markNotificationAsRead: async(id:string) => {
+  try {
+    const response  = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}`
+    )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+},
+markNotificationAsUnread: async(id:string) => {
+  try {
+    const response = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}/unread`
+    )
+    return response.data;
+  } catch (error) {
+    throw error
+  }
+},
+deleteNotification: async(id:string) => {
+  try {
+    const response = await axiosPrivate.delete(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}`
+    )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+},
+markAllAsRead: async() => {
+  try {
+    const response = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications`
+    )
+    return response.data;
+  } catch (error) {
+    throw error
+  }
+}
+
 });
 
 export default createAdminApi;
