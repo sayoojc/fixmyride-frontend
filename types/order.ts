@@ -1,5 +1,11 @@
 export type Order = {
   _id: string;
+   provider?:{
+    _id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  }
   user: {
     _id: string;
     name: string;

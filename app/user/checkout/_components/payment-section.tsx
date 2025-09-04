@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import type { CheckoutPaymentStepProps } from "@/types/checkout";
 import Image from "next/image";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import createUserApi from "@/services/userApi";
@@ -37,7 +37,10 @@ export function PaymentSection({
   const handlePaymentMethodChange = (method: "online" | "cash") => {
     onUpdate({ paymentMethod: method });
   };
-
+   useEffect(() => {
+    console.log("Cart data in PaymentSection:", cart);
+    console.log("data",data)
+   }, [cart,data]);
   const calculateSubtotal = () => {
     if (!cart?.services || !Array.isArray(cart.services)) return 0;
 
@@ -130,16 +133,22 @@ export function PaymentSection({
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async() => {
     if (data.paymentMethod === "online") {
       handleRazorpayPayment();
     } else {
-      // Handle cash or wallet payment
-      toast.success(
-        data.paymentMethod === "cash"
-          ? "Your order has been placed. Pay with cash when the service provider arrives."
-          : "Your order has been placed using your wallet balance."
-      );
+    const response = await userApi.placeCashOrder(cart._id,'cash', {
+              ...data.selectedAddress,
+              userId: data.selectedAddress.userId || "",
+            },data.selectedDate,data.selectedSlot!);
+      if(response.success){
+        toast.success("Order placed successfully!");
+        router.push(`/user/checkout/success/${response.orderId}`);
+      } else {
+          toast.error("Failed to place order.Try again")
+      }      
+
+
     }
   };
   const serviceNames =

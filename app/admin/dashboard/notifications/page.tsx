@@ -18,21 +18,19 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-interface INotification {
-  _id: string;
-  recipientId: string;
-  recipientType: "user" | "provider";
-  type: "service_request" | "order" | "info" | "admin_announcement";
-  message: string;
-  link?: string;
-  isRead: boolean;
-  createdAt: Date;
-}
+import { ConfirmationConfig } from "@/components/ConfirmationModal";
 
+import { toast } from "react-toastify";
 import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
+import { INotification } from "@/types/notification";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 const adminApi = createAdminApi(axiosPrivate);
 export default function NotificationsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<ConfirmationConfig | null>(
+    null
+  );
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +44,33 @@ export default function NotificationsPage() {
   useEffect(() => {
     fetchNotifications();
   }, [currentPage, searchQuery, statusFilter]);
+  const confirmDeleteNotification = (id: string) => {
+    setModalConfig({
+      title: "Delete Notification",
+      description:
+        "Are you sure you want to delete this notification? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          const response = await adminApi.deleteNotification(id);
+          if (response.success) {
+            toast.success("Notification deleted successfully.");
+            setNotifications((prev) => prev.filter((n) => n._id !== id));
+          }
+        } catch (error) {
+          toast.error("Failed to delete notification.");
+          console.error("Error deleting notification:", error);
+        } finally {
+          setLoading(false);
+          setIsModalOpen(false);
+        }
+      },
+    });
+    setIsModalOpen(true);
+  };
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -92,31 +117,27 @@ export default function NotificationsPage() {
     }
   };
 
-  const formatTimestamp = (timestamp: Date) => {
+  const formatTimestamp = (timestamp: string | Date) => {
+    const date =
+      typeof timestamp === "string" ? new Date(timestamp) : timestamp;
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const diff = now.getTime() - date.getTime();
+
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 60) {
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else {
-      return `${days}d ago`;
-    }
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
   };
 
   const markAsRead = async (id: string) => {
     try {
-      const response = await fetch(`/api/notifications/${id}/read`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isRead: true }),
-      });
+      const response = await adminApi.markNotificationAsRead(id);
 
-      if (response.ok) {
+      if (response.success) {
+        toast.success("marked notification as read");
         setNotifications((prev) =>
           prev.map((notification) =>
             notification._id === id
@@ -126,19 +147,16 @@ export default function NotificationsPage() {
         );
       }
     } catch (error) {
+      toast.error("Marking notification as read failed.");
       console.error("Error marking notification as read:", error);
     }
   };
 
   const markAsUnread = async (id: string) => {
     try {
-      const response = await fetch(`/api/notifications/${id}/read`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isRead: false }),
-      });
-
-      if (response.ok) {
+      const response = await adminApi.markNotificationAsUnread(id);
+      if (response.success) {
+        toast.success("marked notification as unread");
         setNotifications((prev) =>
           prev.map((notification) =>
             notification._id === id
@@ -148,39 +166,25 @@ export default function NotificationsPage() {
         );
       }
     } catch (error) {
-      console.error("Error marking notification as unread:", error);
+      toast.error("Marking notification as unread failed.");
+      console.error("Error marking notification as read:", error);
     }
   };
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch("/api/notifications/mark-all-read", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await adminApi.markAllAsRead();
 
-      if (response.ok) {
+      if (response.success) {
         setNotifications((prev) =>
           prev.map((notification) => ({ ...notification, isRead: true }))
         );
         fetchNotifications();
       }
+      toast.success("notifications marked as read.");
     } catch (error) {
+      toast.error("failed to mark notifications as marked.")
       console.error("Error marking all notifications as read:", error);
-    }
-  };
-
-  const deleteNotification = async (id: string) => {
-    try {
-      const response = await fetch(`/api/notifications/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchNotifications();
-      }
-    } catch (error) {
-      console.error("Error deleting notification:", error);
     }
   };
 
@@ -373,7 +377,9 @@ export default function NotificationsPage() {
                             </button>
                           )}
                           <button
-                            onClick={() => deleteNotification(notification._id)}
+                            onClick={() =>
+                              confirmDeleteNotification(notification._id)
+                            }
                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
                             title="Delete notification"
                           >
@@ -431,6 +437,12 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        config={modalConfig}
+        isLoading={loading}
+      />
     </div>
   );
 }

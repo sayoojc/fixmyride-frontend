@@ -8,6 +8,7 @@ import { ServiceSearch } from "./ServiceSearch"
 import { axiosPrivate } from "@/api/axios"
 import createAuthApi from "@/services/authApi"
 import createUserApi from "@/services/userApi"
+import {toast} from "react-toastify"
 const userApi = createUserApi(axiosPrivate)
 const authApi = createAuthApi(axiosPrivate)
 import { IServiceProvider } from "@/types/provider"
@@ -51,9 +52,9 @@ export const Header = () => {
     try {
       await authApi.logoutApi();
       router.push("/")
-      alert("Logged out successfully")
+      toast.success("Logged out successfully")
     } catch (error) {
-      console.error("logout failed", error)
+     toast.error("Logout failed")
     }
   }
 

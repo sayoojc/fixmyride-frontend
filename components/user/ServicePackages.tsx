@@ -1,70 +1,33 @@
 "use client";
 import { useSelector } from "react-redux";
 import type React from "react";
-
+import type { IServicePackage } from "@/types/service-packages";
 import type { RootState } from "../../redux/store";
-import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { axiosPrivate } from "@/api/axios";
 import createUserApi from "@/services/userApi";
-import type { IServicePackage } from "@/types/service-packages";
 import type { IFrontendCart } from "@/types/cart";
-
+import { AxiosError } from "axios";
 const userApi = createUserApi(axiosPrivate);
-
 interface ServicePackagesProps {
   setCart: (state: IFrontendCart) => void;
-  serviceCategory: string;
-  modelId: string;
-  fuelType: string;
-  cart: IFrontendCart;
+  loading: boolean;
+  servicePackages: IServicePackage[];
 }
-
 export const ServicePackages: React.FC<ServicePackagesProps> = ({
   setCart,
-  serviceCategory,
-  modelId,
-  fuelType,
-  cart,
+  loading,
+  servicePackages
 }) => {
   const vehicle = useSelector((state: RootState) => state.vehicle);
-  const [servicePackages, setServicePackages] = useState<IServicePackage[]>([]);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const fetchServicePackages = async () => {
-      setLoading(true);
-      const response = await userApi.getServicePackages(
-        modelId,
-        serviceCategory,
-        fuelType
-      );
-      setServicePackages(response.servicePackages);
-      setLoading(false);
-    };
-
-    fetchServicePackages();
-  }, [serviceCategory]);
-  useEffect(() => {
-     if (!cart?.services || servicePackages.length === 0) return;
-    setServicePackages((prev) =>
-      prev.map((sp) => {
-        const isInCart = cart?.services?.some(
-          (cartService) => cartService.serviceId._id === sp._id
-        );
-        return {
-          ...sp,
-          isAdded: isInCart,
-        };
-      })
-    );
-  }, [cart,servicePackages.length]);
-
   const handleAddToCart = async (serviceId: string, vehicleId: string) => {
     try {
       const response = await userApi.addToCart(serviceId, vehicleId);
       setCart(response.cart);
+      toast.success("Service added to cart successfully!");
     } catch (error) {
-      console.error("Failed to add to cart:", error);
-      throw error;
+      const err = error as AxiosError<{message:string}>
+     toast.error(err?.response?.data?.message || "Failed to add service to cart. Please try again.");
     }
   };
 

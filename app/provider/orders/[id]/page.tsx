@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useParams, useRouter } from "next/navigation";
 import { axiosPrivate } from "@/api/axios";
-import { AxiosError } from "axios";
+import type { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import createProviderApi from "@/services/providerApi";
 import type { Order } from "@/types/order";
@@ -25,6 +25,7 @@ import GoogleMapDirections from "@/components/GoogleMapDirections";
 import { getSocket } from "@/lib/socket";
 
 const providerApi = createProviderApi(axiosPrivate);
+import { IProviderProfile } from "@/types/serviceProvider";
 const getStatusColor = (status: string) => {
   switch (status) {
     case "completed":
@@ -70,6 +71,7 @@ const formatAddress = (address: Order["address"]) => {
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const [profile,setProfile] = useState<IProviderProfile | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,34 +83,93 @@ export default function OrderDetailPage() {
     lat: number;
     lng: number;
   }>();
-  useEffect(() => {
-    const socket = getSocket();
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const newLocation = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setProviderLocation(newLocation);
-        socket.emit("provider:location:update", {
-          id,
-          location: newLocation,
-          clientId: order?.user._id,
-        });
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+  const [isCommitting, setIsCommitting] = useState(false);
+
+const hasAssignedProvider = (o: Order) => {
+  
+  if (!o){
+   
+    return false};
+  if (!o.provider?._id) return false;
+  if (!o.selectedSlot || !o.serviceDate) return false;
+  const [hours, minutes] = o.selectedSlot.split(":").map(Number);
+  console.log('hours and minutes',hours,minutes);
+  const serviceDateTime = new Date(o.serviceDate);
+  serviceDateTime.setHours(hours, minutes, 0, 0);
+
+  const now = new Date();
+  return serviceDateTime <= now;
+};
+
+
+
+
+  const handleCommit = async () => {
+    if (!id) return;
+    try {
+      setIsCommitting(true);
+      if(!profile){
+        toast.error("Failed to fetch provider profile. Please try again.");
+        return;
       }
-    );
+      await providerApi.commitOrder(id,profile?.name,profile?.email,profile?.phone);
+      toast.success("Order committed successfully");
+      setOrder((prev) =>
+        prev
+          ? ({
+              ...prev,
+              orderStatus:
+                prev.orderStatus === "placed" ||
+                prev.orderStatus === "confirmed"
+                  ? "in-progress"
+                  : prev.orderStatus,
+            } as Order)
+          : prev
+      );
+    } catch (err) {
+      const e = err as AxiosError<{ message?: string }>;
+      toast.error(e.response?.data?.message || "Failed to commit order");
+    } finally {
+      setIsCommitting(false);
+    }
+  };
 
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  // useEffect(() => {
+  //   const socket = getSocket();
+  //   const watchId = navigator.geolocation.watchPosition(
+  //     (position) => {
+  //       const newLocation = {
+  //         lat: position.coords.latitude,
+  //         lng: position.coords.longitude,
+  //       };
+  //       setProviderLocation(newLocation);
+  //       socket.emit("provider:location:update", {
+  //         id,
+  //         location: newLocation,
+  //         clientId: order?.user._id,
+  //       });
+  //     },
+  //     (error) => {
+  //       console.error("Error getting location:", error);
+  //     },
+  //     {
+  //       enableHighAccuracy: true,
+  //       timeout: 10000,
+  //       maximumAge: 0,
+  //     }
+  //   );
 
+  //   return () => navigator.geolocation.clearWatch(watchId);
+  // }, []);
+  useEffect(() => {
+    async function fetchProfile() {
+      const response = await providerApi.getProfileData();
+      console.log('the response of the fetch provider',response);
+      setProfile(response.provider);
+      setProviderLocation({lat:response.provider.location.coordinates[0],lng:response.provider.location.coordinates[1]})
+    }
+    fetchProfile();
+  },[]);
   useEffect(() => {
     if (!id) {
       console.log("no order id got in the page");
@@ -119,6 +180,7 @@ export default function OrderDetailPage() {
       try {
         setLoading(true);
         const response = await providerApi.getOrderDetails(id);
+        console.log("Order details response:", response);
         const order = response.order;
         setOrder(order);
         setClientLocation({
@@ -187,17 +249,30 @@ export default function OrderDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">Order Details</h1>
             <p className="text-muted-foreground mt-2">Order ID: {order._id}</p>
           </div>
-          <Badge
-            variant="secondary"
-            className={getStatusColor(order.orderStatus)}
-          >
-            <div className="flex items-center space-x-1">
-              {getStatusIcon(order.orderStatus)}
-              <span className="capitalize">
-                {order.orderStatus.replace("-", " ")}
-              </span>
-            </div>
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge
+              variant="secondary"
+              className={getStatusColor(order.orderStatus)}
+            >
+              <div className="flex items-center space-x-1">
+                {getStatusIcon(order.orderStatus)}
+                <span className="capitalize">
+                  {order.orderStatus.replace("-", " ")}
+                </span>
+              </div>
+            </Badge>
+            {!hasAssignedProvider(order) &&
+              (order.orderStatus === "placed" ||
+                order.orderStatus === "confirmed") && (
+                <Button
+                  onClick={handleCommit}
+                  disabled={isCommitting}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  {isCommitting ? "Committing..." : "Commit Order"}
+                </Button>
+              )}
+          </div>
         </div>
       </div>
 

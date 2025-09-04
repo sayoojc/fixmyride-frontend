@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios";
 import { VerificationFormData } from "@/types/provider";
 import { IServiceProvider } from "@/types/provider";
-import { WeeklySlot } from "@/types/slot";
+import { DaySchedule } from "@/types/serviceTypes";
 
 const createProviderApi = (axiosPrivate: AxiosInstance) => ({
   getProfileData: async () => {
@@ -66,6 +66,7 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
     endDate: string;
   }) => {
     try {
+      console.log('the get orders service function',search,page,limit,status,dateFilter,startDate,endDate)
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/order/history`,
         {
@@ -163,11 +164,27 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-  updateSlots: async (weeklySlots: WeeklySlot[]) => {
+  updateSlots: async (weeklySlots: DaySchedule[]) => {
     try {
+      console.log("the slots to be updated ", weeklySlots);
       const response = await axiosPrivate.patch(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/slots`,
         { weeklySlots }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  commitOrder: async (orderId: string,name:string,email:string,phone:string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/order/${orderId}`,
+           {
+        name,
+        email,
+        phone,
+      }
       );
       return response.data;
     } catch (error) {

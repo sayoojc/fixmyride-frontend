@@ -147,6 +147,7 @@ export default function OrdersPage() {
         setOrdersLoading(false)
       } catch (error) {
         const err = error as AxiosError<{ message: string }>
+        setOrders([]);
         toast.error(err.response?.data.message || "Error fetching orders")
         setOrdersLoading(false)
       }

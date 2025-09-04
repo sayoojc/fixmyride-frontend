@@ -13,29 +13,19 @@ interface ServiceSearchProps {
 export const ServiceSearch: React.FC<ServiceSearchProps> = ({ selectedLocation, onSearch, searchResults }) => {
   const [searchQuery, setSearchQuery] = useState("")
   const [showResults, setShowResults] = useState(false)
+ useEffect(() => {
+  if (searchQuery.trim()) {
+    setShowResults(true)
+    const timeoutId = setTimeout(() => {
+      onSearch(searchQuery, selectedLocation)
+    }, 500)
 
-  const debouncedSearch = useCallback(
-    (query: string, location: string) => {
-      const timeoutId = setTimeout(() => {
-        if (query.trim()) {
-          onSearch(query, location)
-        }
-      }, 500) // 500ms debounce delay
+    return () => clearTimeout(timeoutId)
+  } else {
+    setShowResults(false)
+  }
+}, [searchQuery, selectedLocation, onSearch])
 
-      return () => clearTimeout(timeoutId)
-    },
-    [onSearch],
-  )
-
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      setShowResults(true)
-      const cleanup = debouncedSearch(searchQuery, selectedLocation)
-      return cleanup
-    } else {
-      setShowResults(false)
-    }
-  }, [searchQuery, selectedLocation, debouncedSearch])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

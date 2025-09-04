@@ -5,6 +5,7 @@ import { axiosPrivate } from "@/api/axios";
 import createProviderApi from "@/services/providerApi";
 import type { IServiceProvider } from "@/types/provider";
 import { ProviderSidebar } from "@/components/provider/ProviderSidebar";
+import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import {
   SidebarProvider,
@@ -118,6 +119,7 @@ const formatTimeAgo = (dateString: string) => {
 };
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState<ConfirmationConfig | null>(
     null
@@ -619,8 +621,15 @@ export default function NotificationsPage() {
                               </div>
                               {notification.link && (
                                 <div className="mt-3">
-                                  <Button variant="outline" size="sm" asChild>
-                                    <a href={notification.link}>View Details</a>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={async () => {
+                                      await markAsRead(notification._id);
+                                      router.push(notification.link!); // ✅ client-side navigation
+                                    }}
+                                  >
+                                    View Details
                                   </Button>
                                 </div>
                               )}

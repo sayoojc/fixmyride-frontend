@@ -6,15 +6,25 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Calendar, Users, Car, Wrench, LogOut, Menu, X, Bell } from "lucide-react"
+import {toast} from "react-toastify"
+import { useRouter } from "next/navigation";
+import createAuthApi from "@/services/authApi"
+import { axiosPrivate } from "@/api/axios"
+const authApi = createAuthApi(axiosPrivate);
 
-interface DashboardSidebarProps {
-  adminLogout: () => void
-}
-
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ adminLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const pathname = usePathname()
-
+const DashboardSidebar = () => {
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+const adminLogout = async () => {
+    try {
+       await authApi.adminLogoutApi();   
+        toast.success("Logged out successfully.");
+        router.push("/admin");       
+    } catch (error) {
+      toast.error("Error logging out.");
+    }
+  };
   const isActive = (path: string) => pathname === path
 
   return (

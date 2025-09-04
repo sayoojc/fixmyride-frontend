@@ -320,6 +320,46 @@ getNotifications: async (search: string, page: number, limit: number,statusFilte
     console.error("Error fetching notifications:", error);
     throw error;
   }
+},
+markNotificationAsRead: async(id:string) => {
+  try {
+    const response  = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}`
+    )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+},
+markNotificationAsUnread: async(id:string) => {
+  try {
+    const response = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}/unread`
+    )
+    return response.data;
+  } catch (error) {
+    throw error
+  }
+},
+deleteNotification: async(id:string) => {
+  try {
+    const response = await axiosPrivate.delete(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications/${id}`
+    )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+},
+markAllAsRead: async() => {
+  try {
+    const response = await axiosPrivate.patch(
+      `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/notifications`
+    )
+    return response.data;
+  } catch (error) {
+    throw error
+  }
 }
 
 });
