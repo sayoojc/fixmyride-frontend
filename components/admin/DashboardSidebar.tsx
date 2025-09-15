@@ -10,12 +10,17 @@ import {toast} from "react-toastify"
 import { useRouter } from "next/navigation";
 import createAuthApi from "@/services/authApi"
 import { axiosPrivate } from "@/api/axios"
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 const authApi = createAuthApi(axiosPrivate);
 
 const DashboardSidebar = () => {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+    const unreadCount = useSelector(
+    (state: RootState) => state.notifications.unreadCount
+  );
 const adminLogout = async () => {
     try {
        await authApi.adminLogoutApi();   
@@ -32,34 +37,29 @@ const adminLogout = async () => {
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200" // Enhanced mobile toggle button styling
+          className="p-2 rounded-lg bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200"
         >
           {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 transition duration-300 ease-in-out z-30 w-64 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 shadow-xl`} // Enhanced sidebar background with gradient and shadow
+        } md:translate-x-0 transition duration-300 ease-in-out z-30 w-64 bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 shadow-xl`} 
       >
         <div className="flex flex-col h-full">
           <div className="px-6 py-8 border-b border-gray-200 bg-white">
             {" "}
-            {/* Increased padding and added white background */}
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
               {" "}
-              {/* Larger font size and darker color */}
               VehicleService Pro
             </h1>
             <p className="text-sm text-gray-600 font-medium">Admin Dashboard</p>{" "}
-            {/* Slightly darker and added font-medium */}
           </div>
 
           <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
             {" "}
-            {/* Adjusted padding and spacing */}
             <Link
               href="/admin/dashboard"
               className={`group flex items-center px-4 py-3.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
@@ -71,7 +71,6 @@ const adminLogout = async () => {
               <Calendar
                 className={`mr-3 h-5 w-5 ${isActive("/admin/dashboard") ? "text-white" : "text-gray-500 group-hover:text-blue-500"}`}
               />{" "}
-              {/* Dynamic icon colors */}
               Dashboard
             </Link>
             <Link
@@ -87,7 +86,7 @@ const adminLogout = async () => {
                   className={`h-5 w-5 ${isActive("/admin/dashboard/notifications") ? "text-white" : "text-gray-500 group-hover:text-blue-500"}`}
                 />
                 <span className="absolute -top-2 -right-2 h-4 w-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                  3
+                  {unreadCount}
                 </span>
               </div>
               Notifications
@@ -161,7 +160,6 @@ const adminLogout = async () => {
 
           <div className="p-4 border-t border-gray-200 bg-white">
             {" "}
-            {/* Added white background to footer */}
             <button
               onClick={adminLogout}
               className="group flex items-center px-4 py-3 text-sm font-semibold text-gray-700 hover:text-red-600 hover:bg-red-50 w-full rounded-xl transition-all duration-200 border border-transparent hover:border-red-200" // Enhanced logout button styling

@@ -7,6 +7,7 @@ interface authState {
     name: string | null;
     role: string | null;
     email:string | null;
+    location:{lat:number,lng:number} | null;
   };
   persist:boolean
 }
@@ -17,10 +18,10 @@ const initialState: authState = {
     name: null,
     role: null,
     email:null,
+    location:null
   },
   persist:false,
 };
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -32,10 +33,11 @@ const authSlice = createSlice({
         name: string;
         role: string;
         email:string
+        location:{lat:number,lng:number} | null
       }>
     ) => {
-      const { id, name, role,email } = action.payload;
-      state.user = { id, name:name, role,email};
+      const { id, name, role,email,location } = action.payload;
+      state.user = { id, name:name, role,email,location};
     },
     setPersist(state){
       state.persist=!state.persist
@@ -46,6 +48,7 @@ const authSlice = createSlice({
         name: null,
         role: null,
         email:null,
+        location:null
       };
     },
   },

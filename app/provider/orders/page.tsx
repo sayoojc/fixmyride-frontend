@@ -39,9 +39,9 @@ import {
 } from "lucide-react"
 import type { Order } from "@/types/order"
 import { toast } from "react-toastify"
+import { useRouter } from "next/navigation"
 
-const providerApi = createProviderApi(axiosPrivate)
-
+const providerApi = createProviderApi(axiosPrivate);
 const getOrderStatusColor = (status: string) => {
   switch (status) {
     case "completed":
@@ -76,17 +76,6 @@ const getBadgeVariant = (status: string) => {
   }
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -111,7 +100,7 @@ export default function OrdersPage() {
     startDate: "",
     endDate: "",
   })
-
+const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -184,8 +173,7 @@ export default function OrdersPage() {
   }
 
   const viewOrderDetails = (orderId: string) => {
-    // Navigate to order details page
-    window.location.href = `/provider/orders/${orderId}`
+   router.push(`/provider/orders/${orderId}`);
   }
 
   if (loading) {

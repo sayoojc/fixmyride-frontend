@@ -370,7 +370,74 @@ async getProvidersBySearch(query: string, location: string) {
   } catch (error) {
     throw error;
   }
-}
+},
+/////notifications api/////
+ getNotifications: async (
+    search: string,
+    page: number,
+    limit: number,
+    statusFilter: string
+  ) => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications?search=${search}&page=${page}&limit=${limit}&statusFilter=${statusFilter}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      throw error;
+    }
+  },
+  markNotificationAsRead: async (id: string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications/${id}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  markNotificationAsUnread: async (id: string) => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications/${id}/unread`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  deleteNotification: async (id: string) => {
+    try {
+      const response = await axiosPrivate.delete(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications/${id}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  markAllAsRead: async () => {
+    try {
+      const response = await axiosPrivate.patch(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getUnreadCount: async () => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications/count`
+      )
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  }
 
 });
 

@@ -1,82 +1,102 @@
-"use client"
+"use client";
 
-import { useState, type FormEvent } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { X, Eye, EyeOff } from "lucide-react"
+import { useState, type FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Eye, EyeOff } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { toast } from "react-toastify"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
-import createAuthApi from "@/services/authApi"
-import { axiosPrivate } from "@/api/axios"
+import createAuthApi from "@/services/authApi";
+import createProviderApi from "@/services/providerApi";
+import { axiosPrivate } from "@/api/axios";
+const providerApi = createProviderApi(axiosPrivate);
 const authApi = createAuthApi(axiosPrivate);
-import { z } from "zod"
+import { z } from "zod";
 
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { login } from "@/redux/features/authSlice";
+import { setUnreadCount } from "@/redux/features/notificationSlice";
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
-})
+});
 
 interface LoginModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const router = useRouter()
+  const router = useRouter();
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
-  })
-  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-
+  });
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch<AppDispatch>()
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setFormErrors({})
-    setIsSubmitting(true)
-  
-    const result = loginSchema.safeParse(loginData)
-  
+    e.preventDefault();
+    setFormErrors({});
+    setIsSubmitting(true);
+    const result = loginSchema.safeParse(loginData);
     if (!result.success) {
-      const errors = result.error.flatten().fieldErrors
+      const errors = result.error.flatten().fieldErrors;
       setFormErrors({
         email: errors.email?.[0],
         password: errors.password?.[0],
-      })
-      setIsSubmitting(false)
-      return
+      });
+      setIsSubmitting(false);
+      return;
     }
-  
+
     try {
-      let response = await authApi.providerLoginApi(loginData.email, loginData.password)
-      console.log('response',response);
-    
-        toast.success("Login successful!")
-        onClose()
-        router.push("/provider/dashboard")
-    
-     
-    } catch (error) {
-      toast.error("Login failed")
+      let response = await authApi.providerLoginApi(
+        loginData.email,
+        loginData.password
+      );
+      let notificationResponse = await providerApi.getReadUnreadCount();
+      console.log('notification  read unread count',notificationResponse);
+      dispatch(
+        setUnreadCount(notificationResponse.unreadCount)
+      )
+      dispatch(
+        login({
+          id:response.user._id,
+          name:response.user.name,
+          role:"provider",
+          email:response.user.email,
+          location:response.user.location ?? null,
+        })
+      )
+      toast.success("Login successful!");
+      onClose();
+      router.push("/provider/dashboard");
+    } catch (error:any) {
+      console.log(error.message);
+      toast.error("Login failed");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-  
+  };
 
   const modalVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.2 } },
-  }
+  };
 
   const contentVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  }
+  };
 
   return (
     <AnimatePresence>
@@ -97,47 +117,74 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           >
             <div className="flex justify-between items-center p-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
               <h2 className="text-xl font-bold">Login to Your Account</h2>
-              <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-blue-700/50">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white hover:bg-blue-700/50"
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
             <div className="p-6">
               <form onSubmit={handleLogin} className="space-y-4" noValidate>
-              <div className="space-y-2">
-  <label className="text-sm font-medium text-gray-700">Email</label>
-  <Input
-    type="email"
-    value={loginData.email}
-    onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-    placeholder="your@email.com"
-    className={`border-gray-300 focus:border-blue-500 ${formErrors.email ? "border-red-500" : ""}`}
-  />
-  {formErrors.email && <p className="text-red-500 text-sm">{formErrors.email}</p>}
-</div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    value={loginData.email}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, email: e.target.value })
+                    }
+                    placeholder="your@email.com"
+                    className={`border-gray-300 focus:border-blue-500 ${
+                      formErrors.email ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.email && (
+                    <p className="text-red-500 text-sm">{formErrors.email}</p>
+                  )}
+                </div>
 
-<div className="space-y-2">
-  <label className="text-sm font-medium text-gray-700">Password</label>
-  <div className="relative">
-    <Input
-      type={showPassword ? "text" : "password"}
-      value={loginData.password}
-      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-      placeholder="Enter your password"
-      className={`border-gray-300 focus:border-blue-500 pr-10 ${formErrors.password ? "border-red-500" : ""}`}
-    />
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-500"
-      onClick={() => setShowPassword(!showPassword)}
-    >
-      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-    </Button>
-  </div>
-  {formErrors.password && <p className="text-red-500 text-sm">{formErrors.password}</p>}
-</div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={loginData.password}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, password: e.target.value })
+                      }
+                      placeholder="Enter your password"
+                      className={`border-gray-300 focus:border-blue-500 pr-10 ${
+                        formErrors.password ? "border-red-500" : ""
+                      }`}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-500"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {formErrors.password && (
+                    <p className="text-red-500 text-sm">
+                      {formErrors.password}
+                    </p>
+                  )}
+                </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -147,7 +194,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                    <label
+                      htmlFor="remember-me"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
                       Remember me
                     </label>
                   </div>
@@ -203,5 +253,5 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

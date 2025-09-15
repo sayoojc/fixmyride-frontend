@@ -147,12 +147,23 @@ const CarServiceLandingPage: React.FC = () => {
         loginData.email,
         loginData.password
       );
+          let location = null;
+    if (response.user.role === "provider") {
+      location = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (err) => reject(err)
+        );
+      });
+    }
+
       dispatch(
         login({
           id: response.user._id,
           name: response.user.name,
           role: response.user.role,
           email: response.user.email,
+          location
         })
       );
       toast.success("Login successful");

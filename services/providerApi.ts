@@ -153,6 +153,16 @@ const createProviderApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
+  getReadUnreadCount: async () => {
+    try {
+      const response = await axiosPrivate.get(
+         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/notifications/count`
+      )
+      return response.data;
+    } catch (error) {
+      throw error
+    }
+  },
   /////////slot apis////
   getSlots: async () => {
     try {

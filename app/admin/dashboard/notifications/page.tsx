@@ -25,8 +25,14 @@ import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
 import { INotification } from "@/types/notification";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/redux/store';
+import { markAsRead as markAsReadState } from "@/redux/features/notificationSlice";
+import { markAsUnread as markAsUnreadState } from "@/redux/features/notificationSlice";
+import { markAllAsRead as markAllAsReadState } from "@/redux/features/notificationSlice";
 const adminApi = createAdminApi(axiosPrivate);
 export default function NotificationsPage() {
+    const dispatch = useDispatch<AppDispatch>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<ConfirmationConfig | null>(
     null
@@ -57,6 +63,7 @@ export default function NotificationsPage() {
         try {
           const response = await adminApi.deleteNotification(id);
           if (response.success) {
+            dispatch(markAsReadState());
             toast.success("Notification deleted successfully.");
             setNotifications((prev) => prev.filter((n) => n._id !== id));
           }
@@ -137,6 +144,7 @@ export default function NotificationsPage() {
       const response = await adminApi.markNotificationAsRead(id);
 
       if (response.success) {
+        dispatch(markAsReadState())
         toast.success("marked notification as read");
         setNotifications((prev) =>
           prev.map((notification) =>
@@ -156,6 +164,7 @@ export default function NotificationsPage() {
     try {
       const response = await adminApi.markNotificationAsUnread(id);
       if (response.success) {
+        dispatch(markAsUnreadState())
         toast.success("marked notification as unread");
         setNotifications((prev) =>
           prev.map((notification) =>
@@ -174,14 +183,14 @@ export default function NotificationsPage() {
   const markAllAsRead = async () => {
     try {
       const response = await adminApi.markAllAsRead();
-
       if (response.success) {
+        dispatch(markAllAsReadState())
         setNotifications((prev) =>
           prev.map((notification) => ({ ...notification, isRead: true }))
         );
         fetchNotifications();
       }
-      toast.success("notifications marked as read.");
+      toast.success("notifications marked as read");
     } catch (error) {
       toast.error("failed to mark notifications as marked.")
       console.error("Error marking all notifications as read:", error);

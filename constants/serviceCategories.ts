@@ -41,4 +41,14 @@ export const serviceCategories = [
     icon: "/icons/sos.png",
     isActive: false,
   },
-];
+] as const
+export type ServiceCategoryKey = typeof serviceCategories[number]["key"];
+export const categoryKeys = [
+  "general",
+  "ac",
+  "battery",
+  "tyres",
+  "dent",
+  "detailing",
+  "emergency",
+] as const;

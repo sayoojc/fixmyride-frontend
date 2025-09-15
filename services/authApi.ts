@@ -127,6 +127,7 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
   //// Provider Auth ////
   providerLoginApi: async (email: string, password: string) => {
     try {
+      console.log('the provider login api function hits')
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/login`,
         {
@@ -134,6 +135,7 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
           password,
         }
       );
+      console.log('the response after provider login',response);
       return response.data;
     } catch (error) {
       throw error;

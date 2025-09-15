@@ -137,26 +137,7 @@ export default function NotificationsPage() {
   const [filterType, setFilterType] = useState<string>("all");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [unreadOnlyFilter, setUnReadOnlyFilter] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  // useEffect(() => {
-  //   const socket = getSocket()
-  //   socket.on("service:available", (data) => {
-  //     const newNotification: Notification = {
-  //       _id: Date.now().toString(),
-  //       title: "New Emergency Order",
-  //       message: data.message,
-  //       type: "info",
-  //       category: "order",
-  //       isRead: false,
-  //       createdAt: new Date().toISOString(),
-  //     }
-  //     setNotifications((prev) => [newNotification, ...prev])
-  //   })
-  //   return () => {
-  //     socket.off("service:available")
-  //   }
-  // }, []);
   useEffect(() => {
     const fetchData = async () => {
       try {

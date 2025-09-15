@@ -3,28 +3,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
   Calendar,
-  Wrench,
   Save,
   RotateCcw,
-  Zap,
-  ChevronLeft,
-  ChevronRight,
   Users,
   Edit3,
 } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { SERVICE_TYPES } from "../../../constants/serviceTypes";
 import { DaySchedule } from "@/types/serviceTypes";
 import { HourStatus } from "@/types/serviceTypes";
 import {toast} from "react-toastify" 
 import createProviderApi from "@/services/providerApi";
 import { axiosPrivate } from "@/api/axios";
-import { set } from "date-fns";
 const providerApi = createProviderApi(axiosPrivate);
 interface ServiceAvailability {
   [serviceId: string]: boolean;

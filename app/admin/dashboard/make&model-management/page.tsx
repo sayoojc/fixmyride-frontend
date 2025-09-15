@@ -44,6 +44,10 @@ const BrandModelManagement: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] =
     useState<boolean>(false);
+  const [modelImagePreview, setModelImagePreview] = useState<string | null>(
+    null
+  );
+
   const [editingModel, setEditingModel] = useState<ModelType | null>(null);
   const addBrandForm = useForm<z.infer<typeof brandSchema>>({
     resolver: zodResolver(brandSchema),
@@ -248,6 +252,9 @@ const BrandModelManagement: React.FC = () => {
 
   const addModel = async (modelData: z.infer<typeof modelSchema>) => {
     try {
+      if (modelImagePreview) {
+        setModelImagePreview(null);
+      }
       const imageUrl = await imageUploadApi.uploadBrandImageApi(
         modelData.image
       );
@@ -257,6 +264,7 @@ const BrandModelManagement: React.FC = () => {
         modelData.brandId,
         modelData.fuelTypes
       );
+      setModelImagePreview(null);
       toast.success("Model Added Successfully");
       setBrands((prevBrands) =>
         prevBrands.map((brand) => {
@@ -272,6 +280,7 @@ const BrandModelManagement: React.FC = () => {
       setIsAddModelDialogOpen(false);
       addModelForm.reset();
     } catch (error) {
+      setModelImagePreview(null);
       const err = error as AxiosError<{ message: string }>;
       toast.error(err.response?.data?.message || "Adding model failed!");
     }
@@ -329,6 +338,8 @@ const BrandModelManagement: React.FC = () => {
         isAddModelDialogOpen={isAddModelDialogOpen}
         setIsAddModelDialogOpen={setIsAddModelDialogOpen}
         addModelForm={addModelForm}
+        modelImagePreview={modelImagePreview}
+        setModelImagePreview={setModelImagePreview}
         addModel={addModel}
         brands={brands}
       />

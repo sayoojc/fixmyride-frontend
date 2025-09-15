@@ -1,9 +1,19 @@
-"use client"
+"use client";
 
-import type * as React from "react"
-import { usePathname } from "next/navigation"
-import { Calendar, DollarSign, Bell, ClipboardList, Settings, User, BarChart3, Clock, Home, LogOut } from "lucide-react"
-
+import type * as React from "react";
+import { usePathname } from "next/navigation";
+import {
+  Calendar,
+  DollarSign,
+  Bell,
+  ClipboardList,
+  Settings,
+  User,
+  BarChart3,
+  Clock,
+  Home,
+  LogOut,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,16 +26,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import type { IServiceProvider } from "@/types/provider"
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+import type { IServiceProvider } from "@/types/provider";
 
 // Navigation items
 const navigationItems = [
@@ -64,7 +75,7 @@ const navigationItems = [
     url: "/provider/schedule",
     icon: Clock,
   },
-]
+];
 
 const settingsItems = [
   {
@@ -77,14 +88,17 @@ const settingsItems = [
     url: "/provider/settings",
     icon: Settings,
   },
-]
+];
 
 interface ProviderSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  providerData?: IServiceProvider | null
+  providerData?: IServiceProvider | null;
 }
 
-export function ProviderSidebar({ providerData, ...props }: ProviderSidebarProps) {
-  const pathname = usePathname()
+export function ProviderSidebar({
+  providerData,
+  ...props
+}: ProviderSidebarProps) {
+  const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -102,11 +116,17 @@ export function ProviderSidebar({ providerData, ...props }: ProviderSidebarProps
                       // src={providerData?.profileImage || "/placeholder.svg?height=32&width=32"}
                       alt={providerData?.name || "Provider"}
                     />
-                    <AvatarFallback className="rounded-lg">{providerData?.name?.charAt(0) || "P"}</AvatarFallback>
+                    <AvatarFallback className="rounded-lg">
+                      {providerData?.name?.charAt(0) || "P"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{providerData?.name || "Service Provider"}</span>
-                    <span className="truncate text-xs">{providerData?.email || "provider@example.com"}</span>
+                    <span className="truncate font-semibold">
+                      {providerData?.name || "Service Provider"}
+                    </span>
+                    <span className="truncate text-xs">
+                      {providerData?.email || "provider@example.com"}
+                    </span>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -142,11 +162,15 @@ export function ProviderSidebar({ providerData, ...props }: ProviderSidebarProps
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
-                    <a href={item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -160,7 +184,11 @@ export function ProviderSidebar({ providerData, ...props }: ProviderSidebarProps
             <SidebarMenu>
               {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
                     <a href={item.url}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -186,5 +214,5 @@ export function ProviderSidebar({ providerData, ...props }: ProviderSidebarProps
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

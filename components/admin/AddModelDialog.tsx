@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +32,8 @@ interface AddModelDialogProps {
   addModelForm: any;
   addModel: (data: any) => void;
   brands: { _id: string; brandName: string }[];
+  modelImagePreview: string | null;
+  setModelImagePreview: (prev: string | null) => void;
 }
 
 const AddModelDialog: React.FC<AddModelDialogProps> = ({
@@ -40,15 +42,40 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
   addModelForm,
   addModel,
   brands,
+  modelImagePreview,
+  setModelImagePreview
 }) => {
-  const [modelImagePreview, setModelImagePreview] = useState<string | null>(null);
+useEffect(() => {
+    if (isAddModelDialogOpen) {
+      addModelForm.reset();
+      setModelImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [isAddModelDialogOpen, addModelForm, setModelImagePreview]);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const clearFormAndPreview = () => {
+    addModelForm.reset();
+    addModelForm.setValue('image', undefined);
+    setModelImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleDialogToggle = (isOpen: boolean) => {
     if (!isOpen) {
-      addModelForm.reset();
-      setModelImagePreview(null);
+      clearFormAndPreview();
     }
     setIsAddModelDialogOpen(isOpen);
+  };
+
+  const handleModelSubmit = (data: any) => {
+    clearFormAndPreview();
+    addModel(data);
+    
   };
 
   return (
@@ -62,7 +89,7 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
           <DialogDescription>Add a new model to an existing brand.</DialogDescription>
         </DialogHeader>
         <Form {...addModelForm}>
-          <form onSubmit={addModelForm.handleSubmit(addModel)} className="grid gap-4 py-4">
+          <form onSubmit={addModelForm.handleSubmit(handleModelSubmit)} className="grid gap-4 py-4">
             {/* Brand Select Field */}
             <FormField
               control={addModelForm.control}
@@ -71,7 +98,7 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
                 <FormItem>
                   <FormLabel htmlFor="brand">Brand</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <SelectTrigger id="brand">
                         <SelectValue placeholder="Select brand" />
                       </SelectTrigger>
@@ -88,7 +115,6 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
                 </FormItem>
               )}
             />
-
             {/* Model Name Field */}
             <FormField
               control={addModelForm.control}
@@ -149,6 +175,7 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
               <FormLabel htmlFor="modelImage">Model Image</FormLabel>
               <FormControl>
                 <Input
+                  ref={fileInputRef} // Add the ref here
                   id="modelImage"
                   type="file"
                   accept="image/*"
@@ -157,6 +184,9 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
                     if (file) {
                       addModelForm.setValue('image', file);
                       setModelImagePreview(URL.createObjectURL(file));
+                    } else {
+                      addModelForm.setValue('image', undefined);
+                      setModelImagePreview(null);
                     }
                   }}
                 />
@@ -166,16 +196,27 @@ const AddModelDialog: React.FC<AddModelDialogProps> = ({
 
             {/* Image Preview */}
             {modelImagePreview && (
-              <img
-                src={modelImagePreview}
-                alt="Preview"
-                className="mt-2 h-20 w-20 rounded object-contain border"
-              />
+              <div className="relative">
+                <img
+                  src={modelImagePreview}
+                  alt="Preview"
+                  className="mt-2 h-20 w-20 rounded object-contain border"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={clearFormAndPreview}
+                >
+                  Clear Image
+                </Button>
+              </div>
             )}
 
             {/* Dialog Footer */}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddModelDialogOpen(false)}>
+              <Button variant="outline" type="button" onClick={() => setIsAddModelDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit">Add Model</Button>

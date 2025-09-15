@@ -22,7 +22,6 @@ import {
 } from "../../../components/ui/breadcrumb";
 import { Calendar, Bell } from "lucide-react"
 import { getSocket } from "../../../lib/socket"
-import { NotificationListener } from "../../../components/provider/NotificationListner"
 import { toast } from "react-toastify"
 
 const providerApi = createProviderApi(axiosPrivate)
@@ -85,17 +84,6 @@ export default function DashboardPage() {
       <SidebarInset>
         <div className="min-h-screen bg-slate-50">
           <Navbar />
-
-          {providerData && providerData.location && (
-            <NotificationListener
-              providerId={providerData._id}
-              providerLocation={{
-                lat: providerData.location.coordinates[1],
-                lng: providerData.location.coordinates[0],
-              }}
-            />
-          )}
-
           {/* Header with breadcrumb */}
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
