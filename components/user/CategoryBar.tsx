@@ -2,12 +2,12 @@ import React from 'react'
 
   interface CategoryBarProps {
     setSelectedServiceCategory:(state:string) => void
-    serviceCategories:{
+    serviceCategories: ReadonlyArray<{
       key:string,
       name:string,
       icon:string,
       isActive:boolean
-    }[]
+    }>
     selectedServiceCategory:string
   }
 export const CategoryBar:React.FC<CategoryBarProps> = ({setSelectedServiceCategory,serviceCategories,selectedServiceCategory}) => {

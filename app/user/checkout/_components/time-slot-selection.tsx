@@ -1,136 +1,232 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { Clock, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import type {
-  CheckoutStepProps,
-  TimeSlot,
-  AvailableDate,
-} from "../../../../types/checkout";
-import { useEffect } from "react";
+import { motion } from "framer-motion"
+import { Clock, CalendarIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar as DayCalendar } from "@/components/ui/calendar"
+import { useEffect } from "react"
+
+type TimeSlot = { id: string; time: string; available: boolean }
+type AvailableDate = { date: string; available: boolean; timeSlots: TimeSlot[]; isEmergency?: boolean }
+type CheckoutStepData = { selectedDate?: AvailableDate; selectedSlot?: TimeSlot }
+type CheckoutStepProps = {
+  data: CheckoutStepData
+  onUpdate: (partial: Partial<CheckoutStepData>) => void
+  onNext: () => void
+}
+
+const SLOT_RANGES = [
+  "10:00 - 11:00",
+  "11:00 - 12:00",
+  "12:00 - 01:00",
+  "01:00 - 02:00",
+  "02:00 - 03:00",
+  "03:00 - 04:00",
+  "04:00 - 05:00",
+]
 
 const generateAvailableDates = (): AvailableDate[] => {
-  const timeRanges = [
-    "10:00 - 11:00",
-    "11:00 - 12:00",
-    "12:00 - 01:00",
-    "01:00 - 02:00",
-    "02:00 - 03:00",
-    "03:00 - 04:00",
-    "04:00 - 05:00",
-  ];
-
-  const today = new Date();
-  const availableDates: AvailableDate[] = [];
+  const today = new Date()
+  const availableDates: AvailableDate[] = []
 
   for (let i = 0; i < 7; i++) {
-    const currentDate = new Date(today);
-    currentDate.setDate(today.getDate() + i);
+    const currentDate = new Date(today)
+    currentDate.setDate(today.getDate() + i)
 
-    const formattedDate = currentDate.toISOString().split("T")[0];
+    const formattedDate = currentDate.toISOString().split("T")[0]
 
-    const timeSlots: TimeSlot[] = timeRanges.map((time, index) => ({
+    const timeSlots: TimeSlot[] = SLOT_RANGES.map((time, index) => ({
       id: `${index + 1}`,
       time,
-      available: true,
-    }));
+      available: isFutureSlot(formattedDate, time),
+    }))
 
     availableDates.push({
       date: formattedDate,
       available: true,
       timeSlots,
       isEmergency: false,
-    });
+    })
   }
 
-  return availableDates;
-};
+  return availableDates
+}
 
-const availableDates = generateAvailableDates();
+// Helper to build the next N days that actually have available slots
+function buildNextNDaysWithSlots(targetCount: number): AvailableDate[] {
+  const now = new Date()
+  const results: AvailableDate[] = []
+  let i = 0
+
+  // Safety cap to avoid infinite loops; adjust horizon as needed
+  while (results.length < targetCount && i < 60) {
+    const d = new Date(now)
+    d.setDate(now.getDate() + i)
+    const dateStr = d.toISOString().split("T")[0]
+
+    // Build base slots and compute availability per slot
+    const slots: TimeSlot[] = SLOT_RANGES.map((time, idx) => ({
+      id: `${dateStr}-${idx + 1}`,
+      time,
+      available: isFutureSlot(dateStr, time),
+    }))
+
+    // Filter out past slots for today; keep all true-available for future days
+    const filtered = isSameDay(dateStr, now)
+      ? slots.filter((s) => isFutureSlot(dateStr, s.time))
+      : slots.filter((s) => s.available)
+
+    if (filtered.length > 0) {
+      results.push({
+        date: dateStr,
+        available: true,
+        timeSlots: filtered,
+        isEmergency: false,
+      })
+    }
+
+    i++
+  }
+  return results
+}
+
+const availableDates = generateAvailableDates()
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const date = new Date(dateString)
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
 
   if (date.toDateString() === today.toDateString()) {
-    return "Today";
+    return "Today"
   } else if (date.toDateString() === tomorrow.toDateString()) {
-    return "Tomorrow";
+    return "Tomorrow"
   } else {
     return date.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    });
+    })
   }
 }
 
-export function TimeSlotSelection({
-  data,
-  onUpdate,
-  onNext,
-}: CheckoutStepProps) {
+// Time parsing and filtering helpers
+function isSameDay(dateStr: string, ref: Date) {
+  const refKey = toISO(ref)
+  return dateStr === refKey
+}
 
-useEffect(() => {
-  console.log('the checkout data',data)
-},[data]);
+function parseStartToLocalDate(dateStr: string, timeRange: string) {
+  // Expect formats like "10:00 - 11:00", "12:00 - 01:00", "01:00 - 02:00"
+  // Business hours assumption: 10:00-17:00; interpret 01:00-05:00 as 13:00-17:00
+  const start = timeRange.split(" - ")[0]?.trim() ?? "00:00"
+  const [hStr, mStr] = start.split(":")
+  let h = Number(hStr || 0)
+  const m = Number(mStr || 0)
+  if (h >= 1 && h <= 5) h += 12 // map 01:00-05:00 to 13:00-17:00
+  // 12:00 stays 12 (noon), 10,11 remain morning
+  const d = new Date(`${dateStr}T00:00:00`)
+  d.setHours(h, m, 0, 0)
+  return d
+}
+
+function isFutureSlot(dateStr: string, timeRange: string) {
+  const now = new Date()
+  const start = parseStartToLocalDate(dateStr, timeRange)
+  // If selected date is today, ensure start is after now; else for future days allow
+  if (isSameDay(dateStr, now)) {
+    return start.getTime() > now.getTime()
+  }
+  return start.getTime() > now.getTime() // future days remain available
+}
+
+// Build availability across a longer horizon (e.g., 90 days) and ISO helpers
+function toISO(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}` // local date key (YYYY-MM-DD)
+}
+
+function parseLocalDate(dateKey: string) {
+  const [y, m, d] = dateKey.split("-").map((s) => Number(s))
+  return new Date(y, (m || 1) - 1, d || 1)
+}
+
+function buildAvailableWithinHorizon(daysAhead: number): AvailableDate[] {
+  const now = new Date()
+  const results: AvailableDate[] = []
+  for (let i = 0; i <= daysAhead; i++) {
+    const d = new Date(now)
+    d.setDate(now.getDate() + i)
+    const dateStr = toISO(d) // local-safe key
+
+    const slots: TimeSlot[] = SLOT_RANGES.map((time, idx) => ({
+      id: `${dateStr}-${idx + 1}`,
+      time,
+      available: isFutureSlot(dateStr, time),
+    }))
+
+    const filtered = isSameDay(dateStr, now)
+      ? slots.filter((s) => isFutureSlot(dateStr, s.time))
+      : slots.filter((s) => s.available)
+
+    if (filtered.length > 0) {
+      results.push({
+        date: dateStr,
+        available: true,
+        timeSlots: filtered,
+        isEmergency: false,
+      })
+    }
+  }
+  return results
+}
+
+export function TimeSlotSelection({ data, onUpdate, onNext }: CheckoutStepProps) {
+  // Show a calendar spanning ~3 months (90 days) and only include days with remaining slots
+  const availableDays = buildAvailableWithinHorizon(90)
+  const availableMap = new Map(availableDays.map((d) => [d.date, d]))
+
+  useEffect(() => {
+    const hasSelection = Boolean(data.selectedDate)
+    if (!hasSelection) return
+
+    const selectionStillValid = hasSelection && availableDays.some((d) => d.date === data.selectedDate!.date)
+
+    const selectedHasSlots =
+      hasSelection &&
+      (isSameDay(data.selectedDate!.date, new Date())
+        ? (data.selectedDate!.timeSlots || []).some((s) => isFutureSlot(data.selectedDate!.date, s.time))
+        : (data.selectedDate!.timeSlots || []).length > 0)
+
+    if (!selectionStillValid || !selectedHasSlots) {
+      onUpdate({ selectedDate: undefined, selectedSlot: undefined })
+    }
+  }, [data.selectedDate])
 
   const handleDateSelect = (selectedDate: AvailableDate) => {
     if (selectedDate.available) {
       onUpdate({
         selectedDate: selectedDate,
-        selectedSlot: undefined, // Reset time slot when date changes
-      });
+        selectedSlot: undefined,
+      })
     }
-  };
+  }
 
   const handleSlotSelect = (slot: TimeSlot) => {
     if (slot.available && data.selectedDate) {
-      onUpdate({ selectedSlot: slot });
+      onUpdate({ selectedSlot: slot })
     }
-  };
+  }
 
-  const currentTimeSlots = data.selectedDate?.timeSlots || [];
-
-  const handleEmergencySelect = () => {
-    const currentDateTime = new Date();
-    const emergencyAppointment = {
-      date: currentDateTime.toISOString().split("T")[0], // Current date in YYYY-MM-DD format
-      time: currentDateTime.toTimeString().split(" ")[0].substring(0, 5), // Current time in HH:MM format
-      isEmergency: true,
-      available: true,
-      type: "emergency",
-    };
-
-    onUpdate({
-      selectedDate: {
-        date: emergencyAppointment.date,
-        available: true,
-        isEmergency: true,
-        timeSlots:[{
-      id: `1`,
-      time:emergencyAppointment.time,
-      available: true,
-    }]
-      },
-      selectedSlot: {
-        id:'emergency',
-        time:emergencyAppointment.time,
-        available:true
-      },
-    });
-    console.log("Emergency appointment selected:", emergencyAppointment);
-  };
+  const currentTimeSlots = data.selectedDate
+    ? isSameDay(data.selectedDate.date, new Date())
+      ? (data.selectedDate.timeSlots || []).filter((s) => isFutureSlot(data.selectedDate?.date ?? "", s.time))
+      : data.selectedDate.timeSlots || []
+    : []
 
   return (
     <motion.div
@@ -141,186 +237,140 @@ useEffect(() => {
     >
       <Card>
         <CardHeader>
+          {/* Use CalendarIcon alias since DayCalendar is the UI component */}
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             Select Date & Time
           </CardTitle>
-          <CardDescription>
-            Choose your preferred date and time slot for the service
-          </CardDescription>
+          <CardDescription>Choose your preferred date and time slot for the service</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Date Selection */}
+        <CardContent className="space-y-6 md:space-y-0 md:grid md:grid-cols-2 md:gap-6">
+          {/* Left: Calendar */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-700">
-              Available Dates
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {/* Emergency Button */}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  variant={
-                    data.selectedDate?.isEmergency ? "default" : "outline"
-                  }
-                  className={`w-full h-16 flex flex-col items-center justify-center text-xs relative ${
-                    data.selectedDate?.isEmergency
-                      ? "bg-red-600 hover:bg-red-700 text-white ring-2 ring-red-500 ring-offset-2 shadow-lg"
-                      : "border-red-200 hover:bg-red-50 hover:border-red-300 text-red-600"
-                  }`}
-                  onClick={() => handleEmergencySelect()}
-                >
-                  {/* Emergency Icon */}
-                  <div className="flex items-center gap-1 mb-1">
-                    <svg
-                      className="w-3 h-3"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="font-semibold">Emergency</span>
-                  </div>
-                  <span className="text-xs opacity-90">Immediate</span>
-
-                  {/* Pulse animation for emergency */}
-                  {data.selectedDate?.isEmergency && (
-                    <div className="absolute inset-0 rounded-md">
-                      <div className="absolute inset-0 rounded-md bg-red-400 animate-ping opacity-20"></div>
-                    </div>
-                  )}
-                </Button>
-              </motion.div>
-
-              {/* Regular Date Buttons */}
-              {availableDates.map((dateOption) => (
-                <motion.div
-                  key={dateOption.date}
-                  whileHover={{ scale: dateOption.available ? 1.02 : 1 }}
-                  whileTap={{ scale: dateOption.available ? 0.98 : 1 }}
-                >
-                  <Button
-                    variant={
-                      data.selectedDate?.date === dateOption.date &&
-                      !data.selectedDate?.isEmergency
-                        ? "default"
-                        : "outline"
-                    }
-                    className={`w-full h-16 flex flex-col items-center justify-center text-xs ${
-                      !dateOption.available
-                        ? "opacity-50 cursor-not-allowed"
-                        : data.selectedDate?.date === dateOption.date &&
-                          !data.selectedDate?.isEmergency
-                        ? "bg-blue-500 hover:bg-blue-600 text-white ring-2 ring-blue-500 ring-offset-2"
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => handleDateSelect(dateOption)}
-                    disabled={!dateOption.available}
-                  >
-                    <span className="font-medium">
-                      {formatDate(dateOption.date)}
-                    </span>
-                    <span className="text-xs opacity-75">
-                      {new Date(dateOption.date).getDate()}
-                    </span>
-                    {!dateOption.available && (
-                      <span className="text-xs text-red-400">Unavailable</span>
-                    )}
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
+            <h3 className="text-sm font-medium text-gray-700">Calendar</h3>
+            <DayCalendar
+              mode="single"
+              numberOfMonths={1}
+              fromDate={new Date()}
+              toDate={(() => {
+                const d = new Date()
+                d.setMonth(d.getMonth() + 3)
+                return d
+              })()}
+              selected={data.selectedDate ? parseLocalDate(data.selectedDate.date) : undefined}
+              onSelect={(date) => {
+                if (!date) return
+                const iso = toISO(date) // local key
+                const chosen = availableMap.get(iso)
+                if (chosen?.available) {
+                  onUpdate({ selectedDate: chosen, selectedSlot: undefined })
+                }
+              }}
+              disabled={(date) => !availableMap.has(toISO(date))}
+              className="rounded-md border"
+            />
           </div>
 
-          {/* Time Slot Selection */}
-          {data.selectedDate && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-3"
-            >
-              <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Available Time Slots for {formatDate(data.selectedDate.date)}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {currentTimeSlots.map((slot) => (
-                  <motion.div
-                    key={slot.id}
-                    whileHover={{ scale: slot.available ? 1.02 : 1 }}
-                    whileTap={{ scale: slot.available ? 0.98 : 1 }}
-                  >
-                    <Button
-                      variant={
-                        data.selectedSlot?.id === slot.id
-                          ? "default"
-                          : "outline"
-                      }
-                      className={`w-full h-12 ${
-                        !slot.available
-                          ? "opacity-50 cursor-not-allowed"
-                          : data.selectedSlot?.id === slot.id
-                          ? "bg-red-500 hover:bg-red-600 text-white ring-2 ring-red-500 ring-offset-2"
-                          : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => handleSlotSelect(slot)}
-                      disabled={!slot.available}
-                    >
-                      {slot.time}
-                      {!slot.available && (
-                        <span className="ml-2 text-xs">(Unavailable)</span>
-                      )}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Right: Time slots + summary + sticky button */}
+          <div className="flex flex-col md:min-h-80">
+            {/* Header */}
+            <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {data.selectedDate ? (
+                <>Available Time Slots for {formatDate(data.selectedDate.date)}</>
+              ) : (
+                <>Select a date to see available time slots</>
+              )}
+            </h3>
 
-          {/* Selection Summary */}
-          {data.selectedDate && data.selectedSlot && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mt-6 p-4 bg-gray-50 rounded-lg border"
-            >
-              <h4 className="text-sm font-medium text-gray-900 mb-2">
-                Booking Summary
-              </h4>
-              <div className="space-y-1 text-sm text-gray-600">
-                <p>
-                  Date:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {formatDate(data.selectedDate.date)}
-                  </span>
-                </p>
-                <p>
-                  Time:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {data.selectedSlot.time}
-                  </span>
-                </p>
-              </div>
-            </motion.div>
-          )}
+            {/* Scrollable time slots area */}
+            {data.selectedDate ? (
+              <>
+                {(() => {
+                  const currentTimeSlots = data.selectedDate
+                    ? isSameDay(data.selectedDate.date, new Date())
+                      ? (data.selectedDate.timeSlots || []).filter((s) => isFutureSlot(data.selectedDate!.date, s.time))
+                      : data.selectedDate.timeSlots || []
+                    : []
 
-          <div className="flex justify-end pt-4">
-            <Button
-              onClick={onNext}
-              disabled={!data.selectedDate || !data.selectedSlot}
-              className="min-w-24 bg-red-500 hover:bg-red-600 text-white"
-            >
-              Continue
-            </Button>
+                  return currentTimeSlots.length === 0 ? (
+                    <div className="text-sm text-gray-500 border rounded-md p-3">
+                      No remaining time slots available for{" "}
+                      <span className="font-medium text-gray-700">{formatDate(data.selectedDate!.date)}</span>. Please
+                      choose another date.
+                    </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto pr-1 mt-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {currentTimeSlots.map((slot) => (
+                          <motion.div
+                            key={slot.id}
+                            whileHover={{ scale: slot.available ? 1.02 : 1 }}
+                            whileTap={{ scale: slot.available ? 0.98 : 1 }}
+                          >
+                            <Button
+                              variant={data.selectedSlot?.id === slot.id ? "default" : "outline"}
+                              className={`w-full h-9 px-3 py-2 text-sm ${
+                                !slot.available
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : data.selectedSlot?.id === slot.id
+                                    ? "bg-red-500 hover:bg-red-600 text-white ring-2 ring-red-500 ring-offset-2"
+                                    : "hover:bg-gray-50"
+                              }`}
+                              onClick={() => handleSlotSelect(slot)}
+                              disabled={!slot.available}
+                              aria-pressed={data.selectedSlot?.id === slot.id}
+                            >
+                              {slot.time}
+                              {!slot.available && <span className="ml-2 text-xs">(Unavailable)</span>}
+                            </Button>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </>
+            ) : (
+              <div className="text-sm text-gray-500 border rounded-md p-3 mt-2">
+                Choose a date from the calendar to see available time slots.
+              </div>
+            )}
+
+            {/* Summary (non-scrolling area) */}
+            {data.selectedDate && data.selectedSlot && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mt-4 p-4 bg-gray-50 rounded-lg border"
+              >
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Booking Summary</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p>
+                    Date: <span className="font-semibold text-gray-900">{formatDate(data.selectedDate.date)}</span>
+                  </p>
+                  <p>
+                    Time: <span className="font-semibold text-gray-900">{data.selectedSlot.time}</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Bottom-aligned Continue button */}
+            <div className="flex justify-end mt-4 md:mt-auto pt-4">
+              <Button
+                onClick={onNext}
+                disabled={!data.selectedDate || !data.selectedSlot}
+                className="min-w-24 bg-red-500 hover:bg-red-600 text-white"
+              >
+                Continue
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
     </motion.div>
-  );
+  )
 }
+
+export default TimeSlotSelection

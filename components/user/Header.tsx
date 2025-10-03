@@ -12,11 +12,19 @@ import {toast} from "react-toastify"
 const userApi = createUserApi(axiosPrivate)
 const authApi = createAuthApi(axiosPrivate)
 import { IServiceProvider } from "@/types/provider"
+import { NotificationBell } from "../NotificationBell"
+import { useSelector } from "react-redux";
+import { clearCart } from "@/redux/features/cartSlice"
+import { useDispatch } from "react-redux"
+import { RootState } from "../../redux/store";
+
 export const Header = () => {
-  const router = useRouter()
-  const [showDropdown, setShowDropdown] = useState(false)
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [showDropdown, setShowDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("Thiruvananthapuram");
   const [searchResults, setSearchResults] = useState<IServiceProvider[]>([])
+  const unreadCount = useSelector((state: RootState) => state.notifications.unreadCount);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem("selectedLocation")
@@ -52,14 +60,17 @@ export const Header = () => {
     try {
       await authApi.logoutApi();
       router.push("/")
+      dispatch(clearCart());
       toast.success("Logged out successfully")
     } catch (error) {
      toast.error("Logout failed")
     }
   }
-
+const handleBellClick = () => {
+  router.push("/user/notifications");
+  }
   return (
-    <header className="bg-black text-white p-4">
+<header className="fixed top-0 left-0 w-full z-50 bg-black text-white p-4 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <div className="text-2xl font-bold">FixMyRide</div>
@@ -69,14 +80,7 @@ export const Header = () => {
         <ServiceSearch selectedLocation={selectedLocation} onSearch={handleSearch} searchResults={searchResults}/>
 
         <div className="flex items-center space-x-6">
-          <a href="#" className="hover:text-gray-300">
-            Blog
-          </a>
-          <div className="relative group">
-            <a href="#" className="hover:text-gray-300">
-              More
-            </a>
-          </div>
+      <NotificationBell count={unreadCount} onClick={handleBellClick}/>
           <div className="relative">
             <a href="#" className="bg-red-600 text-white px-4 py-2 rounded" onMouseEnter={() => setShowDropdown(true)}>
               Customer

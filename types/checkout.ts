@@ -21,15 +21,14 @@ export interface AvailableDate {
   date: string
   available: boolean
   timeSlots: TimeSlot[]
-  isEmergency:boolean
 }
 
 
 export interface CheckoutData {
-  selectedSlot: TimeSlot | null
+  selectedSlot?: TimeSlot 
   selectedAddress: Address
   paymentMethod: "online" |"cash"
-  selectedDate:AvailableDate
+  selectedDate?:AvailableDate
 }
 
 export interface CheckoutStepProps {

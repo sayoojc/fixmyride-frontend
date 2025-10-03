@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { GoogleMap, MarkerF } from "@react-google-maps/api";
 
 interface MapPickerProps {

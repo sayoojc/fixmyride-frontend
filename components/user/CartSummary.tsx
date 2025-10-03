@@ -1,9 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../redux/store";
+import { useState } from "react";
 import type { IFrontendCart } from "@/types/cart";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,22 +19,26 @@ import { X } from "lucide-react";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 const userApi = createUserApi(axiosPrivate);
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
+import { useDispatch } from "react-redux";
+import { clearCart } from "@/redux/features/cartSlice";
+import { setCart } from "@/redux/features/cartSlice";
 
 interface CartSummaryProps {
   cart: IFrontendCart;
-  setCart: (state: IFrontendCart | undefined) => void;
 }
 
-export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
+export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
   const vehicle = useSelector((state: RootState) => state.vehicle);
+  const dispatch = useDispatch();
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<{
     cartId: string;
     packageId: string;
     serviceName: string;
   } | null>(null);
-  const [useWallet, setUseWallet] = useState(false);
-  const walletBalance = 500;
+
   const calculateSubtotal = () => {
     if (!cart.services || !Array.isArray(cart.services)) return 0;
 
@@ -64,15 +66,13 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
 
   const subtotal = calculateSubtotal();
   const discountAmount = cart.coupon?.discountAmount || 0;
-  const walletAmount = useWallet
-    ? Math.min(walletBalance, subtotal - discountAmount)
-    : 0;
-  const finalAmount = subtotal - discountAmount - walletAmount;
+
+  const finalAmount = subtotal - discountAmount;
 
   const handleRemoveFromCart = async (cartId: string, packageId: string) => {
     try {
       const response = await userApi.removeFromCart(cartId, packageId);
-      setCart(response.cart);
+      dispatch(setCart(response.cart));
     } catch (error) {
       throw error;
     }
@@ -102,9 +102,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
     setShowRemoveDialog(false);
     setItemToRemove(null);
   };
-  const toggleWallet = () => {
-    setUseWallet(!useWallet);
-  };
+ 
 
   const vehicleBrand =
     cart.vehicleId?.brandId.brandName || vehicle.brand?.name || "";
@@ -139,7 +137,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
           <Button
             variant="ghost"
             className="text-red-500 font-medium hover:text-red-600"
-            onClick={() => setCart(undefined)}
+            onClick={() => dispatch(clearCart())}
           >
             CHANGE
           </Button>
@@ -194,45 +192,6 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
               </Button>
             </div>
           ))}
-
-        {/* Membership Section */}
-        {/* <div className="bg-gray-800 text-white p-4 rounded flex justify-between items-center mb-6">
-          <div>
-            <div className="font-semibold">Membership</div>
-            <div className="mt-2 text-sm">• ₹20,000 Annual Savings</div>
-          </div>
-          <div className="text-sm">
-            <div>Free SOS and much more</div>
-            <div className="flex justify-end mt-2">
-              <ChevronRight className="w-5 h-5" />
-            </div>
-          </div>
-        </div> */}
-
-        {/* Wallet Section */}
-        {/* <div className="border rounded-lg p-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <Wallet className="w-5 h-5 mr-2 text-green-600" />
-              <div>
-                <p className="font-medium">Wallet Balance</p>
-                <p className="text-sm text-gray-600">
-                  Available: ₹{walletBalance.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="use-wallet"
-                checked={useWallet}
-                onCheckedChange={toggleWallet}
-              />
-              <Label htmlFor="use-wallet">Use Wallet</Label>
-            </div>
-          </div>
-        </div> */}
-
-        {/* Price Breakdown */}
         <div className="mb-6 space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal</span>
@@ -245,14 +204,6 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
               <span>-₹{cart.coupon.discountAmount.toLocaleString()}</span>
             </div>
           )}
-
-          {useWallet && walletAmount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Wallet Credit</span>
-              <span>-₹{walletAmount.toLocaleString()}</span>
-            </div>
-          )}
-
           <div className="flex justify-between border-t pt-2">
             <span className="text-lg font-semibold">Total</span>
             <span className="text-lg font-semibold">
@@ -261,19 +212,6 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, setCart }) => {
           </div>
           <p className="text-sm text-gray-600">Extra charges may apply</p>
         </div>
-
-        {/* Coupon Section */}
-        {/* <div className="border border-dashed p-3 rounded-lg flex justify-between items-center mb-6 cursor-pointer hover:bg-gray-50">
-          <div className="flex items-center">
-            <Info className="w-6 h-6 text-blue-500 mr-2" />
-            <span className="font-medium">
-              {cart.coupon?.applied ? "Coupon Applied" : "Apply Coupon"}
-            </span>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" />
-        </div> */}
-
-        {/* Checkout Button */}
         {cart?.services?.length > 0 && (
           <Link href={`/user/checkout?cartId=${cart._id}`} passHref>
             <Button

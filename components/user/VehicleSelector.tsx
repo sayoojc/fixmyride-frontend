@@ -9,16 +9,16 @@ import { axiosPrivate } from "@/api/axios";
 import { IFrontendCart } from "@/types/cart";
 import { useDispatch } from "react-redux";
 import { setVehicleData } from "../../redux/features/vehicleSlice";
+import { setCart  } from "@/redux/features/cartSlice";
+
 const userApi = createUserApi(axiosPrivate);
 interface VehicleSelectorProps {
   vehicles:Vehicle[];
   setOpenAddVehicleModal: (state: boolean) => void;
-  setCart: (state: IFrontendCart) => void;
 }
 export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
   vehicles,
   setOpenAddVehicleModal,
-  setCart,
 }) => {
   const dispatch = useDispatch();
   const selectVehicleHandler = async (vehicleId: string) => {
@@ -38,6 +38,7 @@ export const VehicleSelector: React.FC<VehicleSelectorProps> = ({
         },
       };
       dispatch(setVehicleData(selectedVehicleData));
+      dispatch(setCart(cart))
       setCart(cart);
     } catch (error) {
       throw error;

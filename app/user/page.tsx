@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState } from "react";
 import { CategoryBar } from "@/components/user/CategoryBar";
 import { ServicePackages } from "@/components/user/ServicePackages";
 import { CartSummary } from "@/components/user/CartSummary";
@@ -8,37 +8,46 @@ import { VehicleSelector } from "../../components/user/VehicleSelector";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import { Vehicle } from "@/types/user";
-import { IFrontendCart } from "@/types/cart";
 import { toast } from "react-toastify";
 import type { IServicePackage } from "@/types/service-packages";
 import { serviceCategories } from "@/constants/serviceCategories";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const userApi = createUserApi(axiosPrivate);
 const CarServiceBooking = () => {
+  const cart = useSelector((state: RootState) => state.cart.cart);
   const [selectedServiceCategory, setSelectedServiceCategory] =
     useState<string>('general');
-  const [cart, setCart] = useState<IFrontendCart>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [openAddVehicleModal, setOpenAddVehicleModal] = useState(false);
     const [servicePackages, setServicePackages] = useState<IServicePackage[]>([]);
+
+    useEffect(() => {
+      console.log('packages',servicePackages);
+    }, [servicePackages]);
     const [loading, setLoading] = useState(false); 
     useEffect(() => {
+      console.log('the useEffect in the page.tsx Selected Service Category:', selectedServiceCategory);
     const fetchServicePackages = async () => {
       setLoading(true);
-      if(!cart?.vehicleId.modelId._id){
+      if(!cart){
+        console.log('nod cart.vehicleId.modelId._id');
         setLoading(false);
         return;
       }
+      console.log('fetching service packages for modelId:', cart?.vehicleId.modelId._id, 'fuel:', cart?.vehicleId.fuel);
       const response = await userApi.getServicePackages(
         cart?.vehicleId.modelId._id,
         selectedServiceCategory,
         cart?.vehicleId.fuel,
       );
+      console.log('Fetched service packages:', response.servicePackages);
       setServicePackages(response.servicePackages);
       setLoading(false);
     };
     fetchServicePackages();
-  }, [selectedServiceCategory,cart?._id]);
+  }, [selectedServiceCategory,cart?.vehicleId?.modelId?._id, cart?.vehicleId?.fuel,cart]);
 useEffect(() => {
   const fetchVehicles = async () => {
     try {
@@ -64,9 +73,8 @@ useEffect(() => {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {cart?.vehicleId.modelId._id ?(
+          {cart ?(
             <ServicePackages
-              setCart={setCart}
               loading={loading}
               servicePackages={servicePackages}
             />
@@ -156,13 +164,12 @@ useEffect(() => {
         </div>
       </div>
           )}
-          {cart ? (
-            <CartSummary cart={cart} setCart={setCart} />
+          {cart ?  (
+            <CartSummary cart={cart}/>
           ) : (
             <VehicleSelector
               vehicles={vehicles}
               setOpenAddVehicleModal={setOpenAddVehicleModal}
-              setCart={setCart}
             />
           )}
           <AddVehicleModal

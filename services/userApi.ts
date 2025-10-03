@@ -229,9 +229,28 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     fuelType: string
   ) => {
     try {
-      if (!vehicleId || !serviceCategory) return;
+      console.log("getServicePackages called with:", {
+        vehicleId,
+        serviceCategory,
+        fuelType,
+      });
+      if (!vehicleId || !serviceCategory) {
+        console.log("Missing vehicleId or serviceCategory, returning early");
+        return;
+      }
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/service-packages?vehicleId=${vehicleId}&serviceCategory=${serviceCategory}&fuelType=${fuelType}`
+      );
+      console.log("Service packages response:", response.data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  getServicePackageById: async (packageId: string) => {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/service-packages/${packageId}`
       );
       return response.data;
     } catch (error) {
@@ -255,7 +274,6 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     orderId: string,
     razorpayPaymentId: string,
     razorpaySignature: string,
-    cartId: string,
     paymentMethod: string,
     selectedAddressId: {
       addressLine1: string;
@@ -271,7 +289,9 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       zipCode: string;
     },
     selectedDate: AvailableDate,
-    selectedSlot: TimeSlot
+    selectedSlot: TimeSlot,
+    cartId?: string,
+    packageId?: string
   ) {
     try {
       const response = await axiosPrivate.post(
@@ -285,6 +305,7 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
           selectedAddressId,
           selectedDate,
           selectedSlot,
+          packageId,
         }
       );
       return response.data;
@@ -293,6 +314,37 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
   //// Order Apis////
+  async placeEmergencyCashOrder(
+    packageId: string,
+    vehicleId: string,
+    selectedAddressId: {
+      addressLine1: string;
+      addressLine2: string;
+      addressType: string;
+      city: string;
+      id?: string;
+      isDefault: boolean;
+      latitude: number;
+      longitude: number;
+      state: string;
+      userId: string;
+      zipCode: string;
+    }
+  ) {
+    try {
+      const response = await axiosPrivate.post(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/emergency`,
+        {
+          selectedAddressId,
+          vehicleId,
+          packageId,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error
+    }
+  },
   async placeCashOrder(
     cartId: string,
     paymentMethod: string,
@@ -314,11 +366,11 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
   ) {
     try {
       console.log("Placing cash order with:", {
-        cartId, 
+        cartId,
         paymentMethod,
-        selectedAddressId,  
+        selectedAddressId,
         selectedDate,
-        selectedSlot
+        selectedSlot,
       });
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders`,
@@ -345,34 +397,34 @@ const createUserApi = (axiosPrivate: AxiosInstance) => ({
       throw error;
     }
   },
-async fetchOrderHistory({ page, limit }: { page: number; limit: number }) {
-  try {
-    const response = await axiosPrivate.get(
-      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/history`,
-      {
-        params: { page, limit },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-},
-async getProvidersBySearch(query: string, location: string) {
-  try {
-    const response = await axiosPrivate.get(
-      `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/providers`,
-      {
-        params: { query, location },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-},
-/////notifications api/////
- getNotifications: async (
+  async fetchOrderHistory({ page, limit }: { page: number; limit: number }) {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/orders/history`,
+        {
+          params: { page, limit },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getProvidersBySearch(query: string, location: string) {
+    try {
+      const response = await axiosPrivate.get(
+        `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/providers`,
+        {
+          params: { query, location },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  /////notifications api/////
+  getNotifications: async (
     search: string,
     page: number,
     limit: number,
@@ -432,13 +484,12 @@ async getProvidersBySearch(query: string, location: string) {
     try {
       const response = await axiosPrivate.get(
         `${process.env.NEXT_PUBLIC_USER_API_END_POINT}/notifications/count`
-      )
-      return response.data
+      );
+      return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
-  }
-
+  },
 });
 
 export default createUserApi;

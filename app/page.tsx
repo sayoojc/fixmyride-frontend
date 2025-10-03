@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 import createAuthApi from "@/services/authApi";
+import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
 import LoginModal from "@/components/LoginModal";
 import SignupModal from "@/components/SignupModal";
@@ -15,6 +16,7 @@ import EmailInputModal from "@/components/EnterEmailModal";
 //redux
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/features/authSlice";
+import { setUnreadCount } from "@/redux/features/notificationSlice";
 import type { AppDispatch } from "@/redux/store";
 
 import { toast } from "react-toastify";
@@ -39,6 +41,7 @@ import {
   TestimonialProps,
 } from "@/types/userAuth";
 const authApi = createAuthApi(axiosPrivate);
+const userApi = createUserApi(axiosPrivate);
 const ServiceCard: React.FC<ServiceCardProps> = ({
   icon,
   title,
@@ -148,14 +151,9 @@ const CarServiceLandingPage: React.FC = () => {
         loginData.password
       );
           let location = null;
-    if (response.user.role === "provider") {
-      location = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          (err) => reject(err)
-        );
-      });
-    }
+          const unreadNotificationResponse = await userApi.getUnreadCount();
+          dispatch(setUnreadCount(unreadNotificationResponse.unreadCount));
+          console.log('unreadNotificationResponse',unreadNotificationResponse);
 
       dispatch(
         login({
@@ -179,7 +177,7 @@ const CarServiceLandingPage: React.FC = () => {
 
   const handleforgotPassword = async (email: string) => {
     try {
-      // await authApi.forgotPasswordApi(email);
+      await authApi.forgotPasswordApi(email);
       setShowLoginModal(false);
       setShowEmailInputModal(true);
     } catch (error) {

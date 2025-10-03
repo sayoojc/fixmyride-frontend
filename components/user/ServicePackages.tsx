@@ -6,24 +6,30 @@ import type { RootState } from "../../redux/store";
 import { toast } from "react-toastify";
 import { axiosPrivate } from "@/api/axios";
 import createUserApi from "@/services/userApi";
-import type { IFrontendCart } from "@/types/cart";
+import { setCart } from "@/redux/features/cartSlice";
+import { useDispatch } from "react-redux";
 import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 const userApi = createUserApi(axiosPrivate);
 interface ServicePackagesProps {
-  setCart: (state: IFrontendCart) => void;
   loading: boolean;
   servicePackages: IServicePackage[];
 }
 export const ServicePackages: React.FC<ServicePackagesProps> = ({
-  setCart,
   loading,
   servicePackages
 }) => {
+  const router = useRouter();
+  const dispatch = useDispatch();
   const vehicle = useSelector((state: RootState) => state.vehicle);
-  const handleAddToCart = async (serviceId: string, vehicleId: string) => {
+  const handleAddToCart = async (serviceId: string, vehicleId: string,isEmergency:boolean) => {
     try {
+      if(isEmergency){
+       router.push(`/user/checkout/emergency?packageId=${serviceId}&vehicleId=${vehicleId}`);
+        return;
+      }
       const response = await userApi.addToCart(serviceId, vehicleId);
-      setCart(response.cart);
+      dispatch(setCart(response.cart));
       toast.success("Service added to cart successfully!");
     } catch (error) {
       const err = error as AxiosError<{message:string}>
@@ -294,10 +300,10 @@ export const ServicePackages: React.FC<ServicePackagesProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={() => handleAddToCart(service._id, vehicle.id)}
+                  onClick={() => handleAddToCart(service._id, vehicle.id,service.isEmergency)}
                   className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
-                >
-                  Add
+                >{service.isEmergency?"Book Emergency Service":"Add To Cart"}
+               
                 </button>
               )}
             </div>

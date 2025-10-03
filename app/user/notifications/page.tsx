@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { motion } from "framer-motion"
 import { axiosPrivate } from "@/api/axios"
 import createUserApi from "@/services/userApi"
@@ -29,20 +29,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from "react-toastify"
 import type { INotification } from "@/types/notification"
 import { ConfirmationModal, type ConfirmationConfig } from "../../../components/ConfirmationModal"
+import { useDispatch } from "react-redux"
+import { markAsRead as markNotificationAsRead } from "@/redux/features/notificationSlice"
+import { markAsUnread as markNotificationAsUnread} from "@/redux/features/notificationSlice"
+import { markAllAsRead as markAllNotificationAsRead } from "@/redux/features/notificationSlice"
 
 const userApi = createUserApi(axiosPrivate)
-
-interface PaginatedNotificationResponse {
-  notifications: INotification[]
-  pagination: {
-    currentPage: number
-    totalPages: number
-    totalNotifications: number
-    hasNextPage: boolean
-    hasPrevPage: boolean
-  }
-}
-
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
@@ -116,6 +108,7 @@ const getRelativeTime = (dateString: string) => {
 }
 
 export default function NotificationsPage() {
+  const dispatch = useDispatch();
   const [notifications, setNotifications] = useState<INotification[]>([])
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -146,7 +139,7 @@ export default function NotificationsPage() {
       setLoading(true)
       const response = await userApi.getNotifications(search, page, limit, filterType === "all" ? "" : filterType);
       console.log('Fetched notifications:', response);
-      setNotifications(response.notifications || [])
+      setNotifications(response.data || [])
       setTotalPages(response.totalPages)
       setTotalNotifications(response.totalCount)
       setHasNextPage(response.hasNextPage)
@@ -163,12 +156,15 @@ export default function NotificationsPage() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await userApi.markNotificationAsRead(notificationId)
+      const response = await userApi.markNotificationAsRead(notificationId)
+      console.log('the response from marking notification as read',response);
+      dispatch(markNotificationAsRead())
       setNotifications((prev) =>
         prev.map((notification) =>
           notification._id.toString() === notificationId ? { ...notification, isRead: true } : notification,
         ),
       )
+      
       toast.success("Notification marked as read")
     } catch (error) {
       const err = error as AxiosError<{ message: string }>
@@ -184,6 +180,7 @@ export default function NotificationsPage() {
           notification._id.toString() === notificationId ? { ...notification, isRead: false } : notification,
         ),
       )
+      dispatch(markNotificationAsUnread());
       toast.success("Notification marked as unread")
     } catch (error) {
       const err = error as AxiosError<{ message: string }>
@@ -212,7 +209,8 @@ export default function NotificationsPage() {
           try {
             setConfirmationModal((prev) => ({ ...prev, isLoading: true }))
             await userApi.deleteNotification(notificationId)
-            setNotifications((prev) => prev.filter((notification) => notification._id.toString() !== notificationId))
+            setNotifications((prev) => prev.filter((notification) => notification._id.toString() !== notificationId));
+            markNotificationAsRead();
             toast.success("Notification deleted successfully")
             setConfirmationModal({ isOpen: false, config: null, isLoading: false })
           } catch (error) {
@@ -229,7 +227,8 @@ export default function NotificationsPage() {
     try {
       await userApi.markAllAsRead()
       setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })))
-      toast.success("All notifications marked as read")
+      toast.success("All notifications marked as read");
+      dispatch(markAllNotificationAsRead())
     } catch (error) {
       const err = error as AxiosError<{ message: string }>
       toast.error(err.response?.data.message || "Failed to mark all notifications as read")

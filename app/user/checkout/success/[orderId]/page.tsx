@@ -29,7 +29,8 @@ export default function OrderSuccessPage() {
   useEffect(() => {
     const fetchOrderData = async(id: string) => {
       try {
-        const response =await  userApi.getOrderdetails(id);
+        const response = await  userApi.getOrderdetails(id);
+        console.log("Fetched order data:", response);
         setOrderData(response.order)
       } catch (error) {
         toast.error("Fetching the order data failed");
@@ -41,7 +42,10 @@ export default function OrderSuccessPage() {
       toast.error("Order ID is missing");
     }
 
-  }, [orderId]);
+  }, []);
+useEffect(() => {
+  console.log('the orderData is ',orderData)
+},[orderData]);
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "long",

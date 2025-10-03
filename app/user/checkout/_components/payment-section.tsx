@@ -15,11 +15,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import type { CheckoutPaymentStepProps } from "@/types/checkout";
 import Image from "next/image";
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import createUserApi from "@/services/userApi";
 import { axiosPrivate } from "@/api/axios";
+import { useDispatch } from "react-redux";
+import { clearServicesFromCart } from "@/redux/features/cartSlice";
 const userApi = createUserApi(axiosPrivate);
 declare global {
   interface Window {
@@ -32,18 +34,14 @@ export function PaymentSection({
   onBack,
   cart,
 }: CheckoutPaymentStepProps) {
+  const dispatch = useDispatch();
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
   const handlePaymentMethodChange = (method: "online" | "cash") => {
     onUpdate({ paymentMethod: method });
   };
-   useEffect(() => {
-    console.log("Cart data in PaymentSection:", cart);
-    console.log("data",data)
-   }, [cart,data]);
   const calculateSubtotal = () => {
     if (!cart?.services || !Array.isArray(cart.services)) return 0;
-
     return cart.services.reduce((total, item) => {
       if (
         item.serviceId &&
@@ -55,7 +53,6 @@ export function PaymentSection({
       return total;
     }, 0);
   };
-
   const subtotal = calculateSubtotal();
   const discountAmount = cart?.coupon?.discountAmount || 0;
   const finalAmount = subtotal - discountAmount;
@@ -92,22 +89,27 @@ export function PaymentSection({
             response.razorpay_order_id,
             response.razorpay_payment_id,
             response.razorpay_signature,
-            cart._id,
             data.paymentMethod,
             {
               ...data.selectedAddress,
               userId: data.selectedAddress.userId || "",
             },
-            data.selectedDate,
+            data.selectedDate || {
+              date: "",
+              available: false,
+              timeSlots: [],
+            },
             data.selectedSlot || {
               id: "",
               time: "",
               available: false,
-            }
+            },
+            cart._id
           );
           if (verifyRes.success) {
+            dispatch(clearServicesFromCart())
             console.log("the response for the verify payment", verifyRes);
-             router.push(`/user/checkout/success/${verifyRes.orderId}`);
+            router.push(`/user/checkout/success/${verifyRes.orderId}`);
             toast.success("Payment successful!");
           } else {
             toast.error("Payment verification failed!");
@@ -133,22 +135,27 @@ export function PaymentSection({
     }
   };
 
-  const handleCheckout = async() => {
+  const handleCheckout = async () => {
     if (data.paymentMethod === "online") {
       handleRazorpayPayment();
     } else {
-    const response = await userApi.placeCashOrder(cart._id,'cash', {
-              ...data.selectedAddress,
-              userId: data.selectedAddress.userId || "",
-            },data.selectedDate,data.selectedSlot!);
-      if(response.success){
+      const response = await userApi.placeCashOrder(
+        cart._id,
+        "cash",
+        {
+          ...data.selectedAddress,
+          userId: data.selectedAddress.userId || "",
+        },
+        data.selectedDate!,
+        data.selectedSlot!
+      );
+      if (response.success) {
+        dispatch(clearServicesFromCart());
         toast.success("Order placed successfully!");
         router.push(`/user/checkout/success/${response.orderId}`);
       } else {
-          toast.error("Failed to place order.Try again")
-      }      
-
-
+        toast.error("Failed to place order.Try again");
+      }
     }
   };
   const serviceNames =
