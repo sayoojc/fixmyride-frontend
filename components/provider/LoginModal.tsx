@@ -42,7 +42,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormErrors({});
@@ -64,23 +64,36 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         loginData.password
       );
       let notificationResponse = await providerApi.getReadUnreadCount();
-      console.log('notification  read unread count',notificationResponse);
-      dispatch(
-        setUnreadCount(notificationResponse.unreadCount)
-      )
+      console.log("notification  read unread count", notificationResponse);
+      dispatch(setUnreadCount(notificationResponse.unreadCount));
+      const geo = response.user.location;
+
+      const formattedLocation =
+        geo &&
+        geo.coordinates &&
+        Array.isArray(geo.coordinates) &&
+        typeof geo.coordinates[0] === "number" &&
+        typeof geo.coordinates[1] === "number"
+          ? {
+              lat: geo.coordinates[0],
+              lng: geo.coordinates[1],
+            }
+          : null;
+
       dispatch(
         login({
-          id:response.user._id,
-          name:response.user.name,
-          role:"provider",
-          email:response.user.email,
-          location:response.user.location ?? null,
+          id: response.user._id,
+          name: response.user.name,
+          role: "provider",
+          email: response.user.email,
+          location: formattedLocation,
         })
-      )
+      );
+
       toast.success("Login successful!");
       onClose();
       router.push("/provider/dashboard");
-    } catch (error:any) {
+    } catch (error: any) {
       console.log(error.message);
       toast.error("Login failed");
     } finally {

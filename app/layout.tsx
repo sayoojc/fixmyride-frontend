@@ -5,6 +5,7 @@ import StoreProvider from "../redux/Provider";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <StoreProvider>
         {children}
+        {/* <Footer></Footer> */}
         </StoreProvider>
         <ToastContainer position="top-right" autoClose={3000} />
       </body>

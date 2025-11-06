@@ -3,6 +3,7 @@ import { ProviderNotificationListener } from "@/components/NotificationListner";
 import "react-toastify/dist/ReactToastify.css";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useEffect } from "react";
 
 export default function ProviderLayout({
   children,
@@ -14,7 +15,9 @@ export default function ProviderLayout({
   );
   const providerId = role === "provider" ? id : null;
   const providerLocation = role === "provider" ? location : null;
-
+   useEffect(() => {
+    console.log('the provider location',location)
+   },[location]);
   return (
     <>
       {providerId && providerLocation && (

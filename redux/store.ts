@@ -8,7 +8,7 @@ import notificationReducer from './features/notificationSlice'
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth',"vehicleReducer","notifications","cart"]
+  whitelist: ['auth',"vehicle","notifications","cart"]
 }
 const rootReducer = combineReducers({
   auth: authReducer,

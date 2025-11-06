@@ -17,6 +17,7 @@ const notificationSlice = createSlice({
       state.unreadCount = Math.max(0, state.unreadCount - 1);
     },
     markAsUnread: (state) => {
+      console.log('the mark as unread count is called in the cart slice')
       state.unreadCount = state.unreadCount+1
     },
     markAllAsRead: (state) => {

@@ -8,30 +8,40 @@ import {
   CreditCard,
   Tag,
   Clock,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { axiosPrivate } from "@/api/axios";
 import createUserApi from "@/services/userApi";
-import { IOrderResponse } from "@/types/order";
-import { useState } from "react";
+import type { IOrderResponse } from "@/types/order";
+import { generateReceiptPDF } from "@/utils/generateOrderRecieptPdf";
+
 const userApi = createUserApi(axiosPrivate);
 
 export default function OrderSuccessPage() {
   const params = useParams();
+  const router = useRouter();
   const orderId = params.orderId;
   const [orderData, setOrderData] = useState<IOrderResponse>();
+  const [showPriceBreakup, setShowPriceBreakup] = useState(false);
+
   useEffect(() => {
-    const fetchOrderData = async(id: string) => {
+    console.log("the order data fetched from the frontend", orderData);
+  }, [orderData]);
+
+  useEffect(() => {
+    const fetchOrderData = async (id: string) => {
       try {
-        const response = await  userApi.getOrderdetails(id);
+        const response = await userApi.getOrderdetails(id);
         console.log("Fetched order data:", response);
-        setOrderData(response.order)
+        setOrderData(response.order);
       } catch (error) {
         toast.error("Fetching the order data failed");
       }
@@ -41,11 +51,12 @@ export default function OrderSuccessPage() {
     } else {
       toast.error("Order ID is missing");
     }
-
   }, []);
-useEffect(() => {
-  console.log('the orderData is ',orderData)
-},[orderData]);
+
+  useEffect(() => {
+    console.log("the orderData is ", orderData);
+  }, [orderData]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "long",
@@ -100,10 +111,11 @@ useEffect(() => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <CardTitle className="text-xl">Order Summary</CardTitle>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <p className="text-lg text-gray-600 mb-4">
-                      Thank you for choosing FixMyRide,{" "}
-                      {orderData?.user?.name ?? "Valued Customer"}!
-                    </p>
+                    <Badge
+                      className={getStatusColor(orderData?.orderStatus || "")}
+                    >
+                      {orderData?.orderStatus}
+                    </Badge>
                     <span className="text-sm text-gray-500">
                       #{orderData?._id}
                     </span>
@@ -148,12 +160,6 @@ useEffect(() => {
                           <p className="font-medium">
                             ₹{service.priceBreakup.total.toFixed(2)}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Base: ₹{service.priceBreakup.total.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Tax: ₹{service.priceBreakup.tax?.toFixed(2) ?? 0.0}
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -182,8 +188,108 @@ useEffect(() => {
                   <Separator />
                   <div className="flex justify-between font-medium text-lg">
                     <span>Total Paid</span>
-                    <span>₹{orderData?.finalAmount.toFixed(2)}</span>
+                    <span>₹{orderData?.totalAmount.toFixed(2)}</span>
                   </div>
+
+                  {orderData?.services[0]?.priceBreakup && (
+                    <div className="mt-4">
+                      <Button
+                        variant="outline"
+                        className="w-full flex items-center justify-between bg-transparent"
+                        onClick={() => setShowPriceBreakup(!showPriceBreakup)}
+                      >
+                        <span className="text-sm font-medium">
+                          View Detailed Price Breakup
+                        </span>
+                        {showPriceBreakup ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+
+                      {showPriceBreakup && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                          <h5 className="font-semibold text-sm text-gray-900">
+                            Price Breakdown
+                          </h5>
+
+                          {/* Parts List */}
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-gray-700 uppercase">
+                              Parts & Materials
+                            </p>
+                            {orderData.services[0].priceBreakup.parts.map(
+                              (part: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex justify-between text-sm pl-2"
+                                >
+                                  <span className="text-gray-600">
+                                    {part.name}
+                                  </span>
+                                  <span className="font-medium">
+                                    ₹{part.price.toFixed(2)}
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Labor Charge */}
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Labor Charge</span>
+                            <span className="font-medium">
+                              ₹
+                              {orderData?.services?.[0]?.priceBreakup?.laborCharge?.toFixed(
+                                2
+                              ) ?? "0.00"}
+                            </span>
+                          </div>
+
+                          {/* Discount */}
+                          {orderData?.services?.[0]?.priceBreakup?.discount &&
+                            orderData.services[0].priceBreakup.discount > 0 && (
+                              <div className="flex justify-between text-sm text-green-600">
+                                <span>Discount</span>
+                                <span>
+                                  -₹
+                                  {orderData.services[0].priceBreakup.discount.toFixed(
+                                    2
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                          {/* Tax */}
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Tax (GST)</span>
+                            <span className="font-medium">
+                              ₹
+                              {orderData?.services?.[0]?.priceBreakup?.tax?.toFixed(
+                                2
+                              ) ?? "0.00"}
+                            </span>
+                          </div>
+
+                          <Separator />
+
+                          {/* Total */}
+                          <div className="flex justify-between font-semibold">
+                            <span>Total Amount</span>
+                            <span>
+                              ₹
+                              {orderData.services[0].priceBreakup.total.toFixed(
+                                2
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -303,8 +409,19 @@ useEffect(() => {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button className="w-full">Track Order Status</Button>
-              <Button variant="outline" className="w-full bg-transparent">
+              <Button
+                className="w-full"
+                onClick={() =>
+                  router.push(`/user/order-status/${orderData?._id}`)
+                }
+              >
+                Track Order Status
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-transparent"
+                onClick={() => generateReceiptPDF(orderData)}
+              >
                 Download Receipt
               </Button>
               <Button variant="outline" className="w-full bg-transparent">

@@ -6,7 +6,14 @@ import { UserNotificationListener } from "@/components/NotificationListner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useEffect } from "react";
-
+import dynamic from "next/dynamic";
+import Footer from "@/components/user/Footer";
+const EmergencyOrderWidget = dynamic(
+  () => import("@/components/user/EmergencyOrderWidget"),
+  {
+    ssr: false,
+  }
+);
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,12 +26,11 @@ export default function RootLayout({
   return (
     <>
       <Header />
-
-      {userId && <UserNotificationListener userId={userId} />}
-
-      <main className="pt-20">{children}</main>
-
+     {userId && <UserNotificationListener userId={userId} />}
+      <main className="pt-20 pb-20 min-h-screen">{children}</main>
+      <EmergencyOrderWidget />
       <ToastContainer position="top-right" autoClose={3000} />
+      <Footer></Footer>
     </>
   );
 }

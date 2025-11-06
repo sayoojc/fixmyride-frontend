@@ -18,11 +18,22 @@ export const ProviderNotificationListener = ({
   const dispatch = useDispatch();
   useEffect(() => {
     const socket = getSocket();
-    socket.emit("register:role", {
-      role: "provider",
-      id:providerId,
-      location: providerLocation,
-    });
+    console.log("Emitting register:role", {
+  role: "provider",
+  id: providerId,
+  location: providerLocation,
+});
+  socket.emit(
+  "register:role",
+  {
+    role: "provider",
+    id: providerId,
+    location: providerLocation,
+  },
+  (response:any) => {
+    console.log("Server acknowledged register:role:", response);
+  }
+);
     socket.on("notification:new", (data) => {
       dispatch(markAsUnread());
     });
@@ -79,7 +90,6 @@ export const UserNotificationListener = ({ userId }: { userId: string }) => {
       console.log("📦 order:update payload:", data);
       toast.success(data.message || "Your order has been updated");
        dispatch(markAsUnread());
-    
      
     });
     return () => {

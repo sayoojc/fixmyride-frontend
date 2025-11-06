@@ -1,14 +1,17 @@
+
+
+
 export const serviceCategories = [
   {
     key: "general",
     name: "Periodic Services",
-    icon: "/icons/periodic.png",
+    icon: "/icons/maintenance (1).png",
     isActive: true,
   },
   {
     key: "ac",
     name: "AC Service & Repair",
-    icon: "/icons/ac.png",
+    icon: "/icons/car-ac.png",
     isActive: false,
   },
   {
@@ -20,25 +23,25 @@ export const serviceCategories = [
   {
     key: "tyres",
     name: "Tyres & Wheel Care",
-    icon: "/icons/tyre.png",
+    icon: "/icons/wheels.png",
     isActive: false,
   },
   {
     key: "dent",
     name: "Denting & Painting",
-    icon: "/icons/denting.png",
+    icon: "/icons/bender.png",
     isActive: false,
   },
   {
     key: "detailing",
     name: "Detailing Services",
-    icon: "/icons/detailing.png",
+    icon: "/icons/specification.png",
     isActive: false,
   },
   {
     key: "emergency",
     name: "Emergency Services",
-    icon: "/icons/sos.png",
+    icon: "/icons/siren.png",
     isActive: false,
   },
 ] as const

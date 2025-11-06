@@ -294,10 +294,11 @@ export default function EmergencyBookingPage() {
         vehicle.id,
         selectedAddress
       );
+      console.log('teh response after emergency cash order',response);
 
       if (response.success) {
         toast.success("Emergency service booked successfully!");
-        router.push(`/user/checkout/success/${response.orderId}`);
+        router.push(`/user/checkout/success/${response.orderId._id}`);
       } else {
         toast.error("Failed to book emergency service. Try again");
       }
