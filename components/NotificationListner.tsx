@@ -6,58 +6,83 @@ import { useDispatch } from "react-redux";
 import { markAsUnread } from "@/redux/features/notificationSlice";
 import Swal from "sweetalert2";
 import {toast} from "react-toastify"
-
+import { useRef } from "react";
 /* ---------------- PROVIDER LISTENER ---------------- */
+interface ProviderNotificationListenerProps {
+  providerId: string;
+  providerLocation: { lat: number; lng: number };
+}
+
+
 export const ProviderNotificationListener = ({
   providerId,
   providerLocation,
-}: {
-  providerId: string;
-  providerLocation: { lat: number; lng: number };
-}) => {
+}: ProviderNotificationListenerProps) => {
   const dispatch = useDispatch();
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
+    if (!providerId || !providerLocation) return;
+
+    hasInitialized.current = true;
     const socket = getSocket();
-    console.log("Emitting register:role", {
-  role: "provider",
-  id: providerId,
-  location: providerLocation,
-});
-  socket.emit(
-  "register:role",
-  {
+
+ socket.on("connect", () => {
+  console.log("✅ Socket connected:", socket.id);
+
+  console.log("🚀 Emitting register:role with data:", {
     role: "provider",
     id: providerId,
     location: providerLocation,
-  },
-  (response:any) => {
-    console.log("Server acknowledged register:role:", response);
-  }
-);
+  });
+  socket.emit(
+    "register:role",
+    {
+      role: "provider",
+      id: providerId,
+      location: providerLocation,
+    },
+    (response: any) => {
+      console.log("📬 Server acknowledgment for register:role:", response);
+    }
+  );
+});
     socket.on("notification:new", (data) => {
+      console.log("📩 Notification:", data);
       dispatch(markAsUnread());
     });
+
     socket.on("service:available", (data) => {
+      console.log('the service available event recieved')
+      console.log("🚨 Emergency:", data);
       Swal.fire({
-        title: "New Emergency Order!",
-        text: data.message,
+        title: "🚨 New Emergency Order!",
+        text: data.message || "Emergency nearby!",
         icon: "info",
         confirmButtonText: "View Order",
         showCancelButton: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
+      }).then((res) => {
+        if (res.isConfirmed && data?.orderId) {
           window.location.href = `/provider/orders/${data.orderId}`;
         }
       });
     });
 
-    return () => {
-      socket.off("service:available");
-    };
+    socket.on("connect_error", (err) =>
+      console.error("❌ Socket error:", err.message)
+    );
+
+    socket.on("disconnect", (reason) =>
+      console.warn("⚠️ Socket disconnected:", reason)
+    );
+
+
   }, [providerId, providerLocation]);
 
   return null;
 };
+
+
 
 /* ---------------- ADMIN LISTENER ---------------- */
 export const AdminNotificationListener = ({ adminId }: { adminId: string }) => {

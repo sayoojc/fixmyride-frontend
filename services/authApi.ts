@@ -142,7 +142,7 @@ const createAuthApi = (axiosPrivate: AxiosInstance) => ({
     }
   },
 
-  ProviderLogoutApi: async () => {
+  providerLogoutApi: async () => {
     try {
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_PROVIDER_API_END_POINT}/logout`

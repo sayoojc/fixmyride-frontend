@@ -174,9 +174,7 @@ export const AddAddressModal: React.FC<AddAddressModalProps> = ({ open, onOpenCh
       ...addressForm,
       userId: userId,
     })
-
     console.log("The response from the add address function", response)
-
     if (response) {
       const newAddress = response.data
       console.log("new address", newAddress)

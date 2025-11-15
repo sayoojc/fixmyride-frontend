@@ -12,6 +12,8 @@ import createAuthApi from "@/services/authApi"
 import { axiosPrivate } from "@/api/axios"
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { getPersistor, getStore } from "@/redux/Provider";
+import { getSocket } from "@/lib/socket";
 const authApi = createAuthApi(axiosPrivate);
 
 const DashboardSidebar = () => {
@@ -23,7 +25,23 @@ const DashboardSidebar = () => {
   );
 const adminLogout = async () => {
     try {
-       await authApi.adminLogoutApi();   
+       await authApi.adminLogoutApi();  
+        const persistor = getPersistor();
+      const store = getStore();
+      const socket = getSocket();
+      try {
+        socket.removeAllListeners();
+        socket.disconnect();
+        console.log("Socket disconnected on logout");
+      } catch (e) {
+        console.warn("Socket not initialized or already disconnected");
+      }
+      if (!persistor || !store) {
+        console.error("Redux store or persistor not initialized");
+        return;
+      }
+      persistor.purge();
+      store.dispatch({ type: "RESET_ALL" }); 
         toast.success("Logged out successfully.");
         router.push("/admin");       
     } catch (error) {

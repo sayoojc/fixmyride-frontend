@@ -25,7 +25,7 @@ export interface BrandModelManagementProps {
 }
 
 export const brandSchema = z.object({
-  name: z.string().min(1, "Brand name is required"),
+  name: z.string().min(1, "Brand name is required").max(50, "Brand name must not exceed 50 characters"),
   image: z
     .instanceof(File)
     .refine((file) => file.size > 0, "Image file is required")
@@ -33,7 +33,7 @@ export const brandSchema = z.object({
 });
 
 export const modelSchema = z.object({
-  name: z.string().min(1, "Model name is required"),
+  name: z.string().min(1, "Model name is required").max(50,"Model name must not exceed 50 characters"),
   brandId: z.string().min(1, "Brand is required"),
   image: z
     .instanceof(File)

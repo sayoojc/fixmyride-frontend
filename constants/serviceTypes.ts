@@ -1,8 +1,11 @@
-
-
-
 export const SERVICE_TYPES = [
-  { id: "oil-change", name: "Oil Change", icon: "🛢️", duration: 30, color: "bg-blue-100 border-blue-300 text-blue-800" },
+  {
+    id: "oil-change",
+    name: "Oil Change",
+    icon: "🛢️",
+    duration: 30,
+    color: "bg-blue-100 border-blue-300 text-blue-800",
+  },
   {
     id: "tire-change",
     name: "Tire Change",
@@ -10,7 +13,13 @@ export const SERVICE_TYPES = [
     duration: 45,
     color: "bg-purple-100 border-purple-300 text-purple-800",
   },
-  { id: "car-wash", name: "Car Wash", icon: "🧽", duration: 20, color: "bg-cyan-100 border-cyan-300 text-cyan-800" },
+  {
+    id: "car-wash",
+    name: "Car Wash",
+    icon: "🧽",
+    duration: 20,
+    color: "bg-cyan-100 border-cyan-300 text-cyan-800",
+  },
   {
     id: "brake-service",
     name: "Brake Service",
@@ -46,4 +55,4 @@ export const SERVICE_TYPES = [
     duration: 120,
     color: "bg-orange-100 border-orange-300 text-orange-800",
   },
-]
+];

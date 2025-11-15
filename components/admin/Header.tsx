@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface AdminHeaderProps {
-  setShowLoginModal: (value: boolean) => void;  // Explicitly type the prop
+  setShowLoginModal: (value: boolean) => void;   
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({ setShowLoginModal }) => {

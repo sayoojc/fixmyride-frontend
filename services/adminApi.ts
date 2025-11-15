@@ -3,7 +3,7 @@ import { ServicePackageFormData } from "@/types/service-packages";
 
 const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   ///Brand management///
-  AddBrandApi: async (brandName: string, imageUrl: string) => {
+  addBrandApi: async (brandName: string, imageUrl: string) => {
     try {
       const response = await axiosPrivate.post(
         `${process.env.NEXT_PUBLIC_ADMIN_API_END_POINT}/brands`,
@@ -56,7 +56,7 @@ const createAdminApi = (axiosPrivate: AxiosInstance) => ({
   },
 
   /// Model management ///
-  AddModelApi: async (
+  addModelApi: async (
     model: string,
     imageUrl: string,
     brandId: string,

@@ -17,7 +17,8 @@ import { useSelector } from "react-redux";
 import { clearCart } from "@/redux/features/cartSlice"
 import { useDispatch } from "react-redux"
 import { RootState } from "../../redux/store";
-
+import { getPersistor, getStore } from "@/redux/Provider";
+import { getSocket } from "@/lib/socket";
 export const Header = () => {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -59,6 +60,22 @@ export const Header = () => {
   const handleLogout = async () => {
     try {
       await authApi.logoutApi();
+       const persistor = getPersistor();
+            const store = getStore();
+            const socket = getSocket();
+            try {
+              socket.removeAllListeners();
+              socket.disconnect();
+              console.log("Socket disconnected on logout");
+            } catch (e) {
+              console.warn("Socket not initialized or already disconnected");
+            }
+            if (!persistor || !store) {
+              console.error("Redux store or persistor not initialized");
+              return;
+            }
+            persistor.purge();
+            store.dispatch({ type: "RESET_ALL" });
       router.push("/")
       dispatch(clearCart());
       toast.success("Logged out successfully")

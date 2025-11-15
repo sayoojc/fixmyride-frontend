@@ -122,7 +122,7 @@ export default function DashboardPage() {
                       {notifications.length > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500">{}</span>
                         </span>
                       )}
                     </span>
@@ -137,99 +137,6 @@ export default function DashboardPage() {
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - 2/3 width */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="lg:col-span-2 space-y-6"
-              >
-                {/* Revenue Chart Placeholder */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Revenue Overview</CardTitle>
-                    <CardDescription>Your earnings over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-lg">
-                      <p className="text-slate-500">Revenue chart will go here</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Appointments Table Placeholder */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Appointments</CardTitle>
-                    <CardDescription>Your latest bookings and services</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[200px] flex items-center justify-center bg-slate-50 rounded-lg">
-                      <p className="text-slate-500">Appointments table will go here</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Right Column - 1/3 width */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="space-y-6"
-              >
-                {/* Service Type Distribution Placeholder */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Service Distribution</CardTitle>
-                    <CardDescription>Breakdown of your services</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[200px] flex items-center justify-center bg-slate-50 rounded-lg">
-                      <p className="text-slate-500">Service chart will go here</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Notifications */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Notifications</CardTitle>
-                    <CardDescription>Latest updates and alerts</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {notifications.length > 0 ? (
-                        notifications.map((notification) => (
-                          <motion.div
-                            key={notification.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex items-start space-x-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
-                          >
-                            <div className="flex-1 space-y-1">
-                              <p className="text-sm font-medium">{notification.title}</p>
-                              <p className="text-xs text-slate-500">{notification.message}</p>
-                              <p className="text-xs text-slate-400">{notification.time}</p>
-                            </div>
-                          </motion.div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8">
-                          <Bell className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">No notifications yet</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-4">
-                      <Button variant="outline" className="w-full bg-transparent">
-                        View All Notifications
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
             </div>
           </main>
         </div>

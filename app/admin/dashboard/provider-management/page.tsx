@@ -86,6 +86,7 @@ const ProviderManagement = () => {
 
     fetchProviders();
   }, [debouncedSearchTerm, currentPage, statusFilter]);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

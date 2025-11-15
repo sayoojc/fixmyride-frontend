@@ -54,7 +54,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     setIsLoading(true)
 
     try {
-      handleLoginSubmit(e) // Call parent submit logic
+      handleLoginSubmit(e);
     } catch (err) {
       console.error("Login failed", err)
     } finally {

@@ -4,23 +4,43 @@ import { useRouter } from "next/navigation";
 import { axiosPrivate } from "@/api/axios";
 import createAuthApi from "@/services/authApi";
 import { AxiosError } from "axios";
-import {toast} from 'react-toastify'
-
+import { toast } from "react-toastify";
+import { getPersistor, getStore } from "@/redux/Provider";
+import { getSocket } from "@/lib/socket";
 const authApi = createAuthApi(axiosPrivate);
 export default function Navbar() {
   const router = useRouter();
-  const handleLogout = async() => {
-  
+  const handleLogout = async () => {
     try {
-        await authApi.ProviderLogoutApi();
-        toast.success('Logout successfull');
-        router.push('/provider')
+      await authApi.providerLogoutApi();
+      const persistor = getPersistor();
+      const store = getStore();
+      const socket = getSocket();
+      try {
+        socket.removeAllListeners();
+        socket.disconnect();
+        console.log("Socket disconnected on logout");
+      } catch (e) {
+        console.warn("Socket not initialized or already disconnected");
+      }
+      if (!persistor || !store) {
+        console.error("Redux store or persistor not initialized");
+        return;
+      }
+      await persistor.purge();
+      await persistor.flush();
+      store.dispatch({ type: "RESET_ALL" });
+      toast.success("Logout successfull");
+      router.push("/provider");
     } catch (error) {
-       const err = error as AxiosError<{ message?: string }>;
-              console.error("Logout failed:", err.response?.data?.message || "Something went wrong");
-              alert(err.response?.data?.message || "Logout failed!");   
+      const err = error as AxiosError<{ message?: string }>;
+      console.error(
+        "Logout failed:",
+        err.response?.data?.message || "Something went wrong"
+      );
+      alert(err.response?.data?.message || "Logout failed!");
     }
-  }
+  };
 
   return (
     <nav className="bg-blue-600 p-4 text-white">
@@ -28,13 +48,19 @@ export default function Navbar() {
         <h1 className="text-2xl font-bold">Car Service Center</h1>
 
         <div className="space-x-4">
-          <button onClick={() => router.push("/provider/dashboard")} className="hover:underline">
+          <button
+            onClick={() => router.push("/provider/dashboard")}
+            className="hover:underline"
+          >
             Dashboard
           </button>
-          <button onClick={() => router.push("/provider/profile")} className="hover:underline">
+          <button
+            onClick={() => router.push("/provider/profile")}
+            className="hover:underline"
+          >
             Profile
-          </button> 
-          <button 
+          </button>
+          <button
             onClick={handleLogout}
             className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-500 hover:text-white"
           >

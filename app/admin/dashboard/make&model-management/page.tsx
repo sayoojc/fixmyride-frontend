@@ -12,9 +12,7 @@ import EditBrandDialog from "@/components/admin/EditBrandDialogue";
 import EditModelDialog from "@/components/admin/EditModelDialog";
 import createAdminApi from "@/services/adminApi";
 import { axiosPrivate } from "@/api/axios";
-
 const adminApi = createAdminApi(axiosPrivate);
-
 import createimageUploadApi from "@/services/imageUploadApi";
 import { axiosPublic } from "@/api/axiosPublic";
 const imageUploadApi = createimageUploadApi(axiosPublic);
@@ -133,7 +131,7 @@ const BrandModelManagement: React.FC = () => {
       const imageUrl = await imageUploadApi.uploadBrandImageApi(
         brandData.image
       );
-      const response = await adminApi.AddBrandApi(brandData.name, imageUrl);
+      const response = await adminApi.addBrandApi(brandData.name, imageUrl);
       setBrands([...brands, response.brand]);
       toast.success("Brand Added Successfully");
       setIsAddBrandDialogOpen(false);
@@ -258,7 +256,7 @@ const BrandModelManagement: React.FC = () => {
       const imageUrl = await imageUploadApi.uploadBrandImageApi(
         modelData.image
       );
-      const response = await adminApi.AddModelApi(
+      const response = await adminApi.addModelApi(
         modelData.name,
         imageUrl,
         modelData.brandId,
